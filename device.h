@@ -163,7 +163,6 @@ private:
   static int nextCardIndex;
   int cardIndex;
 protected:
-  cDevice(void);
   virtual ~cDevice();
   virtual bool Ready(void);
          ///< Returns true if this device is ready. Devices with conditional
@@ -190,9 +189,6 @@ protected:
          ///< A derived class must call the MakePrimaryDevice() function of its
          ///< base class.
 public:
-  bool IsPrimaryDevice(void) const { return this == primaryDevice; }
-  int CardIndex(void) const { return cardIndex; }
-         ///< Returns the card index of this device (0 ... MAXDEVICES - 1).
   int DeviceNumber(void) const;
          ///< Returns the number of this device (0 ... numDevices).
   virtual bool HasDecoder(void) const;
@@ -365,9 +361,6 @@ public:
          ///< Returns true if this device has a Common Interface.
   void SetCamSlot(cCamSlot *CamSlot);
          ///< Sets the given CamSlot to be used with this device.
-  cCamSlot *CamSlot(void) const { return camSlot; }
-         ///< Returns the CAM slot that is currently used with this device,
-         ///< or NULL if no CAM slot is in use.
 
 // Image Grab facilities
 
@@ -524,9 +517,6 @@ private:
   cTsToPes tsToPesSubtitle;
   bool isPlayingVideo;
 protected:
-  const cPatPmtParser *PatPmtParser(void) const { return &patPmtParser; }
-       ///< Returns a pointer to the patPmtParser, so that a derived device
-       ///< can use the stream information from it.
   virtual bool CanReplay(void) const;
        ///< Returns true if this device can currently start a replay session.
   virtual bool SetPlayMode(ePlayMode PlayMode);
@@ -712,6 +702,39 @@ public:
        ///< Detaches all receivers from this device for this pid.
   void DetachAllReceivers(void);
        ///< Detaches all receivers from this device.
+       
+// --- dynamite subdevice patch start ---
+  friend class cDynamicDevice;
+private:
+  static cDevice *nextParentDevice;
+         ///< Holds the parent device for the next subdevice
+         ///< so the dynamite-plugin can work with unpatched plugins
+  bool isIdle;
+protected:
+  cDevice *parentDevice;
+  cDevice *subDevice;
+  cDevice(cDevice *ParentDevice = NULL);
+  const cPatPmtParser *PatPmtParser(void) const { if (parentDevice) return parentDevice->PatPmtParser(); return &patPmtParser; }
+       ///< Returns a pointer to the patPmtParser, so that a derived device
+       ///< can use the stream information from it.
+public:
+  bool IsPrimaryDevice(void) const { if (parentDevice) return parentDevice->IsPrimaryDevice(); return this == primaryDevice; }
+  int CardIndex(void) const { if (parentDevice) return parentDevice->cardIndex; return cardIndex; }
+         ///< Returns the card index of this device (0 ... MAXDEVICES - 1).
+  cCamSlot *CamSlot(void) const { if (parentDevice) return parentDevice->CamSlot(); return camSlot; }
+         ///< Returns the CAM slot that is currently used with this device,
+         ///< or NULL if no CAM slot is in use.
+  bool IsSubDevice(void) const { return (parentDevice != NULL); }
+  bool HasSubDevice(void) const { return (subDevice != NULL); }
+  cDevice *SubDevice(void) const { return subDevice; }
+  bool IsIdle(void) const { if (parentDevice) return parentDevice->IsIdle(); return isIdle; }
+  bool SetIdle(bool Idle);
+  virtual bool SetIdleDevice(bool Idle, bool TestOnly) { return false; }
+         ///< Called by SetIdle
+         ///< if TestOnly, don't do anything, just return, if the device
+         ///< can be set to the new idle state
+  virtual bool CanScanForEPG(void) const { return !IsIdle(); }
+  // --- dynamite subdevice patch end ---
   };
 
 /// Derived cDevice classes that can receive channels will have to provide
@@ -735,4 +758,47 @@ public:
   uchar *Get(void);
   };
 
+/// A plugin that want to create devices handled by the dynamite-plugin needs to create
+/// a cDynamicDeviceProbe derived object on the heap in order to have its Probe()
+/// function called, where it can actually create the appropriate device.
+/// The cDynamicDeviceProbe object must be created in the plugin's constructor,
+/// and deleted in its destructor.
+/// The "DevPath" hasn't to be a physical device or a path in the filesystem.
+/// It can be any string a plugin may react on.
+
+#define __DYNAMIC_DEVICE_PROBE
+
+enum eDynamicDeviceProbeCommand { ddpcAttach, ddpcDetach, ddpcService };
+
+class cDynamicDeviceProbe : public cListObject {
+  friend class cDynamicDevice;
+private:
+  class cDynamicDeviceProbeItem : public cListObject {
+  public:
+    eDynamicDeviceProbeCommand cmd;
+    cString *devpath;
+    cDynamicDeviceProbeItem(eDynamicDeviceProbeCommand Cmd, cString *DevPath):cmd(Cmd),devpath(DevPath) {}
+    virtual ~cDynamicDeviceProbeItem() { if (devpath) delete devpath; }
+    };
+  static cList<cDynamicDeviceProbeItem> commandQueue;
+     ///< A list where all attach/detach commands are queued
+     ///< so they can be processed in the MainThreadHook of
+     ///< the dynamite plugin.
+public:
+  static void QueueDynamicDeviceCommand(eDynamicDeviceProbeCommand Cmd, const char *DevPath);
+     ///< Plugins which support cDynamicDeviceProbe must use this function
+     ///< to queue the devices they normally create in their Initialize method.
+     ///< These devices are created as subdevices in the Start-method of the dynamite-plugin.
+  cDynamicDeviceProbe(void);
+  virtual ~cDynamicDeviceProbe();
+  virtual cDevice *Attach(cDevice *ParentDevice, const char *DevPath) = 0;
+     ///< Probes for a device at the given device-path like /dev/dvb/adapter0/frontend0
+     ///< or /dev/video0 etc. and creates the appropriate
+     ///< object derived from cDevice if applicable.
+     ///< Returns the device that has been created or NULL if not.
+     ///< The dynamite-plugin will delete the device if it is detached.
+  };
+
+extern cList<cDynamicDeviceProbe> DynamicDeviceProbes;
+  
 #endif //__DEVICE_H

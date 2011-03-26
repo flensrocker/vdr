@@ -259,6 +259,7 @@ private:
   int device;
   int fd_frontend;
   int adapter, frontend;
+  cDvbDevice *dvbdevice;
   int tuneTimeout;
   int lockTimeout;
   time_t lastTimeoutReport;
@@ -269,30 +270,37 @@ private:
   cMutex mutex;
   cCondVar locked;
   cCondVar newSet;
+  bool isIdle;
+  bool OpenFrontend(void);
+  bool CloseFrontend(void);
   bool GetFrontendStatus(fe_status_t &Status, int TimeoutMs = 0);
   bool SetFrontend(void);
   virtual void Action(void);
 public:
-  cDvbTuner(int Device, int Fd_Frontend, int Adapter, int Frontend, fe_delivery_system FrontendType);
+  cDvbTuner(int Device, int Fd_Frontend, int Adapter, int Frontend, fe_delivery_system FrontendType, cDvbDevice *Dvbdevice);
   virtual ~cDvbTuner();
   const cChannel *GetTransponder(void) const { return &channel; }
   bool IsTunedTo(const cChannel *Channel) const;
   void Set(const cChannel *Channel);
   bool Locked(int TimeoutMs = 0);
+  bool SetIdle(bool Idle);
+  bool IsIdle(void) const { return isIdle; }
   };
 
-cDvbTuner::cDvbTuner(int Device, int Fd_Frontend, int Adapter, int Frontend, fe_delivery_system FrontendType)
+cDvbTuner::cDvbTuner(int Device, int Fd_Frontend, int Adapter, int Frontend, fe_delivery_system FrontendType, cDvbDevice *Dvbdevice)
 {
   device = Device;
   fd_frontend = Fd_Frontend;
   adapter = Adapter;
   frontend = Frontend;
   frontendType = FrontendType;
+  dvbdevice = Dvbdevice;
   tuneTimeout = 0;
   lockTimeout = 0;
   lastTimeoutReport = 0;
   diseqcCommands = NULL;
   tunerStatus = tsIdle;
+  isIdle = false;
   if (frontendType == SYS_DVBS || frontendType == SYS_DVBS2)
      CHECK(ioctl(fd_frontend, FE_SET_VOLTAGE, SEC_VOLTAGE_13)); // must explicitly turn on LNB power
   SetDescription("tuner on frontend %d/%d", adapter, frontend);
@@ -305,6 +313,8 @@ cDvbTuner::~cDvbTuner()
   newSet.Broadcast();
   locked.Broadcast();
   Cancel(3);
+  if (dvbdevice && dvbdevice->IsSubDevice())
+     CloseFrontend();
 }
 
 bool cDvbTuner::IsTunedTo(const cChannel *Channel) const
@@ -339,8 +349,49 @@ bool cDvbTuner::Locked(int TimeoutMs)
   return tunerStatus >= tsLocked;
 }
 
+bool cDvbTuner::SetIdle(bool Idle)
+{
+  if (isIdle == Idle)
+     return true;
+  isIdle = Idle;
+  if (Idle)
+     return CloseFrontend();
+  return OpenFrontend();
+}
+
+bool cDvbTuner::OpenFrontend(void)
+{
+  if (fd_frontend >= 0)
+     return true;
+  cMutexLock MutexLock(&mutex);
+  fd_frontend = cDvbDevice::DvbOpen(DEV_DVB_FRONTEND, adapter, frontend, O_RDWR | O_NONBLOCK);
+  if (fd_frontend < 0)
+     return false;
+  if (frontendType == SYS_DVBS || frontendType == SYS_DVBS2)
+#ifdef LNB_SHARING_VERSION
+     if (lnbSendSignals)
+#endif
+     CHECK(ioctl(fd_frontend, FE_SET_VOLTAGE, SEC_VOLTAGE_13)); // must explicitly turn on LNB power
+  isIdle = false;
+  return true;
+}
+
+bool cDvbTuner::CloseFrontend(void)
+{
+  if (fd_frontend < 0)
+     return true;
+  cMutexLock MutexLock(&mutex);
+  tunerStatus = tsIdle;
+  newSet.Broadcast();
+  close(fd_frontend);
+  fd_frontend = -1;
+  return true;
+}
+
 bool cDvbTuner::GetFrontendStatus(fe_status_t &Status, int TimeoutMs)
 {
+  if (!OpenFrontend())
+     return false;
   if (TimeoutMs) {
      cPoller Poller(fd_frontend);
      if (Poller.Poll(TimeoutMs)) {
@@ -367,6 +418,8 @@ static unsigned int FrequencyToHz(unsigned int f)
 
 bool cDvbTuner::SetFrontend(void)
 {
+  if (!OpenFrontend())
+     return false;
 #define MAXFRONTENDCMDS 16
 #define SETCMD(c, d) { Frontend[CmdSeq.num].cmd = (c);\
                        Frontend[CmdSeq.num].u.data = (d);\
@@ -526,9 +579,11 @@ void cDvbTuner::Action(void)
   bool LostLock = false;
   fe_status_t Status = (fe_status_t)0;
   while (Running()) {
-        fe_status_t NewStatus;
-        if (GetFrontendStatus(NewStatus, 10))
-           Status = NewStatus;
+        if (!isIdle) {
+           fe_status_t NewStatus;
+           if (GetFrontendStatus(NewStatus, 10))
+              Status = NewStatus;
+           }
         cMutexLock MutexLock(&mutex);
         switch (tunerStatus) {
           case tsIdle:
@@ -661,7 +716,8 @@ const char *DeliverySystems[] = {
   NULL
   };
 
-cDvbDevice::cDvbDevice(int Adapter, int Frontend)
+cDvbDevice::cDvbDevice(int Adapter, int Frontend, cDevice *ParentDevice)
+:cDevice(ParentDevice)
 {
   adapter = Adapter;
   frontend = Frontend;
@@ -678,7 +734,7 @@ cDvbDevice::cDvbDevice(int Adapter, int Frontend)
 
   fd_ca = DvbOpen(DEV_DVB_CA, adapter, frontend, O_RDWR);
   if (fd_ca >= 0)
-     ciAdapter = cDvbCiAdapter::CreateCiAdapter(this, fd_ca);
+     ciAdapter = cDvbCiAdapter::CreateCiAdapter(parentDevice ? parentDevice : this, fd_ca, Adapter, Frontend);
 
   // The DVR device (will be opened and closed as needed):
 
@@ -718,7 +774,7 @@ cDvbDevice::cDvbDevice(int Adapter, int Frontend)
         else
            p = (char *)"unknown modulations";
         isyslog("frontend %d/%d provides %s with %s (\"%s\")", adapter, frontend, DeliverySystems[frontendType], p, frontendInfo.name);
-        dvbTuner = new cDvbTuner(CardIndex() + 1, fd_frontend, adapter, frontend, frontendType);
+        dvbTuner = new cDvbTuner(CardIndex() + 1, fd_frontend, adapter, frontend, frontendType, this);
         }
      }
   else
@@ -821,6 +877,31 @@ bool cDvbDevice::Ready(void)
   if (ciAdapter)
      return ciAdapter->Ready();
   return true;
+}
+
+bool cDvbDevice::SetIdleDevice(bool Idle, bool TestOnly)
+{
+  if (TestOnly) {
+     if (ciAdapter)
+        return ciAdapter->SetIdle(Idle, true);
+     return true;
+     }
+  if (!dvbTuner->SetIdle(Idle))
+     return false;
+  if (ciAdapter && !ciAdapter->SetIdle(Idle, false)) {
+     dvbTuner->SetIdle(!Idle);
+     return false;
+     }
+  if (Idle)
+     StopSectionHandler();
+  else
+     StartSectionHandler();
+  return true;
+}
+
+bool cDvbDevice::CanScanForEPG(void) const
+{
+  return !IsIdle() && !dvbTuner->IsIdle() && ((ciAdapter == NULL) || !ciAdapter->IsIdle());
 }
 
 bool cDvbDevice::HasCi(void)
