@@ -143,7 +143,7 @@ void cEITScanner::Process(void)
            bool AnyDeviceSwitched = false;
            for (int i = 0; i < cDevice::NumDevices(); i++) {
                cDevice *Device = cDevice::GetDevice(i);
-               if (Device) {
+               if (Device && Device->CanScanForEPG()) {
                   for (cScanData *ScanData = scanList->First(); ScanData; ScanData = scanList->Next(ScanData)) {
                       const cChannel *Channel = ScanData->GetChannel();
                       if (Channel) {
