@@ -1,0 +1,42 @@
+configurableLNBshare Revision History
+
+Version for VDR 1.4.3 
+
+- configurableLNBshare-VDR_1.4.3.patch from Matthias Lötzke (http://lötzke.de/vdr.html)
+
+2010-04-10: Version for VDR 1.7.14
+- Created HISTORY.LNBshare
+- Created README.LNBshare
+- Fixed possible buffer overflow in cMenuSetupLNB::Setup(void)
+- Ignore all non-DVB-S devices when checking for possible conflicts.
+- Use the 'actual' device instead of the 'primary' device as device that is used as reciever for live viewing. This adds support for 'other' output devices than a FF card like xine. Based on a patch from CR7 at vdr-portal.de
+- Adept to  VDR 1.7.14. Support the new diseqc feature introduced with VDR 1.7.13: 'Added device definitions to the diseqc.conf file format, so that certain satellite positions can be limited to a given list of devices'.
+  
+2010-11-13:
+- Fix: Devices sharing same LNB don't switch channel on main channel switch (thanks to hivdr @ vdr-portal.de for reporting the bug and spockele @ vdr-portal.de and hopsi @ vdr-portal.de for testing the correction)
+- Fix: In LOG, device numbering is now as in VDR: Starting from 1, ...
+- Fix: Encoding of german umlaut in "DVB-Empfänger %d nutzt LNB Nr"
+
+2010-11-28:
+- Fix: Device numbering in message 'LNB or DiSEq conflict with device ...'.
+- Fix: Numbering of LNBs not using SAT
+
+2010-12-25: Version 0.1.0 for VDR version 1.7.16
+- Rename the patch to include patch version number (vdr-lnb-sharing-0.1.0-1.7.16.patch)
+- Write patch version number to log file (if logging is switched on).
+- Adept to  VDR 1.7.16
+
+2011-02-06 Version 0.1.1 for VDR version 1.7.16
+- Fix: If several DVB devices share one LNB, only the first of these devises will send signals like 22kHz. See README.LNBshare for details.
+  Thanks to Uwe (Licherkette @ vdr-portal.de) for finding and analyzing the error and testing the correction.
+- README.LNBshare: Include warning about 1.3 FF cards with buggy Loop-Through that might result in destruction of LNBP-Chips if the Loop-Through is used
+- Fix: Log file: Numbering of 'LNBs' not connected to a SAT DVB card
+
+2011-02-08 Version 0.1.2 for VDR version 1.7.16
+- Change: Make it easier to apply this patch together with the dynamite-Plugin patch. Note: this is mostly for maintainers of distributions and multi-patches. It will (must probably) not be possible for devices added with dynamite to share LNBs. Some concept work is required for this: How can VDR uniquely identify a device? How can a user identify such a device on OSD?
+
+2011-02-16 Version 0.1.3 for VDR version 1.7.16
+- Fix an error that can occur if devices are explizitly specified (-D or --device) during start of VDR. Thanks to Lars (mini73 @ vdr-portal.de) for reporting this error.
+
+2011-02-18 Version 0.1.4 for VDR version 1.7.16
+- Fix: Short before a recording starts, the system switches between black screen and channel. If VPS is used, the recording will not even start. Thanks to urknall @ vdr-portal.de for reporting this error and Uwe (Licherkette @ vdr-portal.de) for providing a Log

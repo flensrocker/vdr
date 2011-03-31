@@ -159,6 +159,46 @@ public:
   static void Shutdown(void);
          ///< Closes down all devices.
          ///< Must be called at the end of the program.
+//ML
+public:
+  static void SetLnbNr(void);
+		  ///< Called after changes in setup
+		  ///< call SetLNBNrFromSetup for each device
+  virtual void SetLnbNrFromSetup(void) {};
+         ///< Called after changes in setup
+         ///< Read Setup.CardUsesLNBnr, write value to member variable of this class
+         ///< Only implemented in dvbdevice, other devices don't use LNBs
+  bool IsLnbSendSignals(void);
+         ///< If several devices share the same LNB, only the first of these
+         ///< must send signals (like 22 kHz) to the LNB
+         ///< check, whepher this device must send these signals
+  virtual int LnbNr(void) const { return ( cardIndex + 1 ) * -1; };
+         ///< Number of LNB. This is -cardIndex for all non-DVB devices.
+         ///< So, there will be no LNB conflicts for non-DVB devices.
+  virtual bool IsShareLnb(const cDevice *Device) { return false; };
+		  ///< True if both devices differ (this != Device) and share the same LNB
+  virtual bool IsLnbConflict(const cChannel *Channel) { return false; };
+         ///< false if 'Channel' can be recieved with the same 
+         ///< LNB as 'this' device is using
+         ///< Otherwise, true
+  cDevice *GetBadDevice(const cChannel *Channel) ;
+         ///< Returns NULL if there is no device which uses the same LNB or if
+         ///< all of those devices are tuned to the same frequency band and
+         ///< polarization as of the requested channel.
+         ///< Otherwise returns the first device found.
+  int GetMaxBadPriority(const cChannel *Channel) const;
+         ///< Returns the highest priority of all receiving devices which use
+         ///< the same LNB and are tuned to a different frequency band or
+         ///< polarization as of the requested channel.
+         ///< Returns -1 if there are no such devices, but the 'actual' device
+         ///< (device recieving live view) would be affected by switching to the requested channel.
+         ///< Returns -2 if there are no such devices and the actual device
+         ///< would not be affected by switching to the requested channel.
+  bool IsShareAvoidDevice(const cChannel *Channel, const cDevice *AvoidDevice) const;
+         ///< Returns true if switching this device to Channel will result in a switch of AvoidDevice
+//ML-Ende
+
+
 private:
   static int nextCardIndex;
   int cardIndex;

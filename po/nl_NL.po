@@ -1326,3 +1326,14 @@ msgstr "Druk een willekeurige toets om herstarten af te breken"
 #, c-format
 msgid "VDR will shut down in %s minutes"
 msgstr "VDR zal na %s minuten uitschakelen"
+
+msgid "Channel locked by LNB!"
+msgstr "Kanaal geblokkeerd door LNB"
+
+msgid "Setup.LNB$DVB device %d uses LNB No."
+msgstr "LNB kaart %d gebruikt LNB Nr."
+
+msgid "Setup.LNB$Log LNB usage"
+msgstr "Houd LNB gebruik bij"
+
+
