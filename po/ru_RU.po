@@ -1323,14 +1323,3 @@ msgstr "Нажмите любую кнопку для отмены перезагрузки"
 #, c-format
 msgid "VDR will shut down in %s minutes"
 msgstr "VDR выключится через %s минут"
-
-msgid "Channel locked by LNB!"
-msgstr "Конвертер блокирует канал"
-
-msgid "Setup.LNB$DVB device %d uses LNB No."
-msgstr "DVB устройство %d использует  LNB No."
-
-msgid "Setup.LNB$Log LNB usage"
-msgstr "Логирование использования LNB"
-
-

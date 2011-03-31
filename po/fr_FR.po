@@ -1328,13 +1328,3 @@ msgstr "Appuyer sur une touche pour annuler le redémarrage"
 #, c-format
 msgid "VDR will shut down in %s minutes"
 msgstr "VDR s'arrêtera dans %s minutes"
-
-msgid "Channel locked by LNB!"
-msgstr "Chaîne interdite par la LNB"
-
-msgid "Setup.LNB$DVB device %d uses LNB No."
-msgstr "La carte DVB %d utilise la LNB No."
-
-msgid "Setup.LNB$Log LNB usage"
-msgstr "Protocoller l'utilisation du LNB"
-
