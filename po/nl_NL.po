@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: VDR 1.6.0\n"
 "Report-Msgid-Bugs-To: <vdr-bugs@tvdr.de>\n"
-"POT-Creation-Date: 2010-10-24 16:26+0200\n"
+"POT-Creation-Date: 2011-03-31 11:11+0200\n"
 "PO-Revision-Date: 2008-02-26 17:20+0100\n"
 "Last-Translator: Johan Schuring <johan.schuring@vetteblei.nl>\n"
 "Language-Team: Dutch <vdr@linuxtv.org>\n"
@@ -948,6 +948,13 @@ msgstr "Transparantie achtergrond ondertiteling"
 msgid "LNB"
 msgstr "LNB"
 
+#, c-format
+msgid "Setup.LNB$DVB device %d uses LNB No."
+msgstr "LNB kaart %d gebruikt LNB Nr."
+
+msgid "Setup.LNB$Log LNB usage"
+msgstr "Houd LNB gebruik bij"
+
 msgid "Setup.LNB$Use DiSEqC"
 msgstr "DiSEqC gebruiken"
 
@@ -1326,3 +1333,6 @@ msgstr "Druk een willekeurige toets om herstarten af te breken"
 #, c-format
 msgid "VDR will shut down in %s minutes"
 msgstr "VDR zal na %s minuten uitschakelen"
+
+#~ msgid "Channel locked by LNB!"
+#~ msgstr "Kanaal geblokkeerd door LNB"

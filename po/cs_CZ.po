@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: VDR 1.7.14\n"
 "Report-Msgid-Bugs-To: <vdr-bugs@tvdr.de>\n"
-"POT-Creation-Date: 2010-10-24 16:26+0200\n"
+"POT-Creation-Date: 2011-03-31 11:11+0200\n"
 "PO-Revision-Date: 2010-05-06 11:00+0200\n"
 "Last-Translator: Radek Šťastný <dedkus@gmail.com>\n"
 "Language-Team: Czech <vdr@linuxtv.org>\n"
@@ -945,6 +945,14 @@ msgstr "Průhlednost pozadí titulků"
 
 msgid "LNB"
 msgstr "LNB"
+
+#, c-format
+msgid "Setup.LNB$DVB device %d uses LNB No."
+msgstr ""
+
+#, fuzzy
+msgid "Setup.LNB$Log LNB usage"
+msgstr "Dolní frekvence LNB (MHz)"
 
 msgid "Setup.LNB$Use DiSEqC"
 msgstr "Používat DiSEqC"

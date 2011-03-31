@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: VDR 1.6.0\n"
 "Report-Msgid-Bugs-To: <vdr-bugs@tvdr.de>\n"
-"POT-Creation-Date: 2010-10-24 16:26+0200\n"
+"POT-Creation-Date: 2011-03-31 11:11+0200\n"
 "PO-Revision-Date: 2008-12-15 14:37+0100\n"
 "Last-Translator: Oleg Roitburd <oleg@roitburd.de>\n"
 "Language-Team: Russian <vdr@linuxtv.org>\n"
@@ -945,6 +945,13 @@ msgstr "Прозрачность фона субтитров"
 msgid "LNB"
 msgstr "Конвертер"
 
+#, c-format
+msgid "Setup.LNB$DVB device %d uses LNB No."
+msgstr "DVB устройство %d использует  LNB No."
+
+msgid "Setup.LNB$Log LNB usage"
+msgstr "Логирование использования LNB"
+
 msgid "Setup.LNB$Use DiSEqC"
 msgstr "Использовать DiSEqC"
 
@@ -1323,3 +1330,6 @@ msgstr "Нажмите любую кнопку для отмены перезагрузки"
 #, c-format
 msgid "VDR will shut down in %s minutes"
 msgstr "VDR выключится через %s минут"
+
+#~ msgid "Channel locked by LNB!"
+#~ msgstr "Конвертер блокирует канал"

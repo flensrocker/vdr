@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: VDR 1.6.0\n"
 "Report-Msgid-Bugs-To: <vdr-bugs@tvdr.de>\n"
-"POT-Creation-Date: 2010-10-24 16:26+0200\n"
+"POT-Creation-Date: 2011-03-31 11:11+0200\n"
 "PO-Revision-Date: 2007-08-15 15:52+0200\n"
 "Last-Translator: Rolf Ahrenberg <rahrenbe@cc.hut.fi>\n"
 "Language-Team: Finnish <vdr@linuxtv.org>\n"
@@ -946,6 +946,14 @@ msgstr "Tekstityksen taustan läpinäkyvyys"
 
 msgid "LNB"
 msgstr "LNB"
+
+#, c-format
+msgid "Setup.LNB$DVB device %d uses LNB No."
+msgstr ""
+
+#, fuzzy
+msgid "Setup.LNB$Log LNB usage"
+msgstr "LNB-alataajuus (MHz)"
 
 msgid "Setup.LNB$Use DiSEqC"
 msgstr "Käytä DiSEqC-kytkintä"

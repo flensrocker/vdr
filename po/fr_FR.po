@@ -13,7 +13,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: VDR 1.6.0\n"
 "Report-Msgid-Bugs-To: <vdr-bugs@tvdr.de>\n"
-"POT-Creation-Date: 2010-10-24 16:26+0200\n"
+"POT-Creation-Date: 2011-03-31 11:11+0200\n"
 "PO-Revision-Date: 2008-02-27 18:14+0100\n"
 "Last-Translator: Jean-Claude Repetto <jc@repetto.org>\n"
 "Language-Team: French <vdr@linuxtv.org>\n"
@@ -950,6 +950,13 @@ msgstr "Transparence du fond"
 msgid "LNB"
 msgstr "LNB"
 
+#, c-format
+msgid "Setup.LNB$DVB device %d uses LNB No."
+msgstr "La carte DVB %d utilise la LNB No."
+
+msgid "Setup.LNB$Log LNB usage"
+msgstr "Protocoller l'utilisation du LNB"
+
 msgid "Setup.LNB$Use DiSEqC"
 msgstr "Utiliser le DiSEqC"
 
@@ -1328,3 +1335,6 @@ msgstr "Appuyer sur une touche pour annuler le redémarrage"
 #, c-format
 msgid "VDR will shut down in %s minutes"
 msgstr "VDR s'arrêtera dans %s minutes"
+
+#~ msgid "Channel locked by LNB!"
+#~ msgstr "Chaîne interdite par la LNB"

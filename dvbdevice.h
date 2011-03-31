@@ -130,6 +130,22 @@ public:
   virtual bool SetIdleDevice(bool Idle, bool TestOnly);
   virtual bool CanScanForEPG(void) const;
 
+// LNB Sharing
+private:
+  char lnbState;  // Current frequency band and polarization of the DVB-tuner
+  //  cDiseqc *lnbSource;  // can not #include "diseqc.h". A workaround follows:
+  int *lnbSource;  // [DiSEqC] DiSEqC-Source
+  int lnbNr;      // Number of LNB used
+
+public:
+  int *LnbSource(void) { return lnbSource; };
+  virtual int LnbNr(void) const { if(ProvidesSource(cSource::stSat)) return lnbNr; return (CardIndex() + 1) * -1;};
+  virtual void SetLnbNrFromSetup(void);
+  virtual bool IsLnbConflict(const cChannel *Channel);
+  virtual bool IsShareLnb(const cDevice *Device);
+// LNB Sharing Ende
+ 
+  
 // Common Interface facilities:
 
 private:

@@ -291,6 +291,16 @@ public:
   int InitialVolume;
   int ChannelsWrap;
   int EmergencyExit;
+
+//ML
+  #define LNB_SHARING_VERSION "0.1.4"
+  int VerboseLNBlog;
+  #define MAXDEVICES 16 // Since VDR 1.3.32 we can not #include "device.h" for MAXDEVICES anymore.
+                        // With this workaround a warning will be shown during compilation if
+                        // MAXDEVICES changes in device.h.
+  int CardUsesLnbNr[MAXDEVICES];
+//ML-Ende
+
   int __EndData__;
   cSetup(void);
   cSetup& operator= (const cSetup &s);

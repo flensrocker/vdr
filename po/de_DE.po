@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: VDR 1.6.0\n"
 "Report-Msgid-Bugs-To: <vdr-bugs@tvdr.de>\n"
-"POT-Creation-Date: 2010-10-24 16:26+0200\n"
+"POT-Creation-Date: 2011-03-31 11:11+0200\n"
 "PO-Revision-Date: 2010-01-16 16:46+0100\n"
 "Last-Translator: Klaus Schmidinger <kls@tvdr.de>\n"
 "Language-Team: German <vdr@linuxtv.org>\n"
@@ -944,6 +944,13 @@ msgstr "Untertitel-Transparenz Hintergrund"
 msgid "LNB"
 msgstr "LNB"
 
+#, c-format
+msgid "Setup.LNB$DVB device %d uses LNB No."
+msgstr "DVB-Empfänger %d nutzt LNB Nr."
+
+msgid "Setup.LNB$Log LNB usage"
+msgstr "LNB-Nutzung protokollieren"
+
 msgid "Setup.LNB$Use DiSEqC"
 msgstr "DiSEqC benutzen"
 
@@ -1322,3 +1329,6 @@ msgstr "Taste drücken, um Neustart abzubrechen"
 #, c-format
 msgid "VDR will shut down in %s minutes"
 msgstr "VDR wird in %s Minuten ausschalten"
+
+#~ msgid "Channel locked by LNB!"
+#~ msgstr "Kanal durch LNB gesperrt!"
