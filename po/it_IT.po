@@ -1329,3 +1329,14 @@ msgstr "Premi un tasto per annullare il riavvio"
 #, c-format
 msgid "VDR will shut down in %s minutes"
 msgstr "VDR si spegnerà tra %s minuti"
+
+msgid "Channel locked by LNB!"
+msgstr "Canale bloccato dal LNB!"
+
+msgid "Setup.LNB$DVB device %d uses LNB No."
+msgstr "La scheda DVB %d utilizza LNB No."
+
+msgid "Setup.LNB$Log LNB usage"
+msgstr "Registra utilizzo LNB"
+
+

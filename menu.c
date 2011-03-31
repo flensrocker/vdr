@@ -2892,6 +2892,23 @@ void cMenuSetupLNB::Setup(void)
 
   Clear();
 
+//ML
+  int numSatDevices = 0;
+  for (int i = 0; i < cDevice::NumDevices(); i++) {
+     	if (cDevice::GetDevice(i)->ProvidesSource(cSource::stSat)) numSatDevices++;
+  }     		
+  if (numSatDevices > 1) {
+  	 char tmp[40];
+     for (int i = 1; i <= cDevice::NumDevices(); i++) {
+     	if (cDevice::GetDevice(i - 1)->ProvidesSource(cSource::stSat)) {
+        	snprintf( tmp, 40, tr("Setup.LNB$DVB device %d uses LNB No."), i);
+        	Add(new cMenuEditIntItem( tmp, &data.CardUsesLnbNr[i - 1], 1, numSatDevices ));
+        }
+     }
+   }
+  Add(new cMenuEditBoolItem(tr("Setup.LNB$Log LNB usage"), &data.VerboseLNBlog));
+//ML-Ende
+
   Add(new cMenuEditBoolItem(tr("Setup.LNB$Use DiSEqC"),               &data.DiSEqC));
   if (!data.DiSEqC) {
      Add(new cMenuEditIntItem( tr("Setup.LNB$SLOF (MHz)"),               &data.LnbSLOF));
@@ -2907,6 +2924,10 @@ eOSState cMenuSetupLNB::ProcessKey(eKeys Key)
 {
   int oldDiSEqC = data.DiSEqC;
   eOSState state = cMenuSetupBase::ProcessKey(Key);
+
+//ML
+  if (Key == kOk) cDevice::SetLnbNr();
+//ML-Ende
 
   if (Key != kNone && data.DiSEqC != oldDiSEqC)
      Setup();

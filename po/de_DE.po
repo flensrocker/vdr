@@ -1322,3 +1322,13 @@ msgstr "Taste drücken, um Neustart abzubrechen"
 #, c-format
 msgid "VDR will shut down in %s minutes"
 msgstr "VDR wird in %s Minuten ausschalten"
+
+msgid "Channel locked by LNB!"
+msgstr "Kanal durch LNB gesperrt!"
+
+msgid "Setup.LNB$DVB device %d uses LNB No."
+msgstr "DVB-Empfänger %d nutzt LNB Nr."
+
+msgid "Setup.LNB$Log LNB usage"
+msgstr "LNB-Nutzung protokollieren"
+

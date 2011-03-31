@@ -181,6 +181,29 @@ void cDevice::SetUseDevice(int n)
      useDevice |= (1 << n);
 }
 
+//ML
+void cDevice::SetLnbNr(void)
+{
+  for (int i = 0; i < numDevices; i++) {
+    device[i]->SetLnbNrFromSetup();
+  }
+}
+
+
+bool cDevice::IsLnbSendSignals(void)
+{
+  for (int i = 0; device[i] != this && i < numDevices; i++) {
+	if (device[i]->IsShareLnb(this) ) {
+	  isyslog("Device %d: will not send any signal (like 22kHz) to LNB as device %d will do this", cardIndex+1, device[i]->cardIndex + 1);
+	  return false;
+	}
+  }
+  isyslog("Device %d: will send signals (like 22kHz) to LNB nr. = %d ", cardIndex+1, LnbNr() );
+  return true;
+}
+
+//ML-Ende
+
 int cDevice::NextCardIndex(int n)
 {
   if (n > 0) {
@@ -302,6 +325,10 @@ cDevice *cDevice::GetDevice(const cChannel *Channel, int Priority, bool LiveView
       for (int i = 0; i < numDevices; i++) {
           if (device[i] == AvoidDevice)
              continue; // this device shall be temporarily avoided
+          // LNB - Sharing
+          if (AvoidDevice && device[i]->IsShareAvoidDevice(Channel, AvoidDevice) )
+            continue; // this device shall be temporarily avoided
+          // LNB - Sharing END
           if (Channel->Ca() && Channel->Ca() <= CA_DVB_MAX && Channel->Ca() != device[i]->CardIndex() + 1)
              continue; // a specific card was requested, but not this one
           if (NumUsableSlots && !CamSlots.Get(j)->Assign(device[i], true))
@@ -322,9 +349,20 @@ cDevice *cDevice::GetDevice(const cChannel *Channel, int Priority, bool LiveView
              imp <<= 1; imp |= device[i]->Receiving();                                                               // avoid devices that are receiving
              imp <<= 4; imp |= GetClippedNumProvidedSystems(4, device[i]) - 1;                                       // avoid cards which support multiple delivery systems
              imp <<= 1; imp |= device[i] == cTransferControl::ReceiverDevice();                                      // avoid the Transfer Mode receiver device
-             imp <<= 8; imp |= min(max(device[i]->Priority() + MAXPRIORITY, 0), 0xFF);                               // use the device with the lowest priority (+MAXPRIORITY to assure that values -99..99 can be used)
+             // LNB - Sharing
+             int badPriority = device[i]->GetMaxBadPriority(Channel);
+             if (badPriority < 0 )                  // a device receiving with lower priority would need to be stopped
+             {
+                imp <<= 8; imp |= min(max(device[i]->Priority() + MAXPRIORITY, 0), 0xFF);                       // use the device with the lowest priority (+MAXPRIORITY to assure that values -99..99 can be used)
+             } else {
+                imp <<= 8; imp |= min(max(max(device[i]->Priority(), badPriority) + MAXPRIORITY, 0), 0xFF);          // use the device with the lowest priority (+MAXPRIORITY to assure that values -99..99 can be used)
+             }
+             // LNB - Sharing End
              imp <<= 8; imp |= min(max((NumUsableSlots ? SlotPriority[j] : 0) + MAXPRIORITY, 0), 0xFF);              // use the CAM slot with the lowest priority (+MAXPRIORITY to assure that values -99..99 can be used)
              imp <<= 1; imp |= ndr;                                                                                  // avoid devices if we need to detach existing receivers
+             // LNB - Sharing
+             imp <<= 1; imp |= (badPriority == -1);                                                                  // avoid cards where the actual device needs to be switched
+             // LNB - Sharing End             
              imp <<= 1; imp |= NumUsableSlots ? 0 : device[i]->HasCi();                                              // avoid cards with Common Interface for FTA channels
              imp <<= 1; imp |= device[i]->AvoidRecording();                                                          // avoid SD full featured cards
              imp <<= 1; imp |= NumUsableSlots ? !ChannelCamRelations.CamDecrypt(Channel->GetChannelID(), j + 1) : 0; // prefer CAMs that are known to decrypt this channel
@@ -656,7 +694,11 @@ bool cDevice::ProvidesTransponder(const cChannel *Channel) const
 bool cDevice::ProvidesTransponderExclusively(const cChannel *Channel) const
 {
   for (int i = 0; i < numDevices; i++) {
-      if (device[i] && device[i] != this && device[i]->ProvidesTransponder(Channel))
+
+//ML
+      if (device[i] && device[i] != this && device[i]->ProvidesTransponder(Channel) && device[i]->IsShareLnb(this)  )
+//ML-Ende
+
          return false;
       }
   return true;
@@ -748,6 +790,65 @@ bool cDevice::SwitchChannel(int Direction)
   return result;
 }
 
+// ML
+cDevice *cDevice::GetBadDevice(const cChannel *Channel)
+{
+  if(!cSource::IsSat(Channel->Source())) return NULL;  // no conflict if the new channel is not on sat
+  if(!ProvidesSource(cSource::stSat)) return NULL;     // no conflict if this device is not on sat
+  for (int i = 0; i < numDevices; i++) {
+    if (this != device[i] && device[i]->IsShareLnb(this) &&  device[i]->IsLnbConflict(Channel) ) {
+    	// there is a conflict between device[i] and 'this' if we tune this to Channel
+      if (Setup.VerboseLNBlog) {
+        isyslog("LNB %d: Device check for channel %d on device %d. LNB or DiSEq conflict with device %d", LnbNr(), Channel->Number(), this->cardIndex + 1, device[i]->cardIndex + 1);
+      }
+      return device[i];
+    }
+  }
+  if (Setup.VerboseLNBlog) { 
+    isyslog("LNB %d: Device check for channel %d on device %d. OK", LnbNr(), Channel->Number(), this->cardIndex + 1);
+  }
+  return NULL;
+}
+
+int cDevice::GetMaxBadPriority(const cChannel *Channel) const
+{                                
+  if(!cSource::IsSat(Channel->Source())) return -2;  // no conflict if the new channel is not on sat
+  if(!ProvidesSource(cSource::stSat)) return -2;     // no conflict if this device is not on sat
+
+  int maxBadPriority = -2;
+  for (int i = 0; i < numDevices; i++) {
+    if (this != device[i] && device[i]->IsShareLnb(this) && device[i]->IsLnbConflict(Channel) ) {
+    	// there is a conflict between device[i] and 'this' if we tune this to Channel
+    	  if (Setup.VerboseLNBlog) {
+            isyslog("LNB %d: Conflict for device %d, priority of conflicting device: %d", LnbNr(), device[i]->cardIndex + 1, device[i]->Priority());
+    	  }
+      if (device[i]->Receiving() && device[i]->Priority() > maxBadPriority) maxBadPriority = device[i]->Priority();
+      if (device[i] == ActualDevice() && maxBadPriority < -1 ) maxBadPriority = -1;
+    }
+  }
+
+  if (Setup.VerboseLNBlog) { 
+    isyslog("LNB %d: Request for channel %d on device %d. MaxBadPriority is %d", LnbNr(), Channel->Number(), this->cardIndex + 1, maxBadPriority);
+  }
+  return maxBadPriority;
+}
+
+bool cDevice::IsShareAvoidDevice(const cChannel *Channel, const cDevice *AvoidDevice) const
+{                                
+  if(!cSource::IsSat(Channel->Source())) return false;  // no conflict if the new channel is not on sat
+  if(!ProvidesSource(cSource::stSat)) return false;     // no conflict if this device is not on sat
+
+  for (int i = 0; i < numDevices; i++) {
+    if (this != device[i] && device[i]->IsShareLnb(this) && device[i]->IsLnbConflict(Channel) ) {
+    	// there is a conflict between device[i] and 'this' if we tune this to Channel
+    	if(device[i] == AvoidDevice) return true;
+    }
+  }
+  return false;
+}
+// ML Ende
+
+
 eSetChannelResult cDevice::SetChannel(const cChannel *Channel, bool LiveView)
 {
   if (LiveView) {
@@ -761,6 +862,13 @@ eSetChannelResult cDevice::SetChannel(const cChannel *Channel, bool LiveView)
   bool NeedsTransferMode = Device != this;
 
   eSetChannelResult Result = scrOk;
+
+//ML
+  if (Setup.VerboseLNBlog) {
+    isyslog("LNB %d: Switching device %d to channel %d", LnbNr(), this->DeviceNumber() + 1, Channel->Number());
+  }
+//ML-Ende
+
 
   // If this DVB card can't receive this channel, let's see if we can
   // use the card that actually can receive it and transfer data from there:

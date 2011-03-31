@@ -264,6 +264,7 @@ private:
   uint32_t subsystemId;
   int tuneTimeout;
   int lockTimeout;
+  bool lnbSendSignals;   // LNB Sharing.  false if this device must not send signals to the LNB (like 22 kHz, ...).
   time_t lastTimeoutReport;
   fe_delivery_system frontendType;
   cChannel channel;
@@ -298,6 +299,11 @@ public:
 
 cDvbTuner::cDvbTuner(int Device, int Fd_Frontend, int Adapter, int Frontend, fe_delivery_system FrontendType, cDvbDevice *Dvbdevice)
 {
+// LNB Sharing
+  if(Dvbdevice) {
+	lnbSendSignals = Dvbdevice->IsLnbSendSignals();  
+  } else lnbSendSignals = true;
+// END LNB Sharing
   device = Device;
   fd_frontend = Fd_Frontend;
   adapter = Adapter;
@@ -312,7 +318,7 @@ cDvbTuner::cDvbTuner(int Device, int Fd_Frontend, int Adapter, int Frontend, fe_
   dvbdevice = Dvbdevice;
   isIdle = false;
   if (frontendType == SYS_DVBS || frontendType == SYS_DVBS2)
-     CHECK(ioctl(fd_frontend, FE_SET_VOLTAGE, SEC_VOLTAGE_13)); // must explicitly turn on LNB power
+	if(lnbSendSignals) CHECK(ioctl(fd_frontend, FE_SET_VOLTAGE, SEC_VOLTAGE_13)); // must explicitly turn on LNB power   // LNB Sharing
   SetDescription("tuner on frontend %d/%d", adapter, frontend);
   Start();
 }
@@ -527,6 +533,7 @@ bool cDvbTuner::SetFrontend(void)
      if (Setup.DiSEqC) {
         const cDiseqc *diseqc = Diseqcs.Get(device, channel.Source(), channel.Frequency(), dtp.Polarization());
         if (diseqc) {
+           if(lnbSendSignals) {    // LNB sharing
            if (diseqc->Commands() && (!diseqcCommands || strcmp(diseqcCommands, diseqc->Commands()) != 0)) {
               cDiseqc::eDiseqcActions da;
               for (const char *CurrentAction = NULL; (da = diseqc->Execute(&CurrentAction)) != cDiseqc::daNone; ) {
@@ -554,6 +561,7 @@ bool cDvbTuner::SetFrontend(void)
                   }
               diseqcCommands = diseqc->Commands();
               }
+           }   // LNB sharing
            frequency -= diseqc->Lof();
            }
         else {
@@ -571,9 +579,11 @@ bool cDvbTuner::SetFrontend(void)
            frequency -= Setup.LnbFrequHi;
            tone = SEC_TONE_ON;
            }
-        int volt = (dtp.Polarization() == 'v' || dtp.Polarization() == 'V' || dtp.Polarization() == 'r' || dtp.Polarization() == 'R') ? SEC_VOLTAGE_13 : SEC_VOLTAGE_18;
-        CHECK(ioctl(fd_frontend, FE_SET_VOLTAGE, volt));
-        CHECK(ioctl(fd_frontend, FE_SET_TONE, tone));
+        if(lnbSendSignals) {  // LNB sharing
+          int volt = (dtp.Polarization() == 'v' || dtp.Polarization() == 'V' || dtp.Polarization() == 'r' || dtp.Polarization() == 'R') ? SEC_VOLTAGE_13 : SEC_VOLTAGE_18;
+          CHECK(ioctl(fd_frontend, FE_SET_VOLTAGE, volt));
+          CHECK(ioctl(fd_frontend, FE_SET_TONE, tone));
+          }   // LNB sharing
         }
      frequency = abs(frequency); // Allow for C-band, where the frequency is less than the LOF
 
@@ -893,7 +903,14 @@ cDvbDevice::cDvbDevice(int Adapter, int Frontend, cDevice *ParentDevice)
         else
            p = (char *)"unknown modulations";
         isyslog("frontend %d/%d provides %s with %s (\"%s\")", adapter, frontend, DeliverySystems[frontendType], p, frontendInfo.name);
+        
+//ML
+        isyslog("LNB-sharing: patch version %s", LNB_SHARING_VERSION);
+        lnbState = -1;
+        SetLnbNrFromSetup();
+        lnbSource = NULL;
         dvbTuner = new cDvbTuner(CardIndex() + 1, fd_frontend, adapter, frontend, frontendType, this);
+//ML-Ende
         }
      }
   else
@@ -1134,6 +1151,12 @@ bool cDvbDevice::ProvidesChannel(const cChannel *Channel, int Priority, bool *Ne
 {
   bool result = false;
   bool hasPriority = Priority < 0 || Priority > this->Priority();
+  // LNB Sharing
+  if(hasPriority && GetMaxBadPriority(Channel) >= Priority) hasPriority = false;
+  if (Setup.VerboseLNBlog) {
+   isyslog("LNB %d: ProvidesChannel %d on device %d. Priority is %d, hasPriority is %d", LnbNr(), Channel->Number(), this->DeviceNumber() + 1, Priority, hasPriority);
+  }
+  // LNB Sharing END
   bool needsDetachReceivers = false;
 
   if (dvbTuner && ProvidesTransponder(Channel)) {
@@ -1193,7 +1216,27 @@ bool cDvbDevice::SetChannelDevice(const cChannel *Channel, bool LiveView)
 {
   if (dvbTuner)
      dvbTuner->Set(Channel);
-  return true;
+  // LNB Sharing
+  cDvbTransponderParameters dtp(Channel->Parameters());
+ 
+  if (Channel->Frequency() >= Setup.LnbSLOF) {
+     lnbState = 1;
+  } else {
+     lnbState = 0;
+  }
+  if (dtp.Polarization() == 'v' || dtp.Polarization() == 'V') lnbState += 2;
+  lnbSource = (int*) Diseqcs.Get(CardIndex() + 1, Channel->Source(), Channel->Frequency(), dtp.Polarization());
+
+  cDevice *tmpDevice;
+  if (tmpDevice = GetBadDevice(Channel)){
+     tmpDevice->DetachAllReceivers();
+     if (tmpDevice->CamSlot() && !tmpDevice->CamSlot()->IsDecrypting())
+        tmpDevice->CamSlot()->Assign(NULL);
+
+     tmpDevice->SwitchChannel(Channel, false);
+     }
+  // LNB Sharing End
+ return true;
 }
 
 bool cDvbDevice::HasLock(int TimeoutMs)
@@ -1233,6 +1276,46 @@ bool cDvbDevice::GetTSPacket(uchar *&Data)
      }
   return false;
 }
+
+// LNB - Sharing
+void cDvbDevice::SetLnbNrFromSetup(void)
+{
+  lnbNr = Setup.CardUsesLnbNr[CardIndex()];
+  isyslog("LNB-sharing: setting device %d to use LNB %d", CardIndex() + 1, lnbNr);
+}
+
+bool cDvbDevice::IsShareLnb(const cDevice *Device)
+{ 
+  return this != Device && LnbNr() == Device->LnbNr();
+};
+
+
+bool cDvbDevice::IsLnbConflict(const cChannel *Channel)
+{
+  if(!cSource::IsSat(Channel->Source())) return false;  // no conflict if the new channel is not on sat
+  if(!ProvidesSource(cSource::stSat)) return false;     // no conflict if this device is not on sat
+//if(MaySwitchTransponder()) return false;              // no conflict if this transponder may be switched
+  cDvbTransponderParameters dtp(Channel->Parameters());
+  if (Setup.DiSEqC) {
+    cDiseqc *diseqc;
+    diseqc = Diseqcs.Get(CardIndex() + 1, Channel->Source(), Channel->Frequency(), dtp.Polarization() );
+    if (LnbSource() != (int*) diseqc) return true;
+    return false;
+  } else
+  {
+    char requiredState;
+    if (Channel->Frequency() >= Setup.LnbSLOF) {
+      requiredState = 1 ;
+    } else {
+      requiredState = 0;
+    }
+    if (dtp.Polarization() == 'v' || dtp.Polarization() == 'V') requiredState += 2;
+    if(lnbState != requiredState) return true;
+    return false;
+  }
+}
+// LNB - Sharing Ende
+
 
 // --- cDvbDeviceProbe -------------------------------------------------------
 
