@@ -267,13 +267,15 @@ private:
   time_t lastTimeoutReport;
   fe_delivery_system frontendType;
   cChannel channel;
-  const char *diseqcCommands;
+  cUnicable *unicable;
+  const cDiseqc *diseqcLast;
   eTunerStatus tunerStatus;
   cMutex mutex;
   cCondVar locked;
   cCondVar newSet;
   void ClearEventQueue(void) const;
   bool GetFrontendStatus(fe_status_t &Status) const;
+  void ExecuteDiseqc(const cDiseqc *diseqc, unsigned int &frequency);
   bool SetFrontend(void);
   virtual void Action(void);
 public:
@@ -286,6 +288,9 @@ public:
   bool Locked(int TimeoutMs = 0);
   int GetSignalStrength(void) const;
   int GetSignalQuality(void) const;
+  int UnicableSatcr() const { return unicable ? unicable->Satcr() : -1; }
+  int UnicableBpf() const { return unicable ? unicable->Bpf() : 0; }
+  int UnicablePin() const { return unicable ? unicable->Pin() : -1; }
   };
 
 cDvbTuner::cDvbTuner(int Device, int Fd_Frontend, int Adapter, int Frontend, fe_delivery_system FrontendType)
@@ -299,10 +304,13 @@ cDvbTuner::cDvbTuner(int Device, int Fd_Frontend, int Adapter, int Frontend, fe_
   tuneTimeout = 0;
   lockTimeout = 0;
   lastTimeoutReport = 0;
-  diseqcCommands = NULL;
+  unicable = NULL;
+  diseqcLast = NULL;
   tunerStatus = tsIdle;
-  if (frontendType == SYS_DVBS || frontendType == SYS_DVBS2)
+  if (frontendType == SYS_DVBS || frontendType == SYS_DVBS2) {
      CHECK(ioctl(fd_frontend, FE_SET_VOLTAGE, SEC_VOLTAGE_13)); // must explicitly turn on LNB power
+     unicable = Unicables.GetUnused();
+     }
   SetDescription("tuner on frontend %d/%d", adapter, frontend);
   Start();
 }
@@ -313,6 +321,10 @@ cDvbTuner::~cDvbTuner()
   newSet.Broadcast();
   locked.Broadcast();
   Cancel(3);
+  if (diseqcLast && diseqcLast->Unicable()) {
+    unsigned int frequency = 0;
+    ExecuteDiseqc(diseqcLast, frequency);
+    }
 }
 
 bool cDvbTuner::IsTunedTo(const cChannel *Channel) const
@@ -482,6 +494,43 @@ static unsigned int FrequencyToHz(unsigned int f)
   return f;
 }
 
+void cDvbTuner::ExecuteDiseqc(const cDiseqc *diseqc, unsigned int &frequency)
+{
+  cDiseqc::eDiseqcActions da;
+  for (const char *CurrentAction = NULL; (da = diseqc->Execute(&CurrentAction)) != cDiseqc::daNone; ) {
+    switch (da) {
+      case cDiseqc::daNone:      break;
+      case cDiseqc::daToneOff:   CHECK(ioctl(fd_frontend, FE_SET_TONE, SEC_TONE_OFF)); break;
+      case cDiseqc::daToneOn:    CHECK(ioctl(fd_frontend, FE_SET_TONE, SEC_TONE_ON)); break;
+      case cDiseqc::daVoltage13: CHECK(ioctl(fd_frontend, FE_SET_VOLTAGE, SEC_VOLTAGE_13)); break;
+      case cDiseqc::daVoltage18: CHECK(ioctl(fd_frontend, FE_SET_VOLTAGE, SEC_VOLTAGE_18)); break;
+      case cDiseqc::daMiniA:     CHECK(ioctl(fd_frontend, FE_DISEQC_SEND_BURST, SEC_MINI_A)); break;
+      case cDiseqc::daMiniB:     CHECK(ioctl(fd_frontend, FE_DISEQC_SEND_BURST, SEC_MINI_B)); break;
+      case cDiseqc::daCodes: {
+           int n = 0;
+           const uchar *codes = diseqc->Codes(n);
+           if (codes) {
+             struct dvb_diseqc_master_cmd cmd;
+             cmd.msg_len = min(n, int(sizeof(cmd.msg)));
+             memcpy(cmd.msg, codes, cmd.msg_len);
+             CHECK(ioctl(fd_frontend, FE_DISEQC_SEND_MASTER_CMD, &cmd));
+             }
+           }
+           break;
+      case cDiseqc::daUnicable: {
+           frequency = diseqc->UnicableFreq(frequency, UnicableSatcr(), UnicableBpf());
+           diseqc->UnicablePin(UnicablePin());
+           if (frequency == 0) {
+             CHECK(ioctl(fd_frontend, FE_SET_VOLTAGE, SEC_VOLTAGE_13));
+             esyslog("ERROR: unable to setup unicable frequency for channel %d (f=%u, s=%d, b=%d)", channel.Number(), frequency, UnicableSatcr(), UnicableBpf());
+             }
+           }
+           break; 
+      default: esyslog("ERROR: unknown diseqc command %d", da);
+      }
+    }
+}
+
 bool cDvbTuner::SetFrontend(void)
 {
 #define MAXFRONTENDCMDS 16
@@ -511,34 +560,14 @@ bool cDvbTuner::SetFrontend(void)
      if (Setup.DiSEqC) {
         const cDiseqc *diseqc = Diseqcs.Get(device, channel.Source(), channel.Frequency(), dtp.Polarization());
         if (diseqc) {
-           if (diseqc->Commands() && (!diseqcCommands || strcmp(diseqcCommands, diseqc->Commands()) != 0)) {
-              cDiseqc::eDiseqcActions da;
-              for (const char *CurrentAction = NULL; (da = diseqc->Execute(&CurrentAction)) != cDiseqc::daNone; ) {
-                  switch (da) {
-                    case cDiseqc::daNone:      break;
-                    case cDiseqc::daToneOff:   CHECK(ioctl(fd_frontend, FE_SET_TONE, SEC_TONE_OFF)); break;
-                    case cDiseqc::daToneOn:    CHECK(ioctl(fd_frontend, FE_SET_TONE, SEC_TONE_ON)); break;
-                    case cDiseqc::daVoltage13: CHECK(ioctl(fd_frontend, FE_SET_VOLTAGE, SEC_VOLTAGE_13)); break;
-                    case cDiseqc::daVoltage18: CHECK(ioctl(fd_frontend, FE_SET_VOLTAGE, SEC_VOLTAGE_18)); break;
-                    case cDiseqc::daMiniA:     CHECK(ioctl(fd_frontend, FE_DISEQC_SEND_BURST, SEC_MINI_A)); break;
-                    case cDiseqc::daMiniB:     CHECK(ioctl(fd_frontend, FE_DISEQC_SEND_BURST, SEC_MINI_B)); break;
-                    case cDiseqc::daCodes: {
-                         int n = 0;
-                         const uchar *codes = diseqc->Codes(n);
-                         if (codes) {
-                            struct dvb_diseqc_master_cmd cmd;
-                            cmd.msg_len = min(n, int(sizeof(cmd.msg)));
-                            memcpy(cmd.msg, codes, cmd.msg_len);
-                            CHECK(ioctl(fd_frontend, FE_DISEQC_SEND_MASTER_CMD, &cmd));
-                            }
-                         }
-                         break;
-                    default: esyslog("ERROR: unknown diseqc command %d", da);
-                    }
-                  }
-              diseqcCommands = diseqc->Commands();
-              }
            frequency -= diseqc->Lof();
+           if (diseqc->Commands() && (!diseqcLast || strcmp(diseqcLast->Commands(), diseqc->Commands()) != 0 || diseqc->Unicable())) {
+              ExecuteDiseqc(diseqc, frequency);
+              if (frequency == 0) {
+                 return false;
+                 }
+              diseqcLast = diseqc;
+              }
            }
         else {
            esyslog("ERROR: no DiSEqC parameters found for channel %d", channel.Number());
@@ -657,7 +686,7 @@ void cDvbTuner::Action(void)
           case tsTuned:
                if (Timer.TimedOut()) {
                   tunerStatus = tsSet;
-                  diseqcCommands = NULL;
+                  diseqcLast = NULL;
                   if (time(NULL) - lastTimeoutReport > 60) { // let's not get too many of these
                      isyslog("frontend %d/%d timed out while tuning to channel %d, tp %d", adapter, frontend, channel.Number(), channel.Transponder());
                      lastTimeoutReport = time(NULL);
@@ -667,7 +696,7 @@ void cDvbTuner::Action(void)
           case tsLocked:
                if (Status & FE_REINIT) {
                   tunerStatus = tsSet;
-                  diseqcCommands = NULL;
+                  diseqcLast = NULL;
                   isyslog("frontend %d/%d was reinitialized", adapter, frontend);
                   lastTimeoutReport = 0;
                   continue;
