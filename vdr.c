@@ -598,6 +598,7 @@ int main(int argc, char *argv[])
   Setup.Load(AddDirectory(ConfigDirectory, "setup.conf"));
   Sources.Load(AddDirectory(ConfigDirectory, "sources.conf"), true, true);
   Diseqcs.Load(AddDirectory(ConfigDirectory, "diseqc.conf"), true, Setup.DiSEqC);
+  Unicables.Load(AddDirectory(ConfigDirectory, "unicable.conf"), true);
   Channels.Load(AddDirectory(ConfigDirectory, "channels.conf"), false, true);
   Timers.Load(AddDirectory(ConfigDirectory, "timers.conf"));
   Commands.Load(AddDirectory(ConfigDirectory, "commands.conf"));
