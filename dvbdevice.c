@@ -1214,7 +1214,7 @@ bool cDvbDevice::IsLnbConflict(const cChannel *Channel)
 //if(MaySwitchTransponder()) return false;              // no conflict if this transponder may be switched
   cDvbTransponderParameters dtp(Channel->Parameters());
   if (Setup.DiSEqC) {
-    cDiseqc *diseqc;
+    const cDiseqc *diseqc;
     diseqc = Diseqcs.Get(CardIndex() + 1, Channel->Source(), Channel->Frequency(), dtp.Polarization() );
     if (LnbSource() != (int*) diseqc) return true;
     return false;
