@@ -192,6 +192,8 @@ void cDevice::SetLnbNr(void)
 
 bool cDevice::IsLnbSendSignals(void)
 {
+  if (parentDevice)
+     return parentDevice->IsLnbSendSignals();
   for (int i = 0; device[i] != this && i < numDevices; i++) {
 	if (device[i]->IsShareLnb(this) ) {
 	  isyslog("Device %d: will not send any signal (like 22kHz) to LNB as device %d will do this", cardIndex+1, device[i]->cardIndex + 1);
@@ -793,6 +795,8 @@ bool cDevice::SwitchChannel(int Direction)
 // ML
 cDevice *cDevice::GetBadDevice(const cChannel *Channel)
 {
+  if (parentDevice)
+     return parentDevice->GetBadDevice(Channel);
   if(!cSource::IsSat(Channel->Source())) return NULL;  // no conflict if the new channel is not on sat
   if(!ProvidesSource(cSource::stSat)) return NULL;     // no conflict if this device is not on sat
   for (int i = 0; i < numDevices; i++) {
@@ -812,6 +816,8 @@ cDevice *cDevice::GetBadDevice(const cChannel *Channel)
 
 int cDevice::GetMaxBadPriority(const cChannel *Channel) const
 {                                
+  if (parentDevice)
+     return parentDevice->GetMaxBadPriority(Channel);
   if(!cSource::IsSat(Channel->Source())) return -2;  // no conflict if the new channel is not on sat
   if(!ProvidesSource(cSource::stSat)) return -2;     // no conflict if this device is not on sat
 
@@ -835,6 +841,8 @@ int cDevice::GetMaxBadPriority(const cChannel *Channel) const
 
 bool cDevice::IsShareAvoidDevice(const cChannel *Channel, const cDevice *AvoidDevice) const
 {                                
+  if (parentDevice)
+     return parentDevice->IsShareAvoidDevice(Channel, AvoidDevice);
   if(!cSource::IsSat(Channel->Source())) return false;  // no conflict if the new channel is not on sat
   if(!ProvidesSource(cSource::stSat)) return false;     // no conflict if this device is not on sat
 

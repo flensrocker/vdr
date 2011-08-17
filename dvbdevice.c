@@ -1286,7 +1286,7 @@ void cDvbDevice::SetLnbNrFromSetup(void)
 
 bool cDvbDevice::IsShareLnb(const cDevice *Device)
 { 
-  return this != Device && LnbNr() == Device->LnbNr();
+  return this != Device && this->parentDevice != Device && LnbNr() == Device->LnbNr();
 };
 
 
