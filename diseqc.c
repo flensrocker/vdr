@@ -102,9 +102,11 @@ const char *cDiseqc::Codes(const char *s) const
               char *p;
               int n = strtol(t, &p, 16);
               if (!errno && p != t && 0 <= n && n <= 255) {
-                 if (!parsing)
+                 // unicable: don't read codes again, since there are some "presets"
+                 if ((unicable < 0) || (parsing && (unicable >= 0))) {
                     codes[NumCodes] = uchar(n);
-                 ++NumCodes;
+                    ++NumCodes;
+                    }
                  t = skipspace(p);
                  }
               else {
@@ -117,7 +119,7 @@ const char *cDiseqc::Codes(const char *s) const
               return NULL;
               }
            }
-     if (parsing)
+     if (parsing || (unicable < 0))
         numCodes = NumCodes;
      return e + 1;
      }
