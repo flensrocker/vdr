@@ -399,6 +399,10 @@ cSetup::cSetup(void)
   InitialVolume = -1;
   ChannelsWrap = 0;
   EmergencyExit = 1;
+//ML
+  VerboseLNBlog = 0;
+  for (int i = 0; i < MAXDEVICES; i++) CardUsesLnbNr[i] = i + 1;
+//ML-Ende
 }
 
 cSetup& cSetup::operator= (const cSetup &s)
@@ -592,7 +596,23 @@ bool cSetup::Parse(const char *Name, const char *Value)
   else if (!strcasecmp(Name, "ChannelsWrap"))        ChannelsWrap       = atoi(Value);
   else if (!strcasecmp(Name, "EmergencyExit"))       EmergencyExit      = atoi(Value);
   else
-     return false;
+
+//ML
+  if (!strcasecmp(Name, "VerboseLNBlog")) VerboseLNBlog = atoi(Value);
+  else {
+    char tmp[20];
+    bool result = false;
+    for (int i = 1; i <= MAXDEVICES; i++) {
+      sprintf(tmp, "Card%dusesLNBnr", i);
+      if (!strcasecmp(Name, tmp)) {
+        CardUsesLnbNr[i - 1] = atoi(Value);
+        result = true;
+      }
+    }  
+     return result;
+  }
+//ML-Ende
+
   return true;
 }
 
@@ -687,6 +707,17 @@ bool cSetup::Save(void)
   Store("InitialVolume",      InitialVolume);
   Store("ChannelsWrap",       ChannelsWrap);
   Store("EmergencyExit",      EmergencyExit);
+
+//ML
+  Store("VerboseLNBlog",       VerboseLNBlog);
+  char tmp[20];
+  if (cDevice::NumDevices() > 1) {
+     for (int i = 1; i <= cDevice::NumDevices(); i++) {
+        sprintf(tmp, "Card%dusesLNBnr", i);
+        Store(tmp, CardUsesLnbNr[i - 1]);
+     }
+  }
+//ML-Ende
 
   Sort();
 

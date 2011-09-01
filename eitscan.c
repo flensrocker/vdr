@@ -143,7 +143,7 @@ void cEITScanner::Process(void)
            bool AnyDeviceSwitched = false;
            for (int i = 0; i < cDevice::NumDevices(); i++) {
                cDevice *Device = cDevice::GetDevice(i);
-               if (Device) {
+               if (Device && Device->CanScanForEPG()) {
                   for (cScanData *ScanData = scanList->First(); ScanData; ScanData = scanList->Next(ScanData)) {
                       const cChannel *Channel = ScanData->GetChannel();
                       if (Channel) {
@@ -151,9 +151,11 @@ void cEITScanner::Process(void)
                             if (Device->ProvidesTransponder(Channel)) {
                                if (!Device->Receiving()) {
                                   bool MaySwitchTransponder = Device->MaySwitchTransponder();
-                                  if (MaySwitchTransponder || Device->ProvidesTransponderExclusively(Channel) && now - lastActivity > Setup.EPGScanTimeout * 3600) {
+//ML
+                                  if (MaySwitchTransponder && Device->GetMaxBadPriority(Channel) == -2 || (MaySwitchTransponder || Device->ProvidesTransponderExclusively(Channel)) && Device->GetMaxBadPriority(Channel) <= -1 && now - lastActivity > Setup.EPGScanTimeout * 3600) {
                                      if (!MaySwitchTransponder) {
-                                        if (Device == cDevice::ActualDevice() && !currentChannel) {
+                                        if ((Device == cDevice::ActualDevice() || Device->GetMaxBadPriority(Channel) == -1) && !currentChannel) {
+//ML-Ende
                                            cDevice::PrimaryDevice()->StopReplay(); // stop transfer mode
                                            currentChannel = Device->CurrentChannel();
                                            Skins.Message(mtInfo, tr("Starting EPG scan"));

@@ -264,32 +264,52 @@ private:
   uint32_t subsystemId;
   int tuneTimeout;
   int lockTimeout;
+  bool lnbSendSignals;   // LNB Sharing.  false if this device must not send signals to the LNB (like 22 kHz, ...).
   time_t lastTimeoutReport;
   fe_delivery_system frontendType;
   cChannel channel;
-  const char *diseqcCommands;
+  cUnicable *unicable;
+  const cDiseqc *diseqcLast;
   eTunerStatus tunerStatus;
   cMutex mutex;
   cCondVar locked;
   cCondVar newSet;
-  void ClearEventQueue(void) const;
-  bool GetFrontendStatus(fe_status_t &Status) const;
+  void ClearEventQueue(void);
+  bool GetFrontendStatus(fe_status_t &Status);
+  void ExecuteDiseqc(const cDiseqc *diseqc, unsigned int &frequency);
   bool SetFrontend(void);
   virtual void Action(void);
+
+  cDvbDevice *dvbdevice;
+  bool isIdle;
+  bool OpenFrontend(void);
+  bool CloseFrontend(void);
 public:
-  cDvbTuner(int Device, int Fd_Frontend, int Adapter, int Frontend, fe_delivery_system FrontendType);
+  cDvbTuner(int Device, int Fd_Frontend, int Adapter, int Frontend, fe_delivery_system FrontendType, cDvbDevice *Dvbdevice);
   virtual ~cDvbTuner();
   const cChannel *GetTransponder(void) const { return &channel; }
   uint32_t SubsystemId(void) const { return subsystemId; }
   bool IsTunedTo(const cChannel *Channel) const;
   void Set(const cChannel *Channel);
   bool Locked(int TimeoutMs = 0);
-  int GetSignalStrength(void) const;
-  int GetSignalQuality(void) const;
+  int GetSignalStrength(void);
+  int GetSignalQuality(void);
+
+  bool SetIdle(bool Idle);
+  bool IsIdle(void) const { return isIdle; }
+
+  int UnicableSatcr() const { return unicable ? unicable->Satcr() : -1; }
+  int UnicableBpf() const { return unicable ? unicable->Bpf() : 0; }
+  int UnicablePin() const { return unicable ? unicable->Pin() : -1; }
   };
 
-cDvbTuner::cDvbTuner(int Device, int Fd_Frontend, int Adapter, int Frontend, fe_delivery_system FrontendType)
+cDvbTuner::cDvbTuner(int Device, int Fd_Frontend, int Adapter, int Frontend, fe_delivery_system FrontendType, cDvbDevice *Dvbdevice)
 {
+// LNB Sharing
+  if(Dvbdevice) {
+	lnbSendSignals = Dvbdevice->IsLnbSendSignals();  
+  } else lnbSendSignals = true;
+// END LNB Sharing
   device = Device;
   fd_frontend = Fd_Frontend;
   adapter = Adapter;
@@ -299,10 +319,15 @@ cDvbTuner::cDvbTuner(int Device, int Fd_Frontend, int Adapter, int Frontend, fe_
   tuneTimeout = 0;
   lockTimeout = 0;
   lastTimeoutReport = 0;
-  diseqcCommands = NULL;
+  unicable = NULL;
+  diseqcLast = NULL;
   tunerStatus = tsIdle;
-  if (frontendType == SYS_DVBS || frontendType == SYS_DVBS2)
-     CHECK(ioctl(fd_frontend, FE_SET_VOLTAGE, SEC_VOLTAGE_13)); // must explicitly turn on LNB power
+  dvbdevice = Dvbdevice;
+  isIdle = false;
+  if (frontendType == SYS_DVBS || frontendType == SYS_DVBS2) {
+     if(lnbSendSignals) CHECK(ioctl(fd_frontend, FE_SET_VOLTAGE, SEC_VOLTAGE_13)); // must explicitly turn on LNB power
+     unicable = Unicables.GetUnused();
+     }
   SetDescription("tuner on frontend %d/%d", adapter, frontend);
   Start();
 }
@@ -313,6 +338,12 @@ cDvbTuner::~cDvbTuner()
   newSet.Broadcast();
   locked.Broadcast();
   Cancel(3);
+  if (diseqcLast && diseqcLast->Unicable()) {
+     unsigned int frequency = 0;
+     ExecuteDiseqc(diseqcLast, frequency);
+     }
+  if (dvbdevice && dvbdevice->IsSubDevice())
+     CloseFrontend();
 }
 
 bool cDvbTuner::IsTunedTo(const cChannel *Channel) const
@@ -347,8 +378,10 @@ bool cDvbTuner::Locked(int TimeoutMs)
   return tunerStatus >= tsLocked;
 }
 
-void cDvbTuner::ClearEventQueue(void) const
+void cDvbTuner::ClearEventQueue(void)
 {
+  if (!OpenFrontend())
+     return;
   cPoller Poller(fd_frontend);
   if (Poller.Poll(TUNER_POLL_TIMEOUT)) {
      dvb_frontend_event Event;
@@ -357,7 +390,7 @@ void cDvbTuner::ClearEventQueue(void) const
      }
 }
 
-bool cDvbTuner::GetFrontendStatus(fe_status_t &Status) const
+bool cDvbTuner::GetFrontendStatus(fe_status_t &Status)
 {
   ClearEventQueue();
   while (1) {
@@ -372,7 +405,7 @@ bool cDvbTuner::GetFrontendStatus(fe_status_t &Status) const
 //#define DEBUG_SIGNALSTRENGTH
 //#define DEBUG_SIGNALQUALITY
 
-int cDvbTuner::GetSignalStrength(void) const
+int cDvbTuner::GetSignalStrength(void)
 {
   ClearEventQueue();
   uint16_t Signal;
@@ -399,7 +432,7 @@ int cDvbTuner::GetSignalStrength(void) const
 
 #define LOCK_THRESHOLD 5 // indicates that all 5 FE_HAS_* flags are set
 
-int cDvbTuner::GetSignalQuality(void) const
+int cDvbTuner::GetSignalQuality(void)
 {
   fe_status_t Status;
   if (GetFrontendStatus(Status)) {
@@ -482,8 +515,51 @@ static unsigned int FrequencyToHz(unsigned int f)
   return f;
 }
 
+void cDvbTuner::ExecuteDiseqc(const cDiseqc *diseqc, unsigned int &frequency)
+{
+  // LNB sharing
+  if (!lnbSendSignals)
+     return;
+  // LNB sharing
+  cDiseqc::eDiseqcActions da;
+  for (const char *CurrentAction = NULL; (da = diseqc->Execute(&CurrentAction)) != cDiseqc::daNone; ) {
+    switch (da) {
+      case cDiseqc::daNone:      break;
+      case cDiseqc::daToneOff:   CHECK(ioctl(fd_frontend, FE_SET_TONE, SEC_TONE_OFF)); break;
+      case cDiseqc::daToneOn:    CHECK(ioctl(fd_frontend, FE_SET_TONE, SEC_TONE_ON)); break;
+      case cDiseqc::daVoltage13: CHECK(ioctl(fd_frontend, FE_SET_VOLTAGE, SEC_VOLTAGE_13)); break;
+      case cDiseqc::daVoltage18: CHECK(ioctl(fd_frontend, FE_SET_VOLTAGE, SEC_VOLTAGE_18)); break;
+      case cDiseqc::daMiniA:     CHECK(ioctl(fd_frontend, FE_DISEQC_SEND_BURST, SEC_MINI_A)); break;
+      case cDiseqc::daMiniB:     CHECK(ioctl(fd_frontend, FE_DISEQC_SEND_BURST, SEC_MINI_B)); break;
+      case cDiseqc::daCodes: {
+           int n = 0;
+           const uchar *codes = diseqc->Codes(n);
+           if (codes) {
+             struct dvb_diseqc_master_cmd cmd;
+             cmd.msg_len = min(n, int(sizeof(cmd.msg)));
+             memcpy(cmd.msg, codes, cmd.msg_len);
+             CHECK(ioctl(fd_frontend, FE_DISEQC_SEND_MASTER_CMD, &cmd));
+             }
+           }
+           break;
+      case cDiseqc::daUnicable: {
+           frequency = diseqc->UnicableFreq(frequency, UnicableSatcr(), UnicableBpf());
+           diseqc->UnicablePin(UnicablePin());
+           if (frequency == 0) {
+             CHECK(ioctl(fd_frontend, FE_SET_VOLTAGE, SEC_VOLTAGE_13));
+             esyslog("ERROR: unable to setup unicable frequency for channel %d (f=%u, s=%d, b=%d)", channel.Number(), frequency, UnicableSatcr(), UnicableBpf());
+             }
+           }
+           break; 
+      default: esyslog("ERROR: unknown diseqc command %d", da);
+      }
+    }
+}
+
 bool cDvbTuner::SetFrontend(void)
 {
+  if (!OpenFrontend())
+     return false;
 #define MAXFRONTENDCMDS 16
 #define SETCMD(c, d) { Frontend[CmdSeq.num].cmd = (c);\
                        Frontend[CmdSeq.num].u.data = (d);\
@@ -511,34 +587,14 @@ bool cDvbTuner::SetFrontend(void)
      if (Setup.DiSEqC) {
         const cDiseqc *diseqc = Diseqcs.Get(device, channel.Source(), channel.Frequency(), dtp.Polarization());
         if (diseqc) {
-           if (diseqc->Commands() && (!diseqcCommands || strcmp(diseqcCommands, diseqc->Commands()) != 0)) {
-              cDiseqc::eDiseqcActions da;
-              for (const char *CurrentAction = NULL; (da = diseqc->Execute(&CurrentAction)) != cDiseqc::daNone; ) {
-                  switch (da) {
-                    case cDiseqc::daNone:      break;
-                    case cDiseqc::daToneOff:   CHECK(ioctl(fd_frontend, FE_SET_TONE, SEC_TONE_OFF)); break;
-                    case cDiseqc::daToneOn:    CHECK(ioctl(fd_frontend, FE_SET_TONE, SEC_TONE_ON)); break;
-                    case cDiseqc::daVoltage13: CHECK(ioctl(fd_frontend, FE_SET_VOLTAGE, SEC_VOLTAGE_13)); break;
-                    case cDiseqc::daVoltage18: CHECK(ioctl(fd_frontend, FE_SET_VOLTAGE, SEC_VOLTAGE_18)); break;
-                    case cDiseqc::daMiniA:     CHECK(ioctl(fd_frontend, FE_DISEQC_SEND_BURST, SEC_MINI_A)); break;
-                    case cDiseqc::daMiniB:     CHECK(ioctl(fd_frontend, FE_DISEQC_SEND_BURST, SEC_MINI_B)); break;
-                    case cDiseqc::daCodes: {
-                         int n = 0;
-                         const uchar *codes = diseqc->Codes(n);
-                         if (codes) {
-                            struct dvb_diseqc_master_cmd cmd;
-                            cmd.msg_len = min(n, int(sizeof(cmd.msg)));
-                            memcpy(cmd.msg, codes, cmd.msg_len);
-                            CHECK(ioctl(fd_frontend, FE_DISEQC_SEND_MASTER_CMD, &cmd));
-                            }
-                         }
-                         break;
-                    default: esyslog("ERROR: unknown diseqc command %d", da);
-                    }
-                  }
-              diseqcCommands = diseqc->Commands();
-              }
            frequency -= diseqc->Lof();
+           if (diseqc->Commands() && (!diseqcLast || strcmp(diseqcLast->Commands(), diseqc->Commands()) != 0 || diseqc->Unicable())) {
+              ExecuteDiseqc(diseqc, frequency);
+              if (frequency == 0) {
+                 return false;
+                 }
+              diseqcLast = diseqc;
+              }
            }
         else {
            esyslog("ERROR: no DiSEqC parameters found for channel %d", channel.Number());
@@ -555,9 +611,11 @@ bool cDvbTuner::SetFrontend(void)
            frequency -= Setup.LnbFrequHi;
            tone = SEC_TONE_ON;
            }
-        int volt = (dtp.Polarization() == 'v' || dtp.Polarization() == 'V' || dtp.Polarization() == 'r' || dtp.Polarization() == 'R') ? SEC_VOLTAGE_13 : SEC_VOLTAGE_18;
-        CHECK(ioctl(fd_frontend, FE_SET_VOLTAGE, volt));
-        CHECK(ioctl(fd_frontend, FE_SET_TONE, tone));
+        if(lnbSendSignals) {  // LNB sharing
+          int volt = (dtp.Polarization() == 'v' || dtp.Polarization() == 'V' || dtp.Polarization() == 'r' || dtp.Polarization() == 'R') ? SEC_VOLTAGE_13 : SEC_VOLTAGE_18;
+          CHECK(ioctl(fd_frontend, FE_SET_VOLTAGE, volt));
+          CHECK(ioctl(fd_frontend, FE_SET_TONE, tone));
+          }   // LNB sharing
         }
      frequency = abs(frequency); // Allow for C-band, where the frequency is less than the LOF
 
@@ -643,9 +701,11 @@ void cDvbTuner::Action(void)
   bool LostLock = false;
   fe_status_t Status = (fe_status_t)0;
   while (Running()) {
-        fe_status_t NewStatus;
-        if (GetFrontendStatus(NewStatus))
-           Status = NewStatus;
+        if (!isIdle) {
+           fe_status_t NewStatus;
+           if (GetFrontendStatus(NewStatus))
+              Status = NewStatus;
+           }
         cMutexLock MutexLock(&mutex);
         switch (tunerStatus) {
           case tsIdle:
@@ -657,7 +717,7 @@ void cDvbTuner::Action(void)
           case tsTuned:
                if (Timer.TimedOut()) {
                   tunerStatus = tsSet;
-                  diseqcCommands = NULL;
+                  diseqcLast = NULL;
                   if (time(NULL) - lastTimeoutReport > 60) { // let's not get too many of these
                      isyslog("frontend %d/%d timed out while tuning to channel %d, tp %d", adapter, frontend, channel.Number(), channel.Transponder());
                      lastTimeoutReport = time(NULL);
@@ -667,7 +727,7 @@ void cDvbTuner::Action(void)
           case tsLocked:
                if (Status & FE_REINIT) {
                   tunerStatus = tsSet;
-                  diseqcCommands = NULL;
+                  diseqcLast = NULL;
                   isyslog("frontend %d/%d was reinitialized", adapter, frontend);
                   lastTimeoutReport = 0;
                   continue;
@@ -696,6 +756,45 @@ void cDvbTuner::Action(void)
         if (tunerStatus != tsTuned)
            newSet.TimedWait(mutex, 1000);
         }
+}
+
+bool cDvbTuner::SetIdle(bool Idle)
+{
+  if (isIdle == Idle)
+     return true;
+  isIdle = Idle;
+  if (Idle)
+     return CloseFrontend();
+  return OpenFrontend();
+}
+
+bool cDvbTuner::OpenFrontend(void)
+{
+  if (fd_frontend >= 0)
+     return true;
+  cMutexLock MutexLock(&mutex);
+  fd_frontend = cDvbDevice::DvbOpen(DEV_DVB_FRONTEND, adapter, frontend, O_RDWR | O_NONBLOCK);
+  if (fd_frontend < 0)
+     return false;
+  if (frontendType == SYS_DVBS || frontendType == SYS_DVBS2)
+#ifdef LNB_SHARING_VERSION
+     if (lnbSendSignals)
+#endif
+     CHECK(ioctl(fd_frontend, FE_SET_VOLTAGE, SEC_VOLTAGE_13)); // must explicitly turn on LNB power
+  isIdle = false;
+  return true;
+}
+
+bool cDvbTuner::CloseFrontend(void)
+{
+  if (fd_frontend < 0)
+     return true;
+  cMutexLock MutexLock(&mutex);
+  tunerStatus = tsIdle;
+  newSet.Broadcast();
+  close(fd_frontend);
+  fd_frontend = -1;
+  return true;
 }
 
 // --- cDvbSourceParam -------------------------------------------------------
@@ -778,7 +877,8 @@ const char *DeliverySystems[] = {
   NULL
   };
 
-cDvbDevice::cDvbDevice(int Adapter, int Frontend)
+cDvbDevice::cDvbDevice(int Adapter, int Frontend, cDevice *ParentDevice)
+:cDevice(ParentDevice)
 {
   adapter = Adapter;
   frontend = Frontend;
@@ -795,7 +895,7 @@ cDvbDevice::cDvbDevice(int Adapter, int Frontend)
 
   fd_ca = DvbOpen(DEV_DVB_CA, adapter, frontend, O_RDWR);
   if (fd_ca >= 0)
-     ciAdapter = cDvbCiAdapter::CreateCiAdapter(this, fd_ca);
+     ciAdapter = cDvbCiAdapter::CreateCiAdapter(parentDevice ? parentDevice : this, fd_ca, Adapter, Frontend);
 
   // The DVR device (will be opened and closed as needed):
 
@@ -835,7 +935,14 @@ cDvbDevice::cDvbDevice(int Adapter, int Frontend)
         else
            p = (char *)"unknown modulations";
         isyslog("frontend %d/%d provides %s with %s (\"%s\")", adapter, frontend, DeliverySystems[frontendType], p, frontendInfo.name);
-        dvbTuner = new cDvbTuner(CardIndex() + 1, fd_frontend, adapter, frontend, frontendType);
+        
+//ML
+        isyslog("LNB-sharing: patch version %s", LNB_SHARING_VERSION);
+        lnbState = -1;
+        SetLnbNrFromSetup();
+        lnbSource = NULL;
+        dvbTuner = new cDvbTuner(CardIndex() + 1, fd_frontend, adapter, frontend, frontendType, this);
+//ML-Ende
         }
      }
   else
@@ -938,6 +1045,31 @@ bool cDvbDevice::Ready(void)
   if (ciAdapter)
      return ciAdapter->Ready();
   return true;
+}
+
+bool cDvbDevice::SetIdleDevice(bool Idle, bool TestOnly)
+{
+  if (TestOnly) {
+     if (ciAdapter)
+        return ciAdapter->SetIdle(Idle, true);
+     return true;
+     }
+  if (!dvbTuner->SetIdle(Idle))
+     return false;
+  if (ciAdapter && !ciAdapter->SetIdle(Idle, false)) {
+     dvbTuner->SetIdle(!Idle);
+     return false;
+     }
+  if (Idle)
+     StopSectionHandler();
+  else
+     StartSectionHandler();
+  return true;
+}
+
+bool cDvbDevice::CanScanForEPG(void) const
+{
+  return !IsIdle() && !dvbTuner->IsIdle() && ((ciAdapter == NULL) || !ciAdapter->IsIdle());
 }
 
 bool cDvbDevice::HasCi(void)
@@ -1051,6 +1183,12 @@ bool cDvbDevice::ProvidesChannel(const cChannel *Channel, int Priority, bool *Ne
 {
   bool result = false;
   bool hasPriority = Priority < 0 || Priority > this->Priority();
+  // LNB Sharing
+  if(hasPriority && GetMaxBadPriority(Channel) >= Priority) hasPriority = false;
+  if (Setup.VerboseLNBlog) {
+   isyslog("LNB %d: ProvidesChannel %d on device %d. Priority is %d, hasPriority is %d", LnbNr(), Channel->Number(), this->DeviceNumber() + 1, Priority, hasPriority);
+  }
+  // LNB Sharing END
   bool needsDetachReceivers = false;
 
   if (dvbTuner && ProvidesTransponder(Channel)) {
@@ -1110,7 +1248,27 @@ bool cDvbDevice::SetChannelDevice(const cChannel *Channel, bool LiveView)
 {
   if (dvbTuner)
      dvbTuner->Set(Channel);
-  return true;
+  // LNB Sharing
+  cDvbTransponderParameters dtp(Channel->Parameters());
+ 
+  if (Channel->Frequency() >= Setup.LnbSLOF) {
+     lnbState = 1;
+  } else {
+     lnbState = 0;
+  }
+  if (dtp.Polarization() == 'v' || dtp.Polarization() == 'V') lnbState += 2;
+  lnbSource = (int*) Diseqcs.Get(CardIndex() + 1, Channel->Source(), Channel->Frequency(), dtp.Polarization());
+
+  cDevice *tmpDevice;
+  if (tmpDevice = GetBadDevice(Channel)){
+     tmpDevice->DetachAllReceivers();
+     if (tmpDevice->CamSlot() && !tmpDevice->CamSlot()->IsDecrypting())
+        tmpDevice->CamSlot()->Assign(NULL);
+
+     tmpDevice->SwitchChannel(Channel, false);
+     }
+  // LNB Sharing End
+ return true;
 }
 
 bool cDvbDevice::HasLock(int TimeoutMs)
@@ -1150,6 +1308,45 @@ bool cDvbDevice::GetTSPacket(uchar *&Data)
      }
   return false;
 }
+
+// LNB - Sharing
+void cDvbDevice::SetLnbNrFromSetup(void)
+{
+  lnbNr = Setup.CardUsesLnbNr[CardIndex()];
+  isyslog("LNB-sharing: setting device %d to use LNB %d", CardIndex() + 1, lnbNr);
+}
+
+bool cDvbDevice::IsShareLnb(const cDevice *Device)
+{
+  return this != Device && this->parentDevice != Device && LnbNr() == Device->LnbNr();
+}
+
+bool cDvbDevice::IsLnbConflict(const cChannel *Channel)
+{
+  if(!cSource::IsSat(Channel->Source())) return false;  // no conflict if the new channel is not on sat
+  if(!ProvidesSource(cSource::stSat)) return false;     // no conflict if this device is not on sat
+//if(MaySwitchTransponder()) return false;              // no conflict if this transponder may be switched
+  cDvbTransponderParameters dtp(Channel->Parameters());
+  if (Setup.DiSEqC) {
+    const cDiseqc *diseqc;
+    diseqc = Diseqcs.Get(CardIndex() + 1, Channel->Source(), Channel->Frequency(), dtp.Polarization() );
+    if (LnbSource() != (int*) diseqc) return true;
+    return false;
+  } else
+  {
+    char requiredState;
+    if (Channel->Frequency() >= Setup.LnbSLOF) {
+      requiredState = 1 ;
+    } else {
+      requiredState = 0;
+    }
+    if (dtp.Polarization() == 'v' || dtp.Polarization() == 'V') requiredState += 2;
+    if(lnbState != requiredState) return true;
+    return false;
+  }
+}
+// LNB - Sharing Ende
+
 
 // --- cDvbDeviceProbe -------------------------------------------------------
 
