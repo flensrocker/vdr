@@ -283,6 +283,10 @@ public:
          ///< function itself actually returns true.
          ///< The default implementation always returns false, so a derived cDevice
          ///< class that can provide channels must implement this function.
+  virtual bool ProvidesEIT(void) const;
+         ///< Returns true if this device provides EIT data and thus wants to be tuned
+         ///< to the channels it can receive regularly to update the data.
+         ///< The default implementation returns false.
   virtual int NumProvidedSystems(void) const;
          ///< Returns the number of individual "delivery systems" this device provides.
          ///< The default implementation returns 0, so any derived class that can
@@ -785,7 +789,6 @@ public:
          ///< Called by SetIdle
          ///< if TestOnly, don't do anything, just return, if the device
          ///< can be set to the new idle state
-  virtual bool CanScanForEPG(void) const { return !IsIdle(); }
   // --- dynamite subdevice patch end ---
   };
 

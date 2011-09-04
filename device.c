@@ -705,6 +705,11 @@ bool cDevice::ProvidesChannel(const cChannel *Channel, int Priority, bool *Needs
   return false;
 }
 
+bool cDevice::ProvidesEIT(void) const
+{
+  return false;
+}
+
 int cDevice::NumProvidedSystems(void) const
 {
   return 0;
