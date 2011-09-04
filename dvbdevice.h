@@ -128,7 +128,6 @@ public:
   virtual bool Ready(void);
 
   virtual bool SetIdleDevice(bool Idle, bool TestOnly);
-  virtual bool CanScanForEPG(void) const;
 
 // Common Interface facilities:
 
@@ -143,6 +142,7 @@ public:
   virtual bool ProvidesSource(int Source) const;
   virtual bool ProvidesTransponder(const cChannel *Channel) const;
   virtual bool ProvidesChannel(const cChannel *Channel, int Priority = -1, bool *NeedsDetachReceivers = NULL) const;
+  virtual bool ProvidesEIT(void) const;
   virtual int NumProvidedSystems(void) const;
   virtual int SignalStrength(void) const;
   virtual int SignalQuality(void) const;

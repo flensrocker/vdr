@@ -1018,11 +1018,6 @@ bool cDvbDevice::SetIdleDevice(bool Idle, bool TestOnly)
   return true;
 }
 
-bool cDvbDevice::CanScanForEPG(void) const
-{
-  return !IsIdle() && !dvbTuner->IsIdle() && ((ciAdapter == NULL) || !ciAdapter->IsIdle());
-}
-
 bool cDvbDevice::HasCi(void)
 {
   return ciAdapter;
@@ -1162,6 +1157,11 @@ bool cDvbDevice::ProvidesChannel(const cChannel *Channel, int Priority, bool *Ne
   if (NeedsDetachReceivers)
      *NeedsDetachReceivers = needsDetachReceivers;
   return result;
+}
+
+bool cDvbDevice::ProvidesEIT(void) const
+{
+  return !IsIdle() && (dvbTuner != NULL) && !dvbTuner->IsIdle() && ((ciAdapter == NULL) || !ciAdapter->IsIdle());
 }
 
 int cDvbDevice::NumProvidedSystems(void) const
