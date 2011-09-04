@@ -102,7 +102,7 @@ class cDvbTuner;
 /// The cDvbDevice implements a DVB device which can be accessed through the Linux DVB driver API.
 
 class cDvbDevice : public cDevice {
-protected:
+public:
   static cString DvbName(const char *Name, int Adapter, int Frontend);
   static int DvbOpen(const char *Name, int Adapter, int Frontend, int Mode, bool ReportError = false);
 private:
@@ -123,9 +123,11 @@ private:
   fe_delivery_system frontendType;
   int fd_dvr, fd_ca;
 public:
-  cDvbDevice(int Adapter, int Frontend);
+  cDvbDevice(int Adapter, int Frontend, cDevice *ParentDevice = NULL);
   virtual ~cDvbDevice();
   virtual bool Ready(void);
+
+  virtual bool SetIdleDevice(bool Idle, bool TestOnly);
 
 // Common Interface facilities:
 
