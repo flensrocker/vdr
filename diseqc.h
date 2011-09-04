@@ -23,6 +23,7 @@ public:
     daMiniA,
     daMiniB,
     daCodes,
+    daUnicable,
     };
   enum { MaxDiseqcCodes = 6 };
 private:
@@ -32,11 +33,13 @@ private:
   char polarization;
   int lof;
   char *commands;
+  mutable int unicable;
   bool parsing;
   mutable uchar codes[MaxDiseqcCodes];
   mutable int numCodes;
   const char *Wait(const char *s) const;
   const char *Codes(const char *s) const;
+  const char *Unicable(const char *s) const;
 public:
   cDiseqc(void);
   ~cDiseqc();
@@ -56,6 +59,9 @@ public:
   int Lof(void) const { return lof; }
   const char *Commands(void) const { return commands; }
   const uchar *Codes(int &NumCodes) const { NumCodes = numCodes; return numCodes ? codes : NULL; }
+  bool Unicable() const { return unicable >= 0; }
+  unsigned int UnicableFreq(unsigned int frequency, int satcr, unsigned int bpf) const;
+  void UnicablePin(int pin) const;
   };
 
 class cDiseqcs : public cConfig<cDiseqc> {
@@ -64,5 +70,28 @@ public:
   };
 
 extern cDiseqcs Diseqcs;
+
+class cUnicable : public cListObject {
+private:
+  int satcr;
+  unsigned int bpf;
+  int pin;
+  bool unused;
+public:
+  cUnicable();
+  bool Parse(const char *s);
+  int Satcr() const { return satcr; }
+  unsigned int Bpf() const { return bpf; }
+  int Pin() const { return pin; }
+  bool Unused() const { return unused; }
+  void Use() { unused = false; }
+  };
+
+class cUnicables : public cConfig<cUnicable> {
+public:
+  cUnicable *GetUnused();
+  };
+
+extern cUnicables Unicables;
 
 #endif //__DISEQC_H

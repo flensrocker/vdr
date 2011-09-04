@@ -102,7 +102,7 @@ class cDvbTuner;
 /// The cDvbDevice implements a DVB device which can be accessed through the Linux DVB driver API.
 
 class cDvbDevice : public cDevice {
-protected:
+public:
   static cString DvbName(const char *Name, int Adapter, int Frontend);
   static int DvbOpen(const char *Name, int Adapter, int Frontend, int Mode, bool ReportError = false);
 private:
@@ -123,9 +123,26 @@ private:
   fe_delivery_system frontendType;
   int fd_dvr, fd_ca;
 public:
-  cDvbDevice(int Adapter, int Frontend);
+  cDvbDevice(int Adapter, int Frontend, cDevice *ParentDevice = NULL);
   virtual ~cDvbDevice();
   virtual bool Ready(void);
+
+  virtual bool SetIdleDevice(bool Idle, bool TestOnly);
+
+// LNB Sharing
+private:
+  char lnbState;  // Current frequency band and polarization of the DVB-tuner
+  //  cDiseqc *lnbSource;  // can not #include "diseqc.h". A workaround follows:
+  int *lnbSource;  // [DiSEqC] DiSEqC-Source
+  int lnbNr;      // Number of LNB used
+
+public:
+  int *LnbSource(void) { return lnbSource; };
+  virtual int LnbNr(void) const { if(ProvidesSource(cSource::stSat)) return lnbNr; return (CardIndex() + 1) * -1;};
+  virtual void SetLnbNrFromSetup(void);
+  virtual bool IsLnbConflict(const cChannel *Channel);
+  virtual bool IsShareLnb(const cDevice *Device);
+// LNB Sharing Ende
 
 // Common Interface facilities:
 
