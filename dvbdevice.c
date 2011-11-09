@@ -839,7 +839,7 @@ cDvbDevice::cDvbDevice(int Adapter, int Frontend, cDevice *ParentDevice)
 :cDevice(ParentDevice)
 {
   adapter = Adapter;
-  frontend = Frontend;
+  demux = dvr = frontend = Frontend;
   ciAdapter = NULL;
   dvbTuner = NULL;
   frontendType = SYS_UNDEFINED;
@@ -862,6 +862,26 @@ cDvbDevice::cDvbDevice(int Adapter, int Frontend, cDevice *ParentDevice)
   // We only check the devices that must be present - the others will be checked before accessing them://XXX
 
   if (fd_frontend >= 0) {
+     // workaround vor Cine-C/T-cards which creates multiple mutually exclusive frontends with only one demux/dvr
+     while ((demux >= 0) && !Exists(DEV_DVB_DEMUX, adapter, demux))
+           demux--;
+     if (demux < 0) {
+        demux = frontend;
+        esyslog("frontend %d/%d has no demux device", adapter, frontend);
+        }
+     else if (demux != frontend)
+        isyslog("frontend %d/%d will use demux%d", adapter, frontend, demux);
+
+     while ((dvr >= 0) && !Exists(DEV_DVB_DVR, adapter, dvr))
+           dvr--;
+     if (dvr < 0) {
+        dvr = frontend;
+        esyslog("frontend %d/%d has no dvr device", adapter, frontend);
+        }
+     else if (dvr != frontend)
+        isyslog("frontend %d/%d will use dvr%d", adapter, frontend, dvr);
+     // end workaround
+
      if (ioctl(fd_frontend, FE_GET_INFO, &frontendInfo) >= 0) {
         switch (frontendInfo.type) {
           case FE_QPSK: frontendType = (frontendInfo.caps & FE_CAN_2G_MODULATION) ? SYS_DVBS2 : SYS_DVBS; break;
@@ -927,7 +947,12 @@ int cDvbDevice::DvbOpen(const char *Name, int Adapter, int Frontend, int Mode, b
 
 bool cDvbDevice::Exists(int Adapter, int Frontend)
 {
-  cString FileName = DvbName(DEV_DVB_FRONTEND, Adapter, Frontend);
+  return Exists(DEV_DVB_FRONTEND, Adapter, Frontend);
+}
+
+bool cDvbDevice::Exists(const char *Name, int Adapter, int Frontend)
+{
+  cString FileName = DvbName(Name, Adapter, Frontend);
   if (access(FileName, F_OK) == 0) {
      int f = open(FileName, O_RDONLY);
      if (f >= 0) {
@@ -1030,7 +1055,7 @@ bool cDvbDevice::SetPid(cPidHandle *Handle, int Type, bool On)
      memset(&pesFilterParams, 0, sizeof(pesFilterParams));
      if (On) {
         if (Handle->handle < 0) {
-           Handle->handle = DvbOpen(DEV_DVB_DEMUX, adapter, frontend, O_RDWR | O_NONBLOCK, true);
+           Handle->handle = DvbOpen(DEV_DVB_DEMUX, adapter, demux, O_RDWR | O_NONBLOCK, true);
            if (Handle->handle < 0) {
               LOG_ERROR;
               return false;
@@ -1065,7 +1090,7 @@ bool cDvbDevice::SetPid(cPidHandle *Handle, int Type, bool On)
 
 int cDvbDevice::OpenFilter(u_short Pid, u_char Tid, u_char Mask)
 {
-  cString FileName = DvbName(DEV_DVB_DEMUX, adapter, frontend);
+  cString FileName = DvbName(DEV_DVB_DEMUX, adapter, demux);
   int f = open(FileName, O_RDWR | O_NONBLOCK);
   if (f >= 0) {
      dmx_sct_filter_params sctFilterParams;
@@ -1209,7 +1234,7 @@ void cDvbDevice::SetTransferModeForDolbyDigital(int Mode)
 bool cDvbDevice::OpenDvr(void)
 {
   CloseDvr();
-  fd_dvr = DvbOpen(DEV_DVB_DVR, adapter, frontend, O_RDONLY | O_NONBLOCK, true);
+  fd_dvr = DvbOpen(DEV_DVB_DVR, adapter, dvr, O_RDONLY | O_NONBLOCK, true);
   if (fd_dvr >= 0)
      tsBuffer = new cTSBuffer(fd_dvr, MEGABYTE(2), CardIndex() + 1);
   return fd_dvr >= 0;

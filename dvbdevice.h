@@ -106,6 +106,7 @@ public:
   static cString DvbName(const char *Name, int Adapter, int Frontend);
   static int DvbOpen(const char *Name, int Adapter, int Frontend, int Mode, bool ReportError = false);
 private:
+  static bool Exists(const char *Name, int Adapter, int Frontend);
   static bool Exists(int Adapter, int Frontend);
          ///< Checks whether the given adapter/frontend exists.
   static bool Probe(int Adapter, int Frontend);
@@ -116,7 +117,7 @@ public:
          ///< Must be called before accessing any DVB functions.
          ///< \return True if any devices are available.
 protected:
-  int adapter, frontend;
+  int adapter, frontend, demux, dvr;
 private:
   dvb_frontend_info frontendInfo;
   int numProvidedSystems;
