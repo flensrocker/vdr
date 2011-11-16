@@ -1183,6 +1183,28 @@ bool cDvbDevice::IsTunedToTransponder(const cChannel *Channel)
 
 bool cDvbDevice::SetChannelDevice(const cChannel *Channel, bool LiveView)
 {
+  if (numFrontends > 1) {
+     int f = GetFrontend(Channel->Source());
+     if (f < 0)
+        return false;
+     if (currentFrontend != f) {
+        isyslog("switching frontend on adapter %d from %d to %d", adapter, frontends[currentFrontend].frontend, frontends[f].frontend);
+        StopSectionHandler();
+        if (dvbTuner) {
+           delete dvbTuner;
+           dvbTuner = NULL;
+           }
+        if (ciAdapter) {
+           delete ciAdapter;
+           ciAdapter = NULL;
+           }
+        currentFrontend = f;
+        dvbTuner = new cDvbTuner(CardIndex() + 1, adapter, frontends[currentFrontend].frontend, frontends[currentFrontend].frontendType);
+        if (frontends[currentFrontend].ca >= 0)
+           ciAdapter = cDvbCiAdapter::CreateCiAdapter(this, -1, adapter, frontends[currentFrontend].ca);
+        StartSectionHandler();
+        }
+     }
   if (dvbTuner)
      dvbTuner->Set(Channel);
   return true;
