@@ -10,15 +10,18 @@
 #include "dvbci.h"
 #include <linux/dvb/ca.h>
 #include <sys/ioctl.h>
-#include "device.h"
+#include "dvbdevice.h"
 
 // --- cDvbCiAdapter ---------------------------------------------------------
 
-cDvbCiAdapter::cDvbCiAdapter(cDevice *Device, int Fd)
+cDvbCiAdapter::cDvbCiAdapter(cDevice *Device, int Fd, int Adapter, int Ca)
 {
   device = Device;
   SetDescription("CI adapter on device %d", device->DeviceNumber());
   fd = Fd;
+  adapter = Adapter;
+  ca = Ca;
+  OpenCa();
   ca_caps_t Caps;
   if (ioctl(fd, CA_GET_CAP, &Caps) == 0) {
      if ((Caps.slot_type & CA_CI_LINK) != 0) {
@@ -41,10 +44,29 @@ cDvbCiAdapter::cDvbCiAdapter(cDevice *Device, int Fd)
 cDvbCiAdapter::~cDvbCiAdapter()
 {
   Cancel(3);
+  CloseCa();
+}
+
+bool cDvbCiAdapter::OpenCa(void)
+{
+  if (fd >= 0)
+     return true;
+  fd = cDvbDevice::DvbOpen(DEV_DVB_CA, adapter, ca, O_RDWR);
+  return (fd >= 0);
+}
+
+void cDvbCiAdapter::CloseCa(void)
+{
+  if (fd < 0)
+     return;
+  close(fd);
+  fd = -1;
 }
 
 int cDvbCiAdapter::Read(uint8_t *Buffer, int MaxLength)
 {
+  if (fd < 0)
+     return 0;
   if (Buffer && MaxLength > 0) {
      struct pollfd pfd[1];
      pfd[0].fd = fd;
@@ -61,6 +83,8 @@ int cDvbCiAdapter::Read(uint8_t *Buffer, int MaxLength)
 
 void cDvbCiAdapter::Write(const uint8_t *Buffer, int Length)
 {
+  if (fd < 0)
+     return;
   if (Buffer && Length > 0) {
      if (safe_write(fd, Buffer, Length) != Length)
         esyslog("ERROR: can't write to CI adapter on device %d: %m", device->DeviceNumber());
@@ -69,6 +93,8 @@ void cDvbCiAdapter::Write(const uint8_t *Buffer, int Length)
 
 bool cDvbCiAdapter::Reset(int Slot)
 {
+  if (fd < 0)
+     return false;
   if (ioctl(fd, CA_RESET, 1 << Slot) != -1)
      return true;
   else
@@ -78,6 +104,8 @@ bool cDvbCiAdapter::Reset(int Slot)
 
 eModuleStatus cDvbCiAdapter::ModuleStatus(int Slot)
 {
+  if (fd < 0)
+     return msNone;
   ca_slot_info_t sinfo;
   sinfo.num = Slot;
   if (ioctl(fd, CA_GET_SLOT_INFO, &sinfo) != -1) {
@@ -99,10 +127,10 @@ bool cDvbCiAdapter::Assign(cDevice *Device, bool Query)
   return true;
 }
 
-cDvbCiAdapter *cDvbCiAdapter::CreateCiAdapter(cDevice *Device, int Fd)
+cDvbCiAdapter *cDvbCiAdapter::CreateCiAdapter(cDevice *Device, int Fd, int Adapter, int Ca)
 {
   // TODO check whether a CI is actually present?
   if (Device)
-     return new cDvbCiAdapter(Device, Fd);
+     return new cDvbCiAdapter(Device, Fd, Adapter, Ca);
   return NULL;
 }

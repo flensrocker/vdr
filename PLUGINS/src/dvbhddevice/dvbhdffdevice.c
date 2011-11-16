@@ -26,7 +26,8 @@
 int cDvbHdFfDevice::devHdffOffset = -1;
 
 cDvbHdFfDevice::cDvbHdFfDevice(int Adapter, int Frontend)
-:cDvbDevice(Adapter, Frontend)
+:cDvbDevice(Adapter)
+,frontend(Frontend)
 {
   spuDecoder = NULL;
   audioChannel = 0;

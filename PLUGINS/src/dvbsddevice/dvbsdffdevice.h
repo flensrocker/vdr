@@ -16,6 +16,7 @@
 
 class cDvbSdFfDevice : public cDvbDevice {
 private:
+  int frontend;
   int fd_osd, fd_audio, fd_video, fd_stc;
   bool outputOnly;
 protected:

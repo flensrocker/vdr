@@ -276,8 +276,10 @@ private:
   bool GetFrontendStatus(fe_status_t &Status) const;
   bool SetFrontend(void);
   virtual void Action(void);
+  bool OpenFrontend(void);
+  bool CloseFrontend(void);
 public:
-  cDvbTuner(int Device, int Fd_Frontend, int Adapter, int Frontend, fe_delivery_system FrontendType);
+  cDvbTuner(int Device, int Adapter, int Frontend, fe_delivery_system FrontendType);
   virtual ~cDvbTuner();
   const cChannel *GetTransponder(void) const { return &channel; }
   uint32_t SubsystemId(void) const { return subsystemId; }
@@ -288,10 +290,10 @@ public:
   int GetSignalQuality(void) const;
   };
 
-cDvbTuner::cDvbTuner(int Device, int Fd_Frontend, int Adapter, int Frontend, fe_delivery_system FrontendType)
+cDvbTuner::cDvbTuner(int Device, int Adapter, int Frontend, fe_delivery_system FrontendType)
 {
   device = Device;
-  fd_frontend = Fd_Frontend;
+  fd_frontend = -1;
   adapter = Adapter;
   frontend = Frontend;
   frontendType = FrontendType;
@@ -301,8 +303,7 @@ cDvbTuner::cDvbTuner(int Device, int Fd_Frontend, int Adapter, int Frontend, fe_
   lastTimeoutReport = 0;
   diseqcCommands = NULL;
   tunerStatus = tsIdle;
-  if (frontendType == SYS_DVBS || frontendType == SYS_DVBS2)
-     CHECK(ioctl(fd_frontend, FE_SET_VOLTAGE, SEC_VOLTAGE_13)); // must explicitly turn on LNB power
+  OpenFrontend();
   SetDescription("tuner on frontend %d/%d", adapter, frontend);
   Start();
 }
@@ -313,6 +314,7 @@ cDvbTuner::~cDvbTuner()
   newSet.Broadcast();
   locked.Broadcast();
   Cancel(3);
+  CloseFrontend();
 }
 
 bool cDvbTuner::IsTunedTo(const cChannel *Channel) const
@@ -698,6 +700,34 @@ void cDvbTuner::Action(void)
         }
 }
 
+bool cDvbTuner::OpenFrontend(void)
+{
+  if (fd_frontend >= 0)
+     return true;
+  cMutexLock MutexLock(&mutex);
+  fd_frontend = cDvbDevice::DvbOpen(DEV_DVB_FRONTEND, adapter, frontend, O_RDWR | O_NONBLOCK);
+  if (fd_frontend < 0)
+     return false;
+  if (frontendType == SYS_DVBS || frontendType == SYS_DVBS2)
+#ifdef LNB_SHARING_VERSION
+     if (lnbSendSignals)
+#endif
+     CHECK(ioctl(fd_frontend, FE_SET_VOLTAGE, SEC_VOLTAGE_13)); // must explicitly turn on LNB power
+  return true;
+}
+
+bool cDvbTuner::CloseFrontend(void)
+{
+  if (fd_frontend < 0)
+     return true;
+  cMutexLock MutexLock(&mutex);
+  tunerStatus = tsIdle;
+  newSet.Broadcast();
+  close(fd_frontend);
+  fd_frontend = -1;
+  return true;
+}
+
 // --- cDvbSourceParam -------------------------------------------------------
 
 class cDvbSourceParam : public cSourceParam {
@@ -778,69 +808,98 @@ const char *DeliverySystems[] = {
   NULL
   };
 
-cDvbDevice::cDvbDevice(int Adapter, int Frontend)
+cDvbDevice::cDvbDevice(int Adapter)
 {
+  numFrontends = 0;
+  currentFrontend = 0;
   adapter = Adapter;
-  frontend = Frontend;
   ciAdapter = NULL;
   dvbTuner = NULL;
-  frontendType = SYS_UNDEFINED;
   numProvidedSystems = 0;
-
-  // Devices that are present on all card types:
-
-  int fd_frontend = DvbOpen(DEV_DVB_FRONTEND, adapter, frontend, O_RDWR | O_NONBLOCK);
-
-  // Common Interface:
-
-  fd_ca = DvbOpen(DEV_DVB_CA, adapter, frontend, O_RDWR);
-  if (fd_ca >= 0)
-     ciAdapter = cDvbCiAdapter::CreateCiAdapter(this, fd_ca);
-
+  int fd_frontend = -1;
   // The DVR device (will be opened and closed as needed):
-
   fd_dvr = -1;
 
-  // We only check the devices that must be present - the others will be checked before accessing them://XXX
+  for (int f = 0; (numFrontends < MAXDVBFRONTENDS) && Exists(adapter, f); f++) {
+      frontends[numFrontends].frontend = f;
+      frontends[numFrontends].demux = frontends[numFrontends].frontend;
+      frontends[numFrontends].dvr = frontends[numFrontends].frontend;
+      frontends[numFrontends].ca = frontends[numFrontends].frontend;
+      frontends[numFrontends].frontendType = SYS_UNDEFINED;
 
-  if (fd_frontend >= 0) {
-     if (ioctl(fd_frontend, FE_GET_INFO, &frontendInfo) >= 0) {
-        switch (frontendInfo.type) {
-          case FE_QPSK: frontendType = (frontendInfo.caps & FE_CAN_2G_MODULATION) ? SYS_DVBS2 : SYS_DVBS; break;
-          case FE_OFDM: frontendType = SYS_DVBT; break;
-          case FE_QAM:  frontendType = SYS_DVBC_ANNEX_AC; break;
-          case FE_ATSC: frontendType = SYS_ATSC; break;
-          default: esyslog("ERROR: unknown frontend type %d on frontend %d/%d", frontendInfo.type, adapter, frontend);
-          }
-        }
-     else
-        LOG_ERROR;
-     if (frontendType != SYS_UNDEFINED) {
-        numProvidedSystems++;
-        if (frontendType == SYS_DVBS2)
-           numProvidedSystems++;
-        char Modulations[64];
-        char *p = Modulations;
-        if (frontendInfo.caps & FE_CAN_QPSK)    { numProvidedSystems++; p += sprintf(p, ",%s", MapToUserString(QPSK, ModulationValues)); }
-        if (frontendInfo.caps & FE_CAN_QAM_16)  { numProvidedSystems++; p += sprintf(p, ",%s", MapToUserString(QAM_16, ModulationValues)); }
-        if (frontendInfo.caps & FE_CAN_QAM_32)  { numProvidedSystems++; p += sprintf(p, ",%s", MapToUserString(QAM_32, ModulationValues)); }
-        if (frontendInfo.caps & FE_CAN_QAM_64)  { numProvidedSystems++; p += sprintf(p, ",%s", MapToUserString(QAM_64, ModulationValues)); }
-        if (frontendInfo.caps & FE_CAN_QAM_128) { numProvidedSystems++; p += sprintf(p, ",%s", MapToUserString(QAM_128, ModulationValues)); }
-        if (frontendInfo.caps & FE_CAN_QAM_256) { numProvidedSystems++; p += sprintf(p, ",%s", MapToUserString(QAM_256, ModulationValues)); }
-        if (frontendInfo.caps & FE_CAN_8VSB)    { numProvidedSystems++; p += sprintf(p, ",%s", MapToUserString(VSB_8, ModulationValues)); }
-        if (frontendInfo.caps & FE_CAN_16VSB)   { numProvidedSystems++; p += sprintf(p, ",%s", MapToUserString(VSB_16, ModulationValues)); }
-        if (frontendInfo.caps & FE_CAN_TURBO_FEC){numProvidedSystems++; p += sprintf(p, ",%s", "TURBO_FEC"); }
-        if (p != Modulations)
-           p = Modulations + 1; // skips first ','
-        else
-           p = (char *)"unknown modulations";
-        isyslog("frontend %d/%d provides %s with %s (\"%s\")", adapter, frontend, DeliverySystems[frontendType], p, frontendInfo.name);
-        dvbTuner = new cDvbTuner(CardIndex() + 1, fd_frontend, adapter, frontend, frontendType);
-        }
+      // Devices that are present on all card types:
+
+      fd_frontend = DvbOpen(DEV_DVB_FRONTEND, adapter, frontends[numFrontends].frontend, O_RDWR | O_NONBLOCK);
+
+      if (fd_frontend >= 0) {
+         // Look for the right devices
+         while ((frontends[numFrontends].demux >= 0) && !Exists(DEV_DVB_DEMUX, adapter, frontends[numFrontends].demux))
+               frontends[numFrontends].demux--;
+         if (frontends[numFrontends].demux < 0) {
+            frontends[numFrontends].demux = frontends[numFrontends].frontend;
+            esyslog("frontend %d/%d has no demux device", adapter, frontends[numFrontends].frontend);
+            }
+         else if (frontends[numFrontends].demux != frontends[numFrontends].frontend)
+            isyslog("frontend %d/%d will use demux%d", adapter, frontends[numFrontends].frontend, frontends[numFrontends].demux);
+
+         while ((frontends[numFrontends].dvr >= 0) && !Exists(DEV_DVB_DVR, adapter, frontends[numFrontends].dvr))
+               frontends[numFrontends].dvr--;
+         if (frontends[numFrontends].dvr < 0) {
+            frontends[numFrontends].dvr = frontends[numFrontends].frontend;
+            esyslog("frontend %d/%d has no dvr device", adapter, frontends[numFrontends].frontend);
+            }
+         else if (frontends[numFrontends].dvr != frontends[numFrontends].frontend)
+            isyslog("frontend %d/%d will use dvr%d", adapter, frontends[numFrontends].frontend, frontends[numFrontends].dvr);
+
+         while ((frontends[numFrontends].ca >= 0) && !Exists(DEV_DVB_CA, adapter, frontends[numFrontends].ca))
+               frontends[numFrontends].ca--;
+         if ((frontends[numFrontends].ca >= 0) && (frontends[numFrontends].ca != frontends[numFrontends].frontend))
+            isyslog("frontend %d/%d will use ca%d", adapter, frontends[numFrontends].frontend, frontends[numFrontends].ca);
+
+         if (ioctl(fd_frontend, FE_GET_INFO, &frontends[numFrontends].frontendInfo) >= 0) {
+            switch (frontends[numFrontends].frontendInfo.type) {
+              case FE_QPSK: frontends[numFrontends].frontendType = (frontends[numFrontends].frontendInfo.caps & FE_CAN_2G_MODULATION) ? SYS_DVBS2 : SYS_DVBS; break;
+              case FE_OFDM: frontends[numFrontends].frontendType = SYS_DVBT; break;
+              case FE_QAM:  frontends[numFrontends].frontendType = SYS_DVBC_ANNEX_AC; break;
+              case FE_ATSC: frontends[numFrontends].frontendType = SYS_ATSC; break;
+              default: esyslog("ERROR: unknown frontend type %d on frontend %d/%d", frontends[numFrontends].frontendInfo.type, adapter, frontends[numFrontends].frontend);
+              }
+            }
+         else
+            LOG_ERROR;
+         if (frontends[numFrontends].frontendType != SYS_UNDEFINED) {
+            numProvidedSystems++;
+            if (frontends[numFrontends].frontendType == SYS_DVBS2)
+               numProvidedSystems++;
+            char Modulations[64];
+            char *p = Modulations;
+            if (frontends[numFrontends].frontendInfo.caps & FE_CAN_QPSK)    { numProvidedSystems++; p += sprintf(p, ",%s", MapToUserString(QPSK, ModulationValues)); }
+            if (frontends[numFrontends].frontendInfo.caps & FE_CAN_QAM_16)  { numProvidedSystems++; p += sprintf(p, ",%s", MapToUserString(QAM_16, ModulationValues)); }
+            if (frontends[numFrontends].frontendInfo.caps & FE_CAN_QAM_32)  { numProvidedSystems++; p += sprintf(p, ",%s", MapToUserString(QAM_32, ModulationValues)); }
+            if (frontends[numFrontends].frontendInfo.caps & FE_CAN_QAM_64)  { numProvidedSystems++; p += sprintf(p, ",%s", MapToUserString(QAM_64, ModulationValues)); }
+            if (frontends[numFrontends].frontendInfo.caps & FE_CAN_QAM_128) { numProvidedSystems++; p += sprintf(p, ",%s", MapToUserString(QAM_128, ModulationValues)); }
+            if (frontends[numFrontends].frontendInfo.caps & FE_CAN_QAM_256) { numProvidedSystems++; p += sprintf(p, ",%s", MapToUserString(QAM_256, ModulationValues)); }
+            if (frontends[numFrontends].frontendInfo.caps & FE_CAN_8VSB)    { numProvidedSystems++; p += sprintf(p, ",%s", MapToUserString(VSB_8, ModulationValues)); }
+            if (frontends[numFrontends].frontendInfo.caps & FE_CAN_16VSB)   { numProvidedSystems++; p += sprintf(p, ",%s", MapToUserString(VSB_16, ModulationValues)); }
+            if (frontends[numFrontends].frontendInfo.caps & FE_CAN_TURBO_FEC){numProvidedSystems++; p += sprintf(p, ",%s", "TURBO_FEC"); }
+            if (p != Modulations)
+               p = Modulations + 1; // skips first ','
+            else
+               p = (char *)"unknown modulations";
+            isyslog("frontend %d/%d provides %s with %s (\"%s\")", adapter, frontends[numFrontends].frontend, DeliverySystems[frontends[numFrontends].frontendType], p, frontends[numFrontends].frontendInfo.name);
+            numFrontends++;
+            }
+         close (fd_frontend);
+         }
+      else
+         esyslog("ERROR: can't open DVB device %d/%d", adapter, frontends[numFrontends].frontend);
+      }
+  if (numFrontends > 0) {
+     dvbTuner = new cDvbTuner(CardIndex() + 1, adapter, frontends[currentFrontend].frontend, frontends[currentFrontend].frontendType);
+     // Common Interface:
+     if (frontends[currentFrontend].ca >= 0)
+        ciAdapter = cDvbCiAdapter::CreateCiAdapter(this, -1, adapter, frontends[currentFrontend].ca);
      }
-  else
-     esyslog("ERROR: can't open DVB device %d/%d", adapter, frontend);
-
   StartSectionHandler();
 }
 
@@ -869,7 +928,12 @@ int cDvbDevice::DvbOpen(const char *Name, int Adapter, int Frontend, int Mode, b
 
 bool cDvbDevice::Exists(int Adapter, int Frontend)
 {
-  cString FileName = DvbName(DEV_DVB_FRONTEND, Adapter, Frontend);
+  return Exists(DEV_DVB_FRONTEND, Adapter, Frontend);
+}
+
+bool cDvbDevice::Exists(const char *Name, int Adapter, int Frontend)
+{
+  cString FileName = DvbName(Name, Adapter, Frontend);
   if (access(FileName, F_OK) == 0) {
      int f = open(FileName, O_RDONLY);
      if (f >= 0) {
@@ -884,16 +948,16 @@ bool cDvbDevice::Exists(int Adapter, int Frontend)
   return false;
 }
 
-bool cDvbDevice::Probe(int Adapter, int Frontend)
+bool cDvbDevice::Probe(int Adapter)
 {
-  cString FileName = DvbName(DEV_DVB_FRONTEND, Adapter, Frontend);
-  dsyslog("probing %s", *FileName);
+  cString adapterName = cString::sprintf("%s%d", DEV_DVB_ADAPTER, Adapter);
+  dsyslog("probing %s", *adapterName);
   for (cDvbDeviceProbe *dp = DvbDeviceProbes.First(); dp; dp = DvbDeviceProbes.Next(dp)) {
-      if (dp->Probe(Adapter, Frontend))
+      if (dp->Probe(Adapter, 0))
          return true; // a plugin has created the actual device
       }
   dsyslog("creating cDvbDevice");
-  new cDvbDevice(Adapter, Frontend); // it's a "budget" device
+  new cDvbDevice(Adapter); // it's a "budget" device
   return true;
 }
 
@@ -906,23 +970,18 @@ bool cDvbDevice::Initialize(void)
   int Checked = 0;
   int Found = 0;
   for (int Adapter = 0; ; Adapter++) {
-      for (int Frontend = 0; ; Frontend++) {
-          if (Exists(Adapter, Frontend)) {
-             if (Checked++ < MAXDVBDEVICES) {
-                if (UseDevice(NextCardIndex())) {
-                   if (Probe(Adapter, Frontend))
-                      Found++;
-                   }
-                else
-                   NextCardIndex(1); // skips this one
-                }
-             }
-          else if (Frontend == 0)
-             goto LastAdapter;
-          else
-             goto NextAdapter;
-          }
-      NextAdapter: ;
+      if (Exists(DEV_DVB_FRONTEND, Adapter, 0)) {
+         if (Checked++ < MAXDVBDEVICES) {
+            if (UseDevice(NextCardIndex())) {
+               if (Probe(Adapter))
+                  Found++;
+               }
+            else
+               NextCardIndex(1); // skips this one
+            }
+         }
+         else
+            goto LastAdapter;
       }
 LastAdapter:
   NextCardIndex(MAXDVBDEVICES - Checked); // skips the rest
@@ -952,7 +1011,7 @@ bool cDvbDevice::SetPid(cPidHandle *Handle, int Type, bool On)
      memset(&pesFilterParams, 0, sizeof(pesFilterParams));
      if (On) {
         if (Handle->handle < 0) {
-           Handle->handle = DvbOpen(DEV_DVB_DEMUX, adapter, frontend, O_RDWR | O_NONBLOCK, true);
+           Handle->handle = DvbOpen(DEV_DVB_DEMUX, adapter, frontends[currentFrontend].demux, O_RDWR | O_NONBLOCK, true);
            if (Handle->handle < 0) {
               LOG_ERROR;
               return false;
@@ -987,7 +1046,7 @@ bool cDvbDevice::SetPid(cPidHandle *Handle, int Type, bool On)
 
 int cDvbDevice::OpenFilter(u_short Pid, u_char Tid, u_char Mask)
 {
-  cString FileName = DvbName(DEV_DVB_DEMUX, adapter, frontend);
+  cString FileName = DvbName(DEV_DVB_DEMUX, adapter, frontends[currentFrontend].demux);
   int f = open(FileName, O_RDWR | O_NONBLOCK);
   if (f >= 0) {
      dmx_sct_filter_params sctFilterParams;
@@ -1014,32 +1073,43 @@ void cDvbDevice::CloseFilter(int Handle)
   close(Handle);
 }
 
-bool cDvbDevice::ProvidesSource(int Source) const
+int cDvbDevice::GetFrontend(int Source) const
 {
   int type = Source & cSource::st_Mask;
-  return type == cSource::stNone
-      || type == cSource::stAtsc  && (frontendType == SYS_ATSC)
-      || type == cSource::stCable && (frontendType == SYS_DVBC_ANNEX_AC || frontendType == SYS_DVBC_ANNEX_B)
-      || type == cSource::stSat   && (frontendType == SYS_DVBS || frontendType == SYS_DVBS2)
-      || type == cSource::stTerr  && (frontendType == SYS_DVBT);
+  if (type == cSource::stNone)
+     return 0; // can this happen?
+  for (int f = 0; f < numFrontends; f++) {
+      if (type == cSource::stAtsc  && (frontends[f].frontendType == SYS_ATSC)
+          || type == cSource::stCable && (frontends[f].frontendType == SYS_DVBC_ANNEX_AC || frontends[f].frontendType == SYS_DVBC_ANNEX_B)
+          || type == cSource::stSat   && (frontends[f].frontendType == SYS_DVBS || frontends[f].frontendType == SYS_DVBS2)
+          || type == cSource::stTerr  && (frontends[f].frontendType == SYS_DVBT))
+         return f;
+      }
+  return -1;
+}
+
+bool cDvbDevice::ProvidesSource(int Source) const
+{
+  return (GetFrontend(Source) >= 0);
 }
 
 bool cDvbDevice::ProvidesTransponder(const cChannel *Channel) const
 {
-  if (!ProvidesSource(Channel->Source()))
+  int f = GetFrontend(Channel->Source());
+  if (f < 0)
      return false; // doesn't provide source
   cDvbTransponderParameters dtp(Channel->Parameters());
-  if (dtp.System() == SYS_DVBS2 && frontendType == SYS_DVBS ||
-     dtp.Modulation() == QPSK     && !(frontendInfo.caps & FE_CAN_QPSK) ||
-     dtp.Modulation() == QAM_16   && !(frontendInfo.caps & FE_CAN_QAM_16) ||
-     dtp.Modulation() == QAM_32   && !(frontendInfo.caps & FE_CAN_QAM_32) ||
-     dtp.Modulation() == QAM_64   && !(frontendInfo.caps & FE_CAN_QAM_64) ||
-     dtp.Modulation() == QAM_128  && !(frontendInfo.caps & FE_CAN_QAM_128) ||
-     dtp.Modulation() == QAM_256  && !(frontendInfo.caps & FE_CAN_QAM_256) ||
-     dtp.Modulation() == QAM_AUTO && !(frontendInfo.caps & FE_CAN_QAM_AUTO) ||
-     dtp.Modulation() == VSB_8    && !(frontendInfo.caps & FE_CAN_8VSB) ||
-     dtp.Modulation() == VSB_16   && !(frontendInfo.caps & FE_CAN_16VSB) ||
-     dtp.Modulation() == PSK_8    && !(frontendInfo.caps & FE_CAN_TURBO_FEC) && dtp.System() == SYS_DVBS) // "turbo fec" is a non standard FEC used by North American broadcasters - this is a best guess to determine this condition
+  if (dtp.System() == SYS_DVBS2 && frontends[f].frontendType == SYS_DVBS ||
+     dtp.Modulation() == QPSK     && !(frontends[f].frontendInfo.caps & FE_CAN_QPSK) ||
+     dtp.Modulation() == QAM_16   && !(frontends[f].frontendInfo.caps & FE_CAN_QAM_16) ||
+     dtp.Modulation() == QAM_32   && !(frontends[f].frontendInfo.caps & FE_CAN_QAM_32) ||
+     dtp.Modulation() == QAM_64   && !(frontends[f].frontendInfo.caps & FE_CAN_QAM_64) ||
+     dtp.Modulation() == QAM_128  && !(frontends[f].frontendInfo.caps & FE_CAN_QAM_128) ||
+     dtp.Modulation() == QAM_256  && !(frontends[f].frontendInfo.caps & FE_CAN_QAM_256) ||
+     dtp.Modulation() == QAM_AUTO && !(frontends[f].frontendInfo.caps & FE_CAN_QAM_AUTO) ||
+     dtp.Modulation() == VSB_8    && !(frontends[f].frontendInfo.caps & FE_CAN_8VSB) ||
+     dtp.Modulation() == VSB_16   && !(frontends[f].frontendInfo.caps & FE_CAN_16VSB) ||
+     dtp.Modulation() == PSK_8    && !(frontends[f].frontendInfo.caps & FE_CAN_TURBO_FEC) && dtp.System() == SYS_DVBS) // "turbo fec" is a non standard FEC used by North American broadcasters - this is a best guess to determine this condition
      return false; // requires modulation system which frontend doesn't provide
   if (!cSource::IsSat(Channel->Source()) ||
      !Setup.DiSEqC || Diseqcs.Get(CardIndex() + 1, Channel->Source(), Channel->Frequency(), dtp.Polarization()))
@@ -1131,7 +1201,7 @@ void cDvbDevice::SetTransferModeForDolbyDigital(int Mode)
 bool cDvbDevice::OpenDvr(void)
 {
   CloseDvr();
-  fd_dvr = DvbOpen(DEV_DVB_DVR, adapter, frontend, O_RDONLY | O_NONBLOCK, true);
+  fd_dvr = DvbOpen(DEV_DVB_DVR, adapter, frontends[currentFrontend].dvr, O_RDONLY | O_NONBLOCK, true);
   if (fd_dvr >= 0)
      tsBuffer = new cTSBuffer(fd_dvr, MEGABYTE(2), CardIndex() + 1);
   return fd_dvr >= 0;

@@ -20,6 +20,7 @@
 #endif
 
 #define MAXDVBDEVICES  8
+#define MAXDVBFRONTENDS 8
 
 #define DEV_VIDEO         "/dev/video"
 #define DEV_DVB_ADAPTER   "/dev/dvb/adapter"
@@ -101,14 +102,25 @@ class cDvbTuner;
 
 /// The cDvbDevice implements a DVB device which can be accessed through the Linux DVB driver API.
 
+struct tDvbFrontend {
+  int frontend;
+  int demux;
+  int dvr;
+  int ca;
+
+  dvb_frontend_info frontendInfo;
+  fe_delivery_system frontendType;
+  };
+
 class cDvbDevice : public cDevice {
-protected:
+public:
   static cString DvbName(const char *Name, int Adapter, int Frontend);
   static int DvbOpen(const char *Name, int Adapter, int Frontend, int Mode, bool ReportError = false);
 private:
   static bool Exists(int Adapter, int Frontend);
+  static bool Exists(const char *Name, int Adapter, int Frontend);
          ///< Checks whether the given adapter/frontend exists.
-  static bool Probe(int Adapter, int Frontend);
+  static bool Probe(int Adapter);
          ///< Probes for existing DVB devices.
 public:
   static bool Initialize(void);
@@ -116,14 +128,17 @@ public:
          ///< Must be called before accessing any DVB functions.
          ///< \return True if any devices are available.
 protected:
-  int adapter, frontend;
+  int adapter;
 private:
-  dvb_frontend_info frontendInfo;
+  tDvbFrontend frontends[MAXDVBFRONTENDS];
+  int numFrontends;
+  int currentFrontend;
+  int GetFrontend(int Source) const;
+
   int numProvidedSystems;
-  fe_delivery_system frontendType;
-  int fd_dvr, fd_ca;
+  int fd_dvr;
 public:
-  cDvbDevice(int Adapter, int Frontend);
+  cDvbDevice(int Adapter);
   virtual ~cDvbDevice();
   virtual bool Ready(void);
 

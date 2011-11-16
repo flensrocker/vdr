@@ -16,16 +16,22 @@ class cDvbCiAdapter : public cCiAdapter {
 private:
   cDevice *device;
   int fd;
+  int adapter;
+  int ca;
+  bool idle;
+
+  bool OpenCa(void);
+  void CloseCa(void);
 protected:
   virtual int Read(uint8_t *Buffer, int MaxLength);
   virtual void Write(const uint8_t *Buffer, int Length);
   virtual bool Reset(int Slot);
   virtual eModuleStatus ModuleStatus(int Slot);
   virtual bool Assign(cDevice *Device, bool Query = false);
-  cDvbCiAdapter(cDevice *Device, int Fd);
+  cDvbCiAdapter(cDevice *Device, int Fd, int Adapter = -1, int Ca = -1);
 public:
   virtual ~cDvbCiAdapter();
-  static cDvbCiAdapter *CreateCiAdapter(cDevice *Device, int Fd);
+  static cDvbCiAdapter *CreateCiAdapter(cDevice *Device, int Fd, int Adapter = -1, int Ca = -1);
   };
 
 #endif //__DVBCI_H

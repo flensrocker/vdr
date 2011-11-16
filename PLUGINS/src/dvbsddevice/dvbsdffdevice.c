@@ -24,7 +24,8 @@
 int cDvbSdFfDevice::devVideoOffset = -1;
 
 cDvbSdFfDevice::cDvbSdFfDevice(int Adapter, int Frontend, bool OutputOnly)
-:cDvbDevice(Adapter, Frontend)
+:cDvbDevice(Adapter)
+,frontend(Frontend)
 {
   spuDecoder = NULL;
   digitalAudio = false;

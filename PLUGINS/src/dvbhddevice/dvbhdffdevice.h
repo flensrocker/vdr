@@ -17,12 +17,13 @@
 
 class cDvbHdFfDevice : public cDvbDevice {
 private:
+  int frontend;
   int fd_osd, fd_audio, fd_video;
 protected:
   virtual void MakePrimaryDevice(bool On);
 public:
   static bool Probe(int Adapter, int Frontend);
-  cDvbHdFfDevice(int Adapter, int Frontend);
+  cDvbHdFfDevice(int Adapter, int Frontend = 0);
   virtual ~cDvbHdFfDevice();
   virtual bool HasDecoder(void) const;
 
