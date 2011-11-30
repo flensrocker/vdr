@@ -21,6 +21,7 @@
 
 #define MAXDVBDEVICES  8
 #define MAXDVBFRONTENDS 8
+#define MULTI_FRONTEND_PATCH
 
 #define DEV_VIDEO         "/dev/video"
 #define DEV_DVB_ADAPTER   "/dev/dvb/adapter"
@@ -98,6 +99,7 @@ public:
   bool Parse(const char *s);
   };
 
+class cDvbCiAdapter;
 class cDvbTuner;
 
 /// The cDvbDevice implements a DVB device which can be accessed through the Linux DVB driver API.
@@ -110,6 +112,9 @@ struct tDvbFrontend {
 
   dvb_frontend_info frontendInfo;
   fe_delivery_system frontendType;
+
+  cDvbCiAdapter *ciAdapter;
+  cDvbTuner *dvbTuner;
   };
 
 class cDvbDevice : public cDevice {
@@ -142,15 +147,6 @@ public:
   virtual ~cDvbDevice();
   virtual bool Ready(void);
 
-// Common Interface facilities:
-
-private:
-  cCiAdapter *ciAdapter;
-
-// Channel facilities
-
-private:
-  cDvbTuner *dvbTuner;
 public:
   virtual bool ProvidesSource(int Source) const;
   virtual bool ProvidesTransponder(const cChannel *Channel) const;

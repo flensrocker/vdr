@@ -18,19 +18,21 @@ private:
   int fd;
   int adapter;
   int ca;
-  bool idle;
+  bool gotCaps;
 
-  bool OpenCa(void);
-  void CloseCa(void);
+  void GetCaps(void);
+
 protected:
   virtual int Read(uint8_t *Buffer, int MaxLength);
   virtual void Write(const uint8_t *Buffer, int Length);
   virtual bool Reset(int Slot);
   virtual eModuleStatus ModuleStatus(int Slot);
   virtual bool Assign(cDevice *Device, bool Query = false);
-  cDvbCiAdapter(cDevice *Device, int Fd, int Adapter = -1, int Ca = -1);
+  cDvbCiAdapter(cDevice *Device, int Fd, int Adapter, int Ca);
 public:
   virtual ~cDvbCiAdapter();
+  bool OpenCa(void);
+  void CloseCa(void);
   static cDvbCiAdapter *CreateCiAdapter(cDevice *Device, int Fd, int Adapter = -1, int Ca = -1);
   };
 

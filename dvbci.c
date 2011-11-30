@@ -21,7 +21,21 @@ cDvbCiAdapter::cDvbCiAdapter(cDevice *Device, int Fd, int Adapter, int Ca)
   fd = Fd;
   adapter = Adapter;
   ca = Ca;
-  OpenCa();
+  gotCaps = false;
+  GetCaps();
+}
+
+cDvbCiAdapter::~cDvbCiAdapter()
+{
+  Cancel(3);
+  CloseCa();
+}
+
+void cDvbCiAdapter::GetCaps(void)
+{
+  if (gotCaps || (fd < 0))
+     return;
+  gotCaps = true;
   ca_caps_t Caps;
   if (ioctl(fd, CA_GET_CAP, &Caps) == 0) {
      if ((Caps.slot_type & CA_CI_LINK) != 0) {
@@ -41,18 +55,17 @@ cDvbCiAdapter::cDvbCiAdapter(cDevice *Device, int Fd, int Adapter, int Ca)
      esyslog("ERROR: can't get CA capabilities on device %d", device->DeviceNumber());
 }
 
-cDvbCiAdapter::~cDvbCiAdapter()
-{
-  Cancel(3);
-  CloseCa();
-}
-
 bool cDvbCiAdapter::OpenCa(void)
 {
   if (fd >= 0)
      return true;
   fd = cDvbDevice::DvbOpen(DEV_DVB_CA, adapter, ca, O_RDWR);
-  return (fd >= 0);
+  if (fd < 0) {
+     esyslog("ERROR: can't open ca %d/%d", adapter, ca);
+     return false;
+     }
+  GetCaps();
+  return true;
 }
 
 void cDvbCiAdapter::CloseCa(void)
