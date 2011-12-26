@@ -43,6 +43,13 @@ cDvbCiAdapter::~cDvbCiAdapter()
   Cancel(3);
 }
 
+cTSBuffer *cDvbCiAdapter::GetTSBuffer(int FdDvr)
+{
+  if (device)
+     return new cTSBuffer(FdDvr, MEGABYTE(2), device->CardIndex() + 1);
+  return NULL;
+}
+
 int cDvbCiAdapter::Read(uint8_t *Buffer, int MaxLength)
 {
   if (Buffer && MaxLength > 0) {
@@ -101,8 +108,43 @@ bool cDvbCiAdapter::Assign(cDevice *Device, bool Query)
 
 cDvbCiAdapter *cDvbCiAdapter::CreateCiAdapter(cDevice *Device, int Fd)
 {
-  // TODO check whether a CI is actually present?
-  if (Device)
-     return new cDvbCiAdapter(Device, Fd);
-  return NULL;
+  // don't create a ci-adapter if it's not useable
+  if (Device && (Fd >= 0)) {
+     ca_caps_t Caps;
+     if (ioctl(Fd, CA_GET_CAP, &Caps) == 0) {
+        if ((Caps.slot_type & CA_CI_LINK) != 0) {
+           int NumSlots = Caps.slot_num;
+           if (NumSlots > 0)
+              return new cDvbCiAdapter(Device, Fd);
+           else
+              esyslog("ERROR: no CAM slots found on device %d", Device->DeviceNumber());
+           }
+        else
+           isyslog("device %d doesn't support CI link layer interface", Device->DeviceNumber());
+        }
+     else
+        esyslog("ERROR: can't get CA capabilities on device %d", Device->DeviceNumber());
+     close(Fd);
+     }
+  // try to find an external ci-adapter
+  for (cDvbCiAdapterProbe *cp = DvbCiAdapterProbes.First(); cp; cp = DvbCiAdapterProbes.Next(cp)) {
+      cDvbCiAdapter *ca = cp->Probe(Device);
+      if (ca)
+         return ca;
+      }
+ return NULL;
+}
+
+// --- cDvbCiAdapterProbe -------------------------------------------------------
+
+cList<cDvbCiAdapterProbe> DvbCiAdapterProbes;
+
+cDvbCiAdapterProbe::cDvbCiAdapterProbe(void)
+{
+  DvbCiAdapterProbes.Add(this);
+}
+
+cDvbCiAdapterProbe::~cDvbCiAdapterProbe()
+{
+  DvbCiAdapterProbes.Del(this, false);
 }

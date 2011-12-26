@@ -121,7 +121,7 @@ private:
   dvb_frontend_info frontendInfo;
   int numProvidedSystems;
   fe_delivery_system frontendType;
-  int fd_dvr, fd_ca;
+  int fd_dvr;
   static cMutex bondMutex;
   cDvbDevice *bondedDevice;
   mutable bool needsDetachBondedReceivers;
