@@ -762,7 +762,7 @@ private:
   virtual void Action(void);
 public:
   cTSBuffer(int File, int Size, int CardIndex);
-  ~cTSBuffer();
+  virtual ~cTSBuffer();
   uchar *Get(void);
   };
 
