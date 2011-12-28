@@ -26,6 +26,9 @@ protected:
 public:
   virtual ~cDvbCiAdapter();
   virtual cTSBuffer *GetTSBuffer(int FdDvr);
+  static int GetNumCamSlots(cDevice *Device, int Fd, cCiAdapter *CiAdapter);
+   ///< Tests if the CA device is usable for vdr.
+   ///< If CiAdapter is not NULL it will create the CamSlots for the given ci-adapter.
   static cDvbCiAdapter *CreateCiAdapter(cDevice *Device, int Fd);
   };
 
