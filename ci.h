@@ -116,6 +116,7 @@ public:
        ///< The derived class must call Cancel(3) in its destructor.
   virtual bool Ready(void);
        ///< Returns 'true' if all present CAMs in this adapter are ready.
+#define EXTERNALCI_PATCH
   virtual cTSBufferBase *GetTSBuffer(int FdDvr) { return NULL; }
        ///< Derived classes can return a special TS buffer with features
        ///< like rerouting the stream through an external ci.
