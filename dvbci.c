@@ -28,7 +28,7 @@ cDvbCiAdapter::~cDvbCiAdapter()
   Cancel(3);
 }
 
-cTSBuffer *cDvbCiAdapter::GetTSBuffer(int FdDvr)
+cTSBufferBase *cDvbCiAdapter::GetTSBuffer(int FdDvr)
 {
   if (device)
      return new cTSBuffer(FdDvr, MEGABYTE(2), device->CardIndex() + 1);

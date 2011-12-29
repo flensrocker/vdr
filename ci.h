@@ -72,7 +72,7 @@ public:
   };
 
 class cDevice;
-class cTSBuffer;
+class cTSBufferBase;
 class cCamSlot;
 
 enum eModuleStatus { msNone, msReset, msPresent, msReady };
@@ -116,7 +116,7 @@ public:
        ///< The derived class must call Cancel(3) in its destructor.
   virtual bool Ready(void);
        ///< Returns 'true' if all present CAMs in this adapter are ready.
-  virtual cTSBuffer *GetTSBuffer(int FdDvr) { return NULL; }
+  virtual cTSBufferBase *GetTSBuffer(int FdDvr) { return NULL; }
        ///< Derived classes can return a special TS buffer with features
        ///< like rerouting the stream through an external ci.
        ///< The caller must delete the buffer.
