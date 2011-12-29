@@ -31,7 +31,7 @@ protected:
   cDvbCiAdapter(cDevice *Device, int Fd, int Adapter = -1, int Frontend = -1);
 public:
   virtual ~cDvbCiAdapter();
-  virtual cTSBuffer *GetTSBuffer(int FdDvr);
+  virtual cTSBufferBase *GetTSBuffer(int FdDvr);
   virtual bool SetIdle(bool Idle, bool TestOnly);
   virtual bool IsIdle(void) const { return idle; }
   static int GetNumCamSlots(cDevice *Device, int Fd, cCiAdapter *CiAdapter);

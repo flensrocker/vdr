@@ -215,7 +215,7 @@ public:
 // Receiver facilities
 
 private:
-  cTSBuffer *tsBuffer;
+  cTSBufferBase *tsBuffer;
 protected:
   virtual bool OpenDvr(void);
   virtual void CloseDvr(void);
