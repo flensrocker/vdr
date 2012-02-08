@@ -126,7 +126,7 @@ private:
   int deliverySystems[MAXDELIVERYSYSTEMS];
   int numDeliverySystems;
   int numModulations;
-  int fd_dvr, fd_ca;
+  int fd_dvr;
   static cMutex bondMutex;
   cDvbDevice *bondedDevice;
   mutable bool needsDetachBondedReceivers;
@@ -224,7 +224,7 @@ public:
 // Receiver facilities
 
 private:
-  cTSBuffer *tsBuffer;
+  cTSBufferBase *tsBuffer;
 protected:
   virtual bool OpenDvr(void);
   virtual void CloseDvr(void);
