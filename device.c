@@ -69,12 +69,22 @@ int cDevice::currentChannel = 1;
 cDevice *cDevice::device[MAXDEVICES] = { NULL };
 cDevice *cDevice::primaryDevice = NULL;
 cList<cDeviceHook> cDevice::deviceHooks;
-
-cDevice::cDevice(void)
+cDevice *cDevice::nextParentDevice = NULL;
+ 
+cDevice::cDevice(cDevice *ParentDevice)
 :patPmtParser(true)
+,isIdle(false)
+,parentDevice(ParentDevice)
+,subDevice(NULL)
 {
-  cardIndex = nextCardIndex++;
-  dsyslog("new device number %d", CardIndex() + 1);
+  if (!ParentDevice)
+     parentDevice = nextParentDevice;
+  cDevice::nextParentDevice = NULL;
+  if (parentDevice)
+     cardIndex = parentDevice->cardIndex;
+  else
+     cardIndex = nextCardIndex++;
+  dsyslog("new %sdevice number %d", parentDevice ? "sub-" : "", CardIndex() + 1);
 
   SetDescription("receiver on device %d", CardIndex() + 1);
 
@@ -105,10 +115,14 @@ cDevice::cDevice(void)
   for (int i = 0; i < MAXRECEIVERS; i++)
       receiver[i] = NULL;
 
-  if (numDevices < MAXDEVICES)
-     device[numDevices++] = this;
+  if (!parentDevice) {
+     if (numDevices < MAXDEVICES)
+        device[numDevices++] = this;
+     else
+        esyslog("ERROR: too many devices or \"dynamite\"-unpatched device creator!");
+     }
   else
-     esyslog("ERROR: too many devices!");
+     parentDevice->subDevice = this;
 }
 
 cDevice::~cDevice()
@@ -117,6 +131,29 @@ cDevice::~cDevice()
   DetachAllReceivers();
   delete liveSubtitle;
   delete dvbSubtitleConverter;
+  if (parentDevice && (parentDevice->subDevice == this))
+     parentDevice->subDevice = NULL;
+}
+
+bool cDevice::SetIdle(bool Idle)
+{
+  if (parentDevice)
+     return parentDevice->SetIdle(Idle);
+  if (isIdle == Idle)
+     return true;
+  if (Receiving(false))
+     return false;
+  if (Idle) {
+     Detach(player);
+     DetachAllReceivers();
+     }
+  if (!SetIdleDevice(Idle, true))
+     return false;
+  isIdle = Idle;
+  if (SetIdleDevice(Idle, false))
+     return true;
+  isIdle = !Idle;
+  return false;
 }
 
 bool cDevice::WaitForAllDevicesReady(int Timeout)
@@ -155,6 +192,8 @@ int cDevice::NextCardIndex(int n)
 
 int cDevice::DeviceNumber(void) const
 {
+  if (parentDevice)
+     return parentDevice->DeviceNumber();
   for (int i = 0; i < numDevices; i++) {
       if (device[i] == this)
          return i;
@@ -346,6 +385,8 @@ bool cDevice::HasCi(void)
 
 void cDevice::SetCamSlot(cCamSlot *CamSlot)
 {
+  if (parentDevice)
+     return parentDevice->SetCamSlot(CamSlot);
   camSlot = CamSlot;
 }
 
@@ -558,6 +599,10 @@ void cDevice::DelLivePids(void)
 
 void cDevice::StartSectionHandler(void)
 {
+  if (parentDevice) {
+     parentDevice->StartSectionHandler();
+     return;
+     }
   if (!sectionHandler) {
      sectionHandler = new cSectionHandler(this);
      AttachFilter(eitFilter = new cEitFilter);
@@ -569,6 +614,10 @@ void cDevice::StartSectionHandler(void)
 
 void cDevice::StopSectionHandler(void)
 {
+  if (parentDevice) {
+     parentDevice->StopSectionHandler();
+     return;
+     }
   if (sectionHandler) {
      delete nitFilter;
      delete sdtFilter;
@@ -595,12 +644,17 @@ void cDevice::CloseFilter(int Handle)
 
 void cDevice::AttachFilter(cFilter *Filter)
 {
+  if (parentDevice)
+     return parentDevice->AttachFilter(Filter);
+  SetIdle(false);
   if (sectionHandler)
      sectionHandler->Attach(Filter);
 }
 
 void cDevice::Detach(cFilter *Filter)
 {
+  if (parentDevice)
+     return parentDevice->Detach(Filter);
   if (sectionHandler)
      sectionHandler->Detach(Filter);
 }
@@ -762,6 +816,7 @@ eSetChannelResult cDevice::SetChannel(const cChannel *Channel, bool LiveView)
         sectionHandler->SetStatus(false);
         sectionHandler->SetChannel(NULL);
         }
+     SetIdle(false);
      // Tell the camSlot about the channel switch and add all PIDs of this
      // channel to it, for possible later decryption:
      if (camSlot)
@@ -808,19 +863,27 @@ void cDevice::ForceTransferMode(void)
 {
   if (!cTransferControl::ReceiverDevice()) {
      cChannel *Channel = Channels.GetByNumber(CurrentChannel());
-     if (Channel)
+     if (Channel) {
+        SetIdle(false);
         SetChannelDevice(Channel, false); // this implicitly starts Transfer Mode
+        }
      }
 }
 
 int cDevice::Occupied(void) const
 {
+  if (parentDevice)
+     return parentDevice->Occupied();
   int Seconds = occupiedTimeout - time(NULL);
   return Seconds > 0 ? Seconds : 0;
 }
 
 void cDevice::SetOccupied(int Seconds)
 {
+  if (parentDevice) {
+     parentDevice->SetOccupied(Seconds);
+     return;
+     }
   if (Seconds >= 0)
      occupiedTimeout = time(NULL) + min(Seconds, MAXOCCUPIEDTIMEOUT);
 }
@@ -1193,7 +1256,10 @@ bool cDevice::Transferring(void) const
 
 bool cDevice::AttachPlayer(cPlayer *Player)
 {
+  if (parentDevice)
+     return parentDevice->AttachPlayer(Player);
   if (CanReplay()) {
+     SetIdle(false);
      if (player)
         Detach(player);
      DELETENULL(liveSubtitle);
@@ -1212,6 +1278,8 @@ bool cDevice::AttachPlayer(cPlayer *Player)
 
 void cDevice::Detach(cPlayer *Player)
 {
+  if (parentDevice)
+     return parentDevice->Detach(Player);
   if (Player && player == Player) {
      cPlayer *p = player;
      player = NULL; // avoids recursive calls to Detach()
@@ -1231,6 +1299,8 @@ void cDevice::Detach(cPlayer *Player)
 
 void cDevice::StopReplay(void)
 {
+  if (parentDevice)
+     return parentDevice->StopReplay();
   if (player) {
      Detach(player);
      if (IsPrimaryDevice())
@@ -1513,6 +1583,8 @@ int cDevice::PlayTs(const uchar *Data, int Length, bool VideoOnly)
 
 int cDevice::Priority(void) const
 {
+  if (parentDevice)
+     return parentDevice->Priority();
   int priority = IDLEPRIORITY;
   if (IsPrimaryDevice() && !Replaying() && ActualDevice() == PrimaryDevice())
      priority = TRANSFERPRIORITY; // we use the same value here, no matter whether it's actual Transfer Mode or real live viewing
@@ -1531,6 +1603,8 @@ bool cDevice::Ready(void)
 
 bool cDevice::Receiving(bool Dummy) const
 {
+  if (parentDevice)
+     return parentDevice->Receiving(Dummy);
   cMutexLock MutexLock(&mutexReceiver);
   for (int i = 0; i < MAXRECEIVERS; i++) {
       if (receiver[i])
@@ -1611,10 +1685,13 @@ bool cDevice::GetTSPacket(uchar *&Data)
 
 bool cDevice::AttachReceiver(cReceiver *Receiver)
 {
+  if (parentDevice)
+     return parentDevice->AttachReceiver(Receiver);
   if (!Receiver)
      return false;
   if (Receiver->device == this)
      return true;
+  SetIdle(false);
 // activate the following line if you need it - actually the driver should be fixed!
 //#define WAIT_FOR_TUNER_LOCK
 #ifdef WAIT_FOR_TUNER_LOCK
@@ -1653,6 +1730,8 @@ bool cDevice::AttachReceiver(cReceiver *Receiver)
 
 void cDevice::Detach(cReceiver *Receiver)
 {
+  if (parentDevice)
+     return parentDevice->Detach(Receiver);
   if (!Receiver || Receiver->device != this)
      return;
   bool receiversLeft = false;
@@ -1678,6 +1757,8 @@ void cDevice::Detach(cReceiver *Receiver)
 
 void cDevice::DetachAll(int Pid)
 {
+  if (parentDevice)
+     return parentDevice->DetachAll(Pid);
   if (Pid) {
      cMutexLock MutexLock(&mutexReceiver);
      for (int i = 0; i < MAXRECEIVERS; i++) {
@@ -1690,6 +1771,8 @@ void cDevice::DetachAll(int Pid)
 
 void cDevice::DetachAllReceivers(void)
 {
+  if (parentDevice)
+     return parentDevice->DetachAllReceivers();
   cMutexLock MutexLock(&mutexReceiver);
   for (int i = 0; i < MAXRECEIVERS; i++)
       Detach(receiver[i]);
@@ -1760,4 +1843,26 @@ uchar *cTSBuffer::Get(void)
      return p;
      }
   return NULL;
+}
+
+// --- cDynamicDeviceProbe -------------------------------------------------------
+
+cList<cDynamicDeviceProbe> DynamicDeviceProbes;
+
+cList<cDynamicDeviceProbe::cDynamicDeviceProbeItem> cDynamicDeviceProbe::commandQueue;
+
+void cDynamicDeviceProbe::QueueDynamicDeviceCommand(eDynamicDeviceProbeCommand Cmd, const char *DevPath)
+{
+  if (DevPath)
+     commandQueue.Add(new cDynamicDeviceProbeItem(Cmd, new cString(DevPath)));
+}
+
+cDynamicDeviceProbe::cDynamicDeviceProbe(void)
+{
+  DynamicDeviceProbes.Add(this);
+}
+
+cDynamicDeviceProbe::~cDynamicDeviceProbe()
+{
+  DynamicDeviceProbes.Del(this, false);
 }

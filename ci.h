@@ -115,6 +115,8 @@ public:
        ///< The derived class must call Cancel(3) in its destructor.
   virtual bool Ready(void);
        ///< Returns 'true' if all present CAMs in this adapter are ready.
+  virtual bool SetIdle(bool Idle, bool TestOnly) { return false; }
+  virtual bool IsIdle(void) const { return false; }
   };
 
 class cTPDU;
