@@ -784,7 +784,14 @@ public:
 /// sure the returned data points to a TS packet and automatically
 /// re-synchronizes after broken packets.
 
-class cTSBuffer : public cThread {
+class cTSBufferBase {
+public:
+  cTSBufferBase() {}
+  virtual ~cTSBufferBase() {}
+  virtual uchar *Get(void) = 0;
+  };
+
+class cTSBuffer : public cTSBufferBase, public cThread {
 private:
   int f;
   int cardIndex;
@@ -793,8 +800,8 @@ private:
   virtual void Action(void);
 public:
   cTSBuffer(int File, int Size, int CardIndex);
-  ~cTSBuffer();
-  uchar *Get(void);
+  virtual ~cTSBuffer();
+  virtual uchar *Get(void);
   };
 
 /// A plugin that want to create devices handled by the dynamite-plugin needs to create
