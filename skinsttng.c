@@ -4,7 +4,7 @@
  * See the main source file 'vdr.c' for copyright information and
  * how to reach the author.
  *
- * $Id: skinsttng.c 2.14 2012/03/11 14:06:05 kls Exp $
+ * $Id: skinsttng.c 2.16 2012/09/09 11:39:06 kls Exp $
  */
 
 // "Star Trek: The Next Generation"(R) is a registered trademark of Paramount Pictures
@@ -16,6 +16,7 @@
 #include "osd.h"
 #include "menu.h"
 #include "themes.h"
+#include "videodir.h"
 
 #include "symbols/arrowdown.xpm"
 #include "symbols/arrowup.xpm"
@@ -401,8 +402,11 @@ private:
   int lineHeight;
   tColor frameColor;
   int currentIndex;
+  cString title;
   bool message;
   cString lastDate;
+  int lastDiskUsageState;
+  void DrawTitle(void);
   void DrawScrollbar(int Total, int Offset, int Shown, int Top, int Height, bool CanScrollUp, bool CanScrollDown);
   void SetTextScrollbar(void);
 public:
@@ -429,6 +433,7 @@ cSkinSTTNGDisplayMenu::cSkinSTTNGDisplayMenu(void)
   const cFont *font = cFont::GetFont(fontOsd);
   lineHeight = font->Height();
   frameColor = Theme.Color(clrMenuFrame);
+  lastDiskUsageState = -1;
   currentIndex = -1;
   message = false;
   x0 = 0;
@@ -548,17 +553,27 @@ void cSkinSTTNGDisplayMenu::Clear(void)
   osd->DrawRectangle(x1, y3, x7 - 1, y4 - 1, Theme.Color(clrBackground));
 }
 
-void cSkinSTTNGDisplayMenu::SetTitle(const char *Title)
+void cSkinSTTNGDisplayMenu::DrawTitle(void)
 {
   const cFont *font = cFont::GetFont(fontOsd);
   const char *VDR = " VDR";
+  bool WithDisk = MenuCategory() == mcMain || MenuCategory() == mcRecording;
   int w = font->Width(VDR);
-  osd->DrawText(x3 + TextSpacing, y0, Title, Theme.Color(clrMenuTitle), frameColor, font, x4 - w - x3 - TextSpacing);
+  osd->DrawText(x3 + TextSpacing, y0, WithDisk ? cString::sprintf("%s  -  %s", *title, *cVideoDiskUsage::String()) : title, Theme.Color(clrMenuTitle), frameColor, font, x4 - w - x3 - TextSpacing);
   osd->DrawText(x4 - w, y0, VDR, frameColor, clrBlack, font, w, lineHeight);
+}
+
+void cSkinSTTNGDisplayMenu::SetTitle(const char *Title)
+{
+  title = Title;
+  DrawTitle();
 }
 
 void cSkinSTTNGDisplayMenu::SetButtons(const char *Red, const char *Green, const char *Yellow, const char *Blue)
 {
+  const char *lutText[] = { Red, Green, Yellow, Blue };
+  tColor lutFg[] = { clrButtonRedFg, clrButtonGreenFg, clrButtonYellowFg, clrButtonBlueFg };
+  tColor lutBg[] = { clrButtonRedBg, clrButtonGreenBg, clrButtonYellowBg, clrButtonBlueBg };
   cString date = DayDateTime();
   const cFont *font = cFont::GetFont(fontSml);
   int d = 2 * Gap;
@@ -573,10 +588,10 @@ void cSkinSTTNGDisplayMenu::SetButtons(const char *Red, const char *Green, const
   osd->DrawRectangle(t1 + d2, y6, t2 - d2, y7 - 1, clrBlack);
   osd->DrawRectangle(t2 + d2, y6, t3 - d2, y7 - 1, clrBlack);
   osd->DrawRectangle(t3 + d2, y6, t4 - d2, y7 - 1, clrBlack);
-  osd->DrawText(t0 + d, y6, Red,    Theme.Color(clrButtonRedFg),    Theme.Color(clrButtonRedBg),    font, t1 - t0 - 2 * d, 0, taCenter);
-  osd->DrawText(t1 + d, y6, Green,  Theme.Color(clrButtonGreenFg),  Theme.Color(clrButtonGreenBg),  font, t2 - t1 - 2 * d, 0, taCenter);
-  osd->DrawText(t2 + d, y6, Yellow, Theme.Color(clrButtonYellowFg), Theme.Color(clrButtonYellowBg), font, t3 - t2 - 2 * d, 0, taCenter);
-  osd->DrawText(t3 + d, y6, Blue,   Theme.Color(clrButtonBlueFg),   Theme.Color(clrButtonBlueBg),   font, t4 - t3 - 2 * d, 0, taCenter);
+  osd->DrawText(t0 + d, y6, lutText[Setup.ColorKey0], Theme.Color(lutFg[Setup.ColorKey0]), Theme.Color(lutBg[Setup.ColorKey0]), font, t1 - t0 - 2 * d, 0, taCenter);
+  osd->DrawText(t1 + d, y6, lutText[Setup.ColorKey1], Theme.Color(lutFg[Setup.ColorKey1]), Theme.Color(lutBg[Setup.ColorKey1]), font, t2 - t1 - 2 * d, 0, taCenter);
+  osd->DrawText(t2 + d, y6, lutText[Setup.ColorKey2], Theme.Color(lutFg[Setup.ColorKey2]), Theme.Color(lutBg[Setup.ColorKey2]), font, t3 - t2 - 2 * d, 0, taCenter);
+  osd->DrawText(t3 + d, y6, lutText[Setup.ColorKey3], Theme.Color(lutFg[Setup.ColorKey3]), Theme.Color(lutBg[Setup.ColorKey3]), font, t4 - t3 - 2 * d, 0, taCenter);
 }
 
 void cSkinSTTNGDisplayMenu::SetMessage(eMessageType Type, const char *Text)
@@ -749,6 +764,8 @@ const cFont *cSkinSTTNGDisplayMenu::GetTextAreaFont(bool FixedFont) const
 
 void cSkinSTTNGDisplayMenu::Flush(void)
 {
+  if (cVideoDiskUsage::HasChanged(lastDiskUsageState))
+     DrawTitle();
   if (!message) {
      cString date = DayDateTime();
      if (!*lastDate || strcmp(date, lastDate)) {

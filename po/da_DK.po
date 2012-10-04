@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: VDR 1.6.0\n"
 "Report-Msgid-Bugs-To: <vdr-bugs@tvdr.de>\n"
-"POT-Creation-Date: 2012-03-08 14:37+0100\n"
+"POT-Creation-Date: 2012-09-15 14:04+0200\n"
 "PO-Revision-Date: 2007-08-12 14:17+0200\n"
 "Last-Translator: Mogens Elneff <mogens@elneff.dk>\n"
 "Language-Team: Danish <vdr@linuxtv.org>\n"
@@ -509,12 +509,6 @@ msgstr "Bruger8"
 msgid "Key$User9"
 msgstr "Bruger9"
 
-msgid "Disk"
-msgstr "Disk"
-
-msgid "free"
-msgstr "fri"
-
 msgid "Free To Air"
 msgstr "Free To Air"
 
@@ -855,6 +849,18 @@ msgstr ""
 msgid "Setup.OSD$Number keys for characters"
 msgstr ""
 
+msgid "Setup.OSD$Color key 0"
+msgstr ""
+
+msgid "Setup.OSD$Color key 1"
+msgstr ""
+
+msgid "Setup.OSD$Color key 2"
+msgstr ""
+
+msgid "Setup.OSD$Color key 3"
+msgstr ""
+
 msgid "EPG"
 msgstr "EPG"
 
@@ -922,6 +928,9 @@ msgstr "Undertekster"
 
 msgid "Setup.DVB$Primary DVB interface"
 msgstr "Primær DVB enhed"
+
+msgid "Setup.DVB$Standard compliance"
+msgstr ""
 
 msgid "Setup.DVB$Video format"
 msgstr "Video format"
@@ -1068,6 +1077,9 @@ msgstr "Navngiv direkte optagelse"
 msgid "Setup.Recording$Instant rec. time (min)"
 msgstr "Længde af direkte optagelse (min)"
 
+msgid "Setup.Recording$present event"
+msgstr ""
+
 msgid "Setup.Recording$Max. video file size (MB)"
 msgstr "Max. video filstørrelse (MB)"
 
@@ -1122,6 +1134,9 @@ msgstr "Lydstyrke ved opstart"
 msgid "Setup.Miscellaneous$Channels wrap"
 msgstr ""
 
+msgid "Setup.Miscellaneous$Show channel names with source"
+msgstr ""
+
 msgid "Setup.Miscellaneous$Emergency exit"
 msgstr "Nødudgang"
 
@@ -1146,9 +1161,6 @@ msgstr " Stop optagelse "
 
 msgid "Schedule"
 msgstr "Programoversigt"
-
-msgid "VDR"
-msgstr "VDR"
 
 #. TRANSLATORS: note the leading blank!
 msgid " Stop replaying"
@@ -1243,6 +1255,9 @@ msgstr ""
 msgid "Index file regeneration complete"
 msgstr ""
 
+msgid "Index file regeneration failed!"
+msgstr ""
+
 msgid "Can't shutdown - option '-s' not given!"
 msgstr "Kan ikke slukke - parameter '-s' ikke angivet!"
 
@@ -1278,6 +1293,24 @@ msgstr "Lydstyrke "
 
 msgid "Classic VDR"
 msgstr "Klassisk VDR"
+
+msgid "DISK"
+msgstr ""
+
+msgid "LOAD"
+msgstr ""
+
+msgid "TIMERS"
+msgstr ""
+
+msgid "DEVICES"
+msgstr ""
+
+msgid "LIVE"
+msgstr ""
+
+msgid "PLAY"
+msgstr ""
 
 msgid "ST:TNG Panels"
 msgstr "ST:TNG konsol"
@@ -1341,3 +1374,9 @@ msgstr "Tryk vilkårlig knap for at annullere genstart"
 #, c-format
 msgid "VDR will shut down in %s minutes"
 msgstr "VDR slukker om %s minutter"
+
+msgid "Disk"
+msgstr "Disk"
+
+msgid "free"
+msgstr "fri"

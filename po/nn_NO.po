@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: VDR 1.6.0\n"
 "Report-Msgid-Bugs-To: <vdr-bugs@tvdr.de>\n"
-"POT-Creation-Date: 2012-03-08 14:37+0100\n"
+"POT-Creation-Date: 2012-09-15 14:04+0200\n"
 "PO-Revision-Date: 2007-08-12 14:17+0200\n"
 "Last-Translator: Truls Slevigen <truls@slevigen.no>\n"
 "Language-Team: Norwegian Nynorsk <vdr@linuxtv.org>\n"
@@ -510,12 +510,6 @@ msgstr ""
 msgid "Key$User9"
 msgstr ""
 
-msgid "Disk"
-msgstr "Disk"
-
-msgid "free"
-msgstr "ledig"
-
 msgid "Free To Air"
 msgstr ""
 
@@ -856,6 +850,18 @@ msgstr ""
 msgid "Setup.OSD$Number keys for characters"
 msgstr ""
 
+msgid "Setup.OSD$Color key 0"
+msgstr ""
+
+msgid "Setup.OSD$Color key 1"
+msgstr ""
+
+msgid "Setup.OSD$Color key 2"
+msgstr ""
+
+msgid "Setup.OSD$Color key 3"
+msgstr ""
+
 msgid "EPG"
 msgstr "Programoversikt"
 
@@ -923,6 +929,9 @@ msgstr ""
 
 msgid "Setup.DVB$Primary DVB interface"
 msgstr "Hoved DVB-enhet"
+
+msgid "Setup.DVB$Standard compliance"
+msgstr ""
 
 msgid "Setup.DVB$Video format"
 msgstr "TV-Format"
@@ -1069,6 +1078,9 @@ msgstr "Navngi direkteopptak"
 msgid "Setup.Recording$Instant rec. time (min)"
 msgstr ""
 
+msgid "Setup.Recording$present event"
+msgstr ""
+
 msgid "Setup.Recording$Max. video file size (MB)"
 msgstr "Maksimal størrelse på videofiler (MB)"
 
@@ -1123,6 +1135,9 @@ msgstr ""
 msgid "Setup.Miscellaneous$Channels wrap"
 msgstr ""
 
+msgid "Setup.Miscellaneous$Show channel names with source"
+msgstr ""
+
 msgid "Setup.Miscellaneous$Emergency exit"
 msgstr ""
 
@@ -1147,9 +1162,6 @@ msgstr " Stopp opptak fra "
 
 msgid "Schedule"
 msgstr "Programmer"
-
-msgid "VDR"
-msgstr "VDR"
 
 #. TRANSLATORS: note the leading blank!
 msgid " Stop replaying"
@@ -1244,6 +1256,9 @@ msgstr ""
 msgid "Index file regeneration complete"
 msgstr ""
 
+msgid "Index file regeneration failed!"
+msgstr ""
+
 msgid "Can't shutdown - option '-s' not given!"
 msgstr "Kan ikke slå av - startet uten parameteret '-s'!"
 
@@ -1278,6 +1293,24 @@ msgid "Volume "
 msgstr "Volum "
 
 msgid "Classic VDR"
+msgstr ""
+
+msgid "DISK"
+msgstr ""
+
+msgid "LOAD"
+msgstr ""
+
+msgid "TIMERS"
+msgstr ""
+
+msgid "DEVICES"
+msgstr ""
+
+msgid "LIVE"
+msgstr ""
+
+msgid "PLAY"
 msgstr ""
 
 msgid "ST:TNG Panels"
@@ -1342,3 +1375,9 @@ msgstr ""
 #, c-format
 msgid "VDR will shut down in %s minutes"
 msgstr ""
+
+msgid "Disk"
+msgstr "Disk"
+
+msgid "free"
+msgstr "ledig"

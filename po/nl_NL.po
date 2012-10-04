@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: VDR 1.6.0\n"
 "Report-Msgid-Bugs-To: <vdr-bugs@tvdr.de>\n"
-"POT-Creation-Date: 2012-03-08 14:37+0100\n"
+"POT-Creation-Date: 2012-09-15 14:04+0200\n"
 "PO-Revision-Date: 2008-02-26 17:20+0100\n"
 "Last-Translator: Johan Schuring <johan.schuring@vetteblei.nl>\n"
 "Language-Team: Dutch <vdr@linuxtv.org>\n"
@@ -513,12 +513,6 @@ msgstr "Gebruiker8"
 msgid "Key$User9"
 msgstr "Gebruiker9"
 
-msgid "Disk"
-msgstr "Schijf"
-
-msgid "free"
-msgstr "vrij"
-
 msgid "Free To Air"
 msgstr "Vrij te ontvangen"
 
@@ -859,6 +853,18 @@ msgstr ""
 msgid "Setup.OSD$Number keys for characters"
 msgstr ""
 
+msgid "Setup.OSD$Color key 0"
+msgstr ""
+
+msgid "Setup.OSD$Color key 1"
+msgstr ""
+
+msgid "Setup.OSD$Color key 2"
+msgstr ""
+
+msgid "Setup.OSD$Color key 3"
+msgstr ""
+
 msgid "EPG"
 msgstr "EPG"
 
@@ -926,6 +932,9 @@ msgstr "Ondertiteling"
 
 msgid "Setup.DVB$Primary DVB interface"
 msgstr "Eerste DVB kaart"
+
+msgid "Setup.DVB$Standard compliance"
+msgstr ""
 
 msgid "Setup.DVB$Video format"
 msgstr "Videoformaat"
@@ -1072,6 +1081,9 @@ msgstr "Naam direkt-opname"
 msgid "Setup.Recording$Instant rec. time (min)"
 msgstr "Duur van de directe opname (min)"
 
+msgid "Setup.Recording$present event"
+msgstr ""
+
 msgid "Setup.Recording$Max. video file size (MB)"
 msgstr "Maximale omvang video file (MB)"
 
@@ -1126,6 +1138,9 @@ msgstr "Opstartvolume"
 msgid "Setup.Miscellaneous$Channels wrap"
 msgstr ""
 
+msgid "Setup.Miscellaneous$Show channel names with source"
+msgstr ""
+
 msgid "Setup.Miscellaneous$Emergency exit"
 msgstr "Nooduitgang"
 
@@ -1150,9 +1165,6 @@ msgstr " Stop opnemen "
 
 msgid "Schedule"
 msgstr "Programmagids"
-
-msgid "VDR"
-msgstr "VDR"
 
 #. TRANSLATORS: note the leading blank!
 msgid " Stop replaying"
@@ -1247,6 +1259,9 @@ msgstr ""
 msgid "Index file regeneration complete"
 msgstr ""
 
+msgid "Index file regeneration failed!"
+msgstr ""
+
 msgid "Can't shutdown - option '-s' not given!"
 msgstr "Shutdown onmogelijk - Optie '-s' ontbreekt!"
 
@@ -1282,6 +1297,24 @@ msgstr "Volume "
 
 msgid "Classic VDR"
 msgstr "VDR Klassiek"
+
+msgid "DISK"
+msgstr ""
+
+msgid "LOAD"
+msgstr ""
+
+msgid "TIMERS"
+msgstr ""
+
+msgid "DEVICES"
+msgstr ""
+
+msgid "LIVE"
+msgstr ""
+
+msgid "PLAY"
+msgstr ""
 
 msgid "ST:TNG Panels"
 msgstr "ST:TNG Consoles"
@@ -1345,3 +1378,9 @@ msgstr "Druk een willekeurige toets om herstarten af te breken"
 #, c-format
 msgid "VDR will shut down in %s minutes"
 msgstr "VDR zal na %s minuten uitschakelen"
+
+msgid "Disk"
+msgstr "Schijf"
+
+msgid "free"
+msgstr "vrij"

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: VDR 1.7.1\n"
 "Report-Msgid-Bugs-To: <vdr-bugs@tvdr.de>\n"
-"POT-Creation-Date: 2012-03-08 14:37+0100\n"
+"POT-Creation-Date: 2012-09-15 14:04+0200\n"
 "PO-Revision-Date: 2011-01-09 15:57+0100\n"
 "Last-Translator: Milan Cvijanoviæ <elcom_cvijo@hotmail.com>\n"
 "Language-Team: Serbian <vdr@linuxtv.org>\n"
@@ -511,12 +511,6 @@ msgstr "Korisnik8"
 msgid "Key$User9"
 msgstr "Korisnik9"
 
-msgid "Disk"
-msgstr "Disk"
-
-msgid "free"
-msgstr "slobodno"
-
 msgid "Free To Air"
 msgstr "Slobodno"
 
@@ -873,6 +867,18 @@ msgstr "Direktoriji u tajmer meni-ju "
 msgid "Setup.OSD$Number keys for characters"
 msgstr "Number keys for characters"
 
+msgid "Setup.OSD$Color key 0"
+msgstr ""
+
+msgid "Setup.OSD$Color key 1"
+msgstr ""
+
+msgid "Setup.OSD$Color key 2"
+msgstr ""
+
+msgid "Setup.OSD$Color key 3"
+msgstr ""
+
 msgid "EPG"
 msgstr "EPG (TV Raspored¨)"
 
@@ -941,6 +947,9 @@ msgstr "Titlovi"
 
 msgid "Setup.DVB$Primary DVB interface"
 msgstr "Primarni DVB ureðaj"
+
+msgid "Setup.DVB$Standard compliance"
+msgstr ""
 
 msgid "Setup.DVB$Video format"
 msgstr "Video format"
@@ -1091,6 +1100,9 @@ msgstr "Imenuj trenutno snimanje"
 msgid "Setup.Recording$Instant rec. time (min)"
 msgstr "Trajanje trenutnog snimanja (min)"
 
+msgid "Setup.Recording$present event"
+msgstr ""
+
 msgid "Setup.Recording$Max. video file size (MB)"
 msgstr "Maks. velièina datoteke (MB)"
 
@@ -1146,6 +1158,9 @@ msgstr "Poèetna jaèina tona"
 msgid "Setup.Miscellaneous$Channels wrap"
 msgstr "Kanal spakovan"
 
+msgid "Setup.Miscellaneous$Show channel names with source"
+msgstr ""
+
 msgid "Setup.Miscellaneous$Emergency exit"
 msgstr "Izlaz u sluèaju nu¾de"
 
@@ -1170,9 +1185,6 @@ msgstr " Zaustavi snimanje "
 
 msgid "Schedule"
 msgstr "Raspored Programa"
-
-msgid "VDR"
-msgstr "VDR"
 
 #. TRANSLATORS: note the leading blank!
 msgid " Stop replaying"
@@ -1269,6 +1281,9 @@ msgstr "Obnavljanje index datoteke"
 msgid "Index file regeneration complete"
 msgstr "Obnavljanje index datoteke zavr¹eno"
 
+msgid "Index file regeneration failed!"
+msgstr ""
+
 msgid "Can't shutdown - option '-s' not given!"
 msgstr "Ga¹enje nemoguæe - nedostaje opcija '-s'!"
 
@@ -1304,6 +1319,24 @@ msgstr "Jaèina "
 
 msgid "Classic VDR"
 msgstr "Klasièni VDR"
+
+msgid "DISK"
+msgstr ""
+
+msgid "LOAD"
+msgstr ""
+
+msgid "TIMERS"
+msgstr ""
+
+msgid "DEVICES"
+msgstr ""
+
+msgid "LIVE"
+msgstr ""
+
+msgid "PLAY"
+msgstr ""
 
 msgid "ST:TNG Panels"
 msgstr "ST:TNG Panele"
@@ -1368,3 +1401,9 @@ msgstr "Pritisni jedan taster za poni¹tenje restart-a"
 #, c-format
 msgid "VDR will shut down in %s minutes"
 msgstr "VDR se iskljuèuje za %s minuta"
+
+msgid "Disk"
+msgstr "Disk"
+
+msgid "free"
+msgstr "slobodno"

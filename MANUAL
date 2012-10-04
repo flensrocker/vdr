@@ -24,7 +24,7 @@ Version 1.6
   Green   -           Audio        New        New        Ins/Ovr       Rewind            Skip -60s        -
   Yellow  -           Pause live   Delete     Delete     Delete        Delete            Skip +60s        -
   Blue    -           Stop/Resume  Mark       Info       -             Info              Stop             -
-  0..9    Ch select   -            Sort(2)    Day(3)     Numeric inp.  Exec cmd(1)       Editing          -
+  0..9    Ch select   -            Sort(2)    Day(3)     Numeric inp.  Sort/Exec cmd(1)  Editing          -
 
   In a numerical input field (like the response to a CAM enquiry) the keys 0..9
   are used to enter the data, and the Left key can be used to delete the last
@@ -81,7 +81,7 @@ Version 1.6
   Yellow    Info
   Blue      Timers menu
 
-  (1) See "Processing Recordings" below.
+  (1) See "Sort Recordings" and "Processing Recordings" below.
   (2) In the "Channels" menu the '0' key switches the sort mode through "by number",
       "by name" and "by provider". Other numeric input positions the cursor to
       the channel with the number entered so far. If there is no channel with that
@@ -300,6 +300,14 @@ Version 1.6
   or by pressing the "Blue" key outside the menu.
   A previously stopped playback session can be resumed by pressing the "Blue"
   key in the "VDR" menu.
+
+* Sort Recordings
+
+  Within the "Recordings" menu, pressing the '0' key toggles sorting between
+  "by time" and "by name". The selected sort mode is stored separately for each
+  folder (provided you have write access to that folder).
+  If a folder is newly created by a repeating timer, the sort mode for that
+  folder is initially set to "by time".
 
 * Processing Recordings
 
@@ -593,6 +601,14 @@ Version 1.6
                          characters in a text input field. You may want to set this
                          to "no" if you are using an actual keyboard to control VDR.
 
+  Color key 0 = 0        By default, VDR assumes that the sequence of the color
+  Color key 1 = 1        keys on the remote control is red-green-yellow-blue. If
+  Color key 2 = 2        your remote control has these keys in a different sequence,
+  Color key 3 = 3        you can adjust these parameters to reorder the corresponding
+                         color buttons in the menus accordingly. Note that this does
+                         not change the functionality of the individual keys; it only
+                         changes the sequence in which the color buttons are displayed.
+
   EPG:
 
   EPG scan timeout = 5   The time (in hours) of user inactivity after which the
@@ -674,6 +690,11 @@ Version 1.6
                          from the primary DVB interface, so that the viewer will
                          be disturbed as little as possible.
 
+  Standard Compliance = 0
+                         Defines the standard compliance mode:
+                         0 = DVB
+                         1 = ANSI/SCTE
+                         
   Video format = 4:3     The video format (or aspect ratio) of the tv set in use
                          (4:3 or 16:9).
 
@@ -816,6 +837,11 @@ Version 1.6
                          Default is 180 minutes (3 hours). The stop time of an
                          instant recording can be modified at any time by editing
                          the respective timer in the "Timers" menu.
+                         If this parameter is set to 0 ("present event"), only the
+                         currently running event will be recorded, using the stop
+                         margin and VPS setting as configured.
+                         Note that this parameter is also used when pausing live
+                         video!
 
   Max. video file size = 2000
                          The maximum size of a single recorded video file in MB.
@@ -899,6 +925,11 @@ Version 1.6
                          "Channel+" and "Channel-" keys) the current channel will
                          wrap around the beginning or end of the channel list if
                          this parameter is set to 'yes'.
+
+  Show channel names with source = no
+                         If this option is turned on, channel names will be displayed
+                         with the source appended to them, as in "ZDF (S)", where
+                         'S' stands for "Satellite".
 
   Emergency exit = yes   If, for some reason, a recording fails because the video
                          data stream is broken, or the CAM doesn't decrypt etc.,

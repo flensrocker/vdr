@@ -4,7 +4,7 @@
  * See the main source file 'vdr.c' for copyright information and
  * how to reach the author.
  *
- * $Id: tools.h 2.16 2012/02/29 10:41:00 kls Exp $
+ * $Id: tools.h 2.22 2012/09/30 11:02:21 kls Exp $
  */
 
 #ifndef __TOOLS_H
@@ -177,7 +177,7 @@ public:
   cString &operator=(const char *String);
   cString &Truncate(int Index); ///< Truncate the string at the given Index (if Index is < 0 it is counted from the end of the string).
   static cString sprintf(const char *fmt, ...) __attribute__ ((format (printf, 1, 2)));
-  static cString sprintf(const char *fmt, va_list &ap);
+  static cString vsprintf(const char *fmt, va_list &ap);
   };
 
 ssize_t safe_read(int filedes, void *buffer, size_t size);
@@ -213,6 +213,9 @@ int64_t StrToNum(const char *s);
     ///< K, M, G or T to abbreviate Kilo-, Mega-, Giga- or Terabyte, respectively
     ///< (based on 1024). Everything after the first non-numeric character is
     ///< silently ignored, as are any characters other than the ones mentioned here.
+bool StrInArray(const char *a[], const char *s);
+    ///< Returns true if the string s is equal to one of the strings pointed
+    ///< to by the (NULL terminated) array a.
 cString itoa(int n);
 cString AddDirectory(const char *DirName, const char *FileName);
 bool EntriesOnSameFileSystem(const char *File1, const char *File2);
@@ -220,7 +223,12 @@ int FreeDiskSpaceMB(const char *Directory, int *UsedMB = NULL);
 bool DirectoryOk(const char *DirName, bool LogErrors = false);
 bool MakeDirs(const char *FileName, bool IsDirectory = false);
 bool RemoveFileOrDir(const char *FileName, bool FollowSymlinks = false);
-bool RemoveEmptyDirectories(const char *DirName, bool RemoveThis = false);
+bool RemoveEmptyDirectories(const char *DirName, bool RemoveThis = false, const char *IgnoreFiles[] = NULL);
+     ///< Removes all empty directories under the given directory DirName.
+     ///< If RemoveThis is true, DirName will also be removed if it is empty.
+     ///< IgnoreFiles can be set to an array of file names that will be ignored when
+     ///< considering whether a directory is empty. If IgnoreFiles is given, the array
+     ///< must end with a NULL pointer.
 int DirSizeMB(const char *DirName); ///< returns the total size of the files in the given directory, or -1 in case of an error
 char *ReadLink(const char *FileName); ///< returns a new string allocated on the heap, which the caller must delete (or NULL in case of an error)
 bool SpinUpDisk(const char *FileName);
@@ -228,13 +236,26 @@ void TouchFile(const char *FileName);
 time_t LastModifiedTime(const char *FileName);
 off_t FileSize(const char *FileName); ///< returns the size of the given file, or -1 in case of an error (e.g. if the file doesn't exist)
 cString WeekDayName(int WeekDay);
+    ///< Converts the given WeekDay (0=Sunday, 1=Monday, ...) to a three letter
+    ///< day name.
 cString WeekDayName(time_t t);
+    ///< Converts the week day of the given time to a three letter day name.
 cString WeekDayNameFull(int WeekDay);
+    ///< Converts the given WeekDay (0=Sunday, 1=Monday, ...) to a full
+    ///< day name.
 cString WeekDayNameFull(time_t t);
+    ///< Converts the week day of the given time to a full day name.
 cString DayDateTime(time_t t = 0);
+    ///< Converts the given time to a string of the form "www dd.mm. hh:mm".
+    ///< If no time is given, the current time is taken.
 cString TimeToString(time_t t);
+    ///< Converts the given time to a string of the form "www mmm dd hh:mm:ss yyyy".
 cString DateString(time_t t);
+    ///< Converts the given time to a string of the form "www dd.mm.yyyy".
+cString ShortDateString(time_t t);
+    ///< Converts the given time to a string of the form "dd.mm.yy".
 cString TimeString(time_t t);
+    ///< Converts the given time to a string of the form "hh:mm".
 uchar *RgbToJpeg(uchar *Mem, int Width, int Height, int &Size, int Quality = 100);
     ///< Converts the given Memory to a JPEG image and returns a pointer
     ///< to the resulting image. Mem must point to a data block of exactly
@@ -457,6 +478,7 @@ public:
   };
 
 template<class T> class cVector {
+  ///< cVector may only be used for *simple* types, like int or pointers - not for class objects that allocate additional memory!
 private:
   mutable int allocated;
   mutable int size;
@@ -515,7 +537,7 @@ public:
   virtual void Append(T Data)
   {
     if (size >= allocated)
-       Realloc(allocated * 4 / 2); // increase size by 50%
+       Realloc(allocated * 3 / 2); // increase size by 50%
     data[size++] = Data;
   }
   virtual void Remove(int Index)
@@ -526,6 +548,8 @@ public:
   }
   virtual void Clear(void)
   {
+    for (int i = 0; i < size; i++)
+        data[i] = T(0);
     size = 0;
   }
   void Sort(__compar_fn_t Compare)

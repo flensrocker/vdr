@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: VDR 1.6.0\n"
 "Report-Msgid-Bugs-To: <vdr-bugs@tvdr.de>\n"
-"POT-Creation-Date: 2012-03-08 14:37+0100\n"
+"POT-Creation-Date: 2012-09-15 14:04+0200\n"
 "PO-Revision-Date: 2008-02-28 19:44+0100\n"
 "Last-Translator: Matjaz Thaler <matjaz.thaler@guest.arnes.si>\n"
 "Language-Team: Slovenian <vdr@linuxtv.org>\n"
@@ -510,12 +510,6 @@ msgstr "Uporabnik8"
 msgid "Key$User9"
 msgstr "Uporabnik9"
 
-msgid "Disk"
-msgstr "Disk"
-
-msgid "free"
-msgstr "prosto"
-
 msgid "Free To Air"
 msgstr "nekodiran"
 
@@ -856,6 +850,18 @@ msgstr ""
 msgid "Setup.OSD$Number keys for characters"
 msgstr ""
 
+msgid "Setup.OSD$Color key 0"
+msgstr ""
+
+msgid "Setup.OSD$Color key 1"
+msgstr ""
+
+msgid "Setup.OSD$Color key 2"
+msgstr ""
+
+msgid "Setup.OSD$Color key 3"
+msgstr ""
+
 msgid "EPG"
 msgstr "Programski vodnik"
 
@@ -923,6 +929,9 @@ msgstr "Podnapisi"
 
 msgid "Setup.DVB$Primary DVB interface"
 msgstr "Primarna naprava"
+
+msgid "Setup.DVB$Standard compliance"
+msgstr ""
 
 msgid "Setup.DVB$Video format"
 msgstr "Video format"
@@ -1069,6 +1078,9 @@ msgstr "Ime za direktno snemanje"
 msgid "Setup.Recording$Instant rec. time (min)"
 msgstr "Èas direktnega snemanja (min)"
 
+msgid "Setup.Recording$present event"
+msgstr ""
+
 msgid "Setup.Recording$Max. video file size (MB)"
 msgstr "Najveèja velikost datoteke (MB)"
 
@@ -1123,6 +1135,9 @@ msgstr "Privzeta glasnost"
 msgid "Setup.Miscellaneous$Channels wrap"
 msgstr ""
 
+msgid "Setup.Miscellaneous$Show channel names with source"
+msgstr ""
+
 msgid "Setup.Miscellaneous$Emergency exit"
 msgstr "Izhod v sili"
 
@@ -1147,9 +1162,6 @@ msgstr " Prekini snemanje "
 
 msgid "Schedule"
 msgstr "Program"
-
-msgid "VDR"
-msgstr "VDR"
 
 #. TRANSLATORS: note the leading blank!
 msgid " Stop replaying"
@@ -1244,6 +1256,9 @@ msgstr ""
 msgid "Index file regeneration complete"
 msgstr ""
 
+msgid "Index file regeneration failed!"
+msgstr ""
+
 msgid "Can't shutdown - option '-s' not given!"
 msgstr "Zaustavitev ni izvedljiva - opcija '-s' ni podana!"
 
@@ -1279,6 +1294,24 @@ msgstr "Glasnost "
 
 msgid "Classic VDR"
 msgstr "Klasièni VDR"
+
+msgid "DISK"
+msgstr ""
+
+msgid "LOAD"
+msgstr ""
+
+msgid "TIMERS"
+msgstr ""
+
+msgid "DEVICES"
+msgstr ""
+
+msgid "LIVE"
+msgstr ""
+
+msgid "PLAY"
+msgstr ""
 
 msgid "ST:TNG Panels"
 msgstr "ST:TNG Konsola"
@@ -1342,3 +1375,9 @@ msgstr "Pritisni katerokoli tipko za preklic ponovnega zagona"
 #, c-format
 msgid "VDR will shut down in %s minutes"
 msgstr "VDR se bo zaustavil v %s minutah"
+
+msgid "Disk"
+msgstr "Disk"
+
+msgid "free"
+msgstr "prosto"

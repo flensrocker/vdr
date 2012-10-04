@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: VDR 1.6.0\n"
 "Report-Msgid-Bugs-To: <vdr-bugs@tvdr.de>\n"
-"POT-Creation-Date: 2012-03-08 14:37+0100\n"
+"POT-Creation-Date: 2012-09-15 14:04+0200\n"
 "PO-Revision-Date: 2007-08-12 14:17+0200\n"
 "Last-Translator: Arthur Konovalov <artlov@gmail.com>\n"
 "Language-Team: Estonian <vdr@linuxtv.org>\n"
@@ -509,12 +509,6 @@ msgstr "Lisaklahv8"
 msgid "Key$User9"
 msgstr "Lisaklahv9"
 
-msgid "Disk"
-msgstr "Ketas"
-
-msgid "free"
-msgstr "vaba"
-
 msgid "Free To Air"
 msgstr "FTA"
 
@@ -855,6 +849,18 @@ msgstr "Kaustad taimeri menüüs"
 msgid "Setup.OSD$Number keys for characters"
 msgstr "Teksti sisestamine numbriklahvidega"
 
+msgid "Setup.OSD$Color key 0"
+msgstr ""
+
+msgid "Setup.OSD$Color key 1"
+msgstr ""
+
+msgid "Setup.OSD$Color key 2"
+msgstr ""
+
+msgid "Setup.OSD$Color key 3"
+msgstr ""
+
 msgid "EPG"
 msgstr "EPG"
 
@@ -922,6 +928,9 @@ msgstr "Subtiitrid"
 
 msgid "Setup.DVB$Primary DVB interface"
 msgstr "Esmane DVB seade"
+
+msgid "Setup.DVB$Standard compliance"
+msgstr ""
 
 msgid "Setup.DVB$Video format"
 msgstr "TV külgsuhe"
@@ -1068,6 +1077,9 @@ msgstr "Kiirsalvestuse nimi"
 msgid "Setup.Recording$Instant rec. time (min)"
 msgstr "Kiirsalvestuse kestus (min)"
 
+msgid "Setup.Recording$present event"
+msgstr ""
+
 msgid "Setup.Recording$Max. video file size (MB)"
 msgstr "Maks. failisuurus (MB)"
 
@@ -1122,6 +1134,9 @@ msgstr "Helitugevus käivitamisel"
 msgid "Setup.Miscellaneous$Channels wrap"
 msgstr "Kanalite ringkerimine"
 
+msgid "Setup.Miscellaneous$Show channel names with source"
+msgstr ""
+
 msgid "Setup.Miscellaneous$Emergency exit"
 msgstr "Hädaväljumine"
 
@@ -1146,9 +1161,6 @@ msgstr " Lõpetada salvestamine "
 
 msgid "Schedule"
 msgstr "Kava"
-
-msgid "VDR"
-msgstr "VDR"
 
 #. TRANSLATORS: note the leading blank!
 msgid " Stop replaying"
@@ -1243,6 +1255,9 @@ msgstr "Indeksfaili regenereerimine"
 msgid "Index file regeneration complete"
 msgstr "Indeksfaili regenereerimine lõpetatud"
 
+msgid "Index file regeneration failed!"
+msgstr ""
+
 msgid "Can't shutdown - option '-s' not given!"
 msgstr "Väljalülitamine nurjus - '-s' parameeter puudub!"
 
@@ -1278,6 +1293,24 @@ msgstr "Helitugevus "
 
 msgid "Classic VDR"
 msgstr "Classic VDR"
+
+msgid "DISK"
+msgstr ""
+
+msgid "LOAD"
+msgstr ""
+
+msgid "TIMERS"
+msgstr ""
+
+msgid "DEVICES"
+msgstr ""
+
+msgid "LIVE"
+msgstr ""
+
+msgid "PLAY"
+msgstr ""
 
 msgid "ST:TNG Panels"
 msgstr "ST:TNG Panels"
@@ -1341,3 +1374,9 @@ msgstr "Restardi katkestamiseks vajuta suvalist klahvi"
 #, c-format
 msgid "VDR will shut down in %s minutes"
 msgstr "VDR lülitub välja %s minuti pärast"
+
+msgid "Disk"
+msgstr "Ketas"
+
+msgid "free"
+msgstr "vaba"

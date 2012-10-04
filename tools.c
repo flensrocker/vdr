@@ -4,7 +4,7 @@
  * See the main source file 'vdr.c' for copyright information and
  * how to reach the author.
  *
- * $Id: tools.c 2.22 2012/02/18 15:30:35 kls Exp $
+ * $Id: tools.c 2.26 2012/09/30 13:04:14 kls Exp $
  */
 
 #include "tools.h"
@@ -285,6 +285,18 @@ int64_t StrToNum(const char *s)
   return n;
 }
 
+bool StrInArray(const char *a[], const char *s)
+{
+  if (a) {
+     while (*a) {
+           if (strcmp(*a, s) == 0)
+              return true;
+           a++;
+           }
+     }
+  return false;
+}
+
 cString AddDirectory(const char *DirName, const char *FileName)
 {
   return cString::sprintf("%s/%s", DirName && *DirName ? DirName : ".", FileName);
@@ -433,8 +445,9 @@ bool RemoveFileOrDir(const char *FileName, bool FollowSymlinks)
   return true;
 }
 
-bool RemoveEmptyDirectories(const char *DirName, bool RemoveThis)
+bool RemoveEmptyDirectories(const char *DirName, bool RemoveThis, const char *IgnoreFiles[])
 {
+  bool HasIgnoredFiles = false;
   cReadDir d(DirName);
   if (d.Ok()) {
      bool empty = true;
@@ -445,9 +458,11 @@ bool RemoveEmptyDirectories(const char *DirName, bool RemoveThis)
               struct stat st;
               if (stat(buffer, &st) == 0) {
                  if (S_ISDIR(st.st_mode)) {
-                    if (!RemoveEmptyDirectories(buffer, true))
+                    if (!RemoveEmptyDirectories(buffer, true, IgnoreFiles))
                        empty = false;
                     }
+                 else if (RemoveThis && IgnoreFiles && StrInArray(IgnoreFiles, e->d_name))
+                    HasIgnoredFiles = true;
                  else
                     empty = false;
                  }
@@ -458,6 +473,19 @@ bool RemoveEmptyDirectories(const char *DirName, bool RemoveThis)
               }
            }
      if (RemoveThis && empty) {
+        if (HasIgnoredFiles) {
+           while (*IgnoreFiles) {
+                 cString buffer = AddDirectory(DirName, *IgnoreFiles);
+                 if (access(buffer, F_OK) == 0) {
+                    dsyslog("removing %s", *buffer);
+                    if (remove(buffer) < 0) {
+                       LOG_ERROR_STR(*buffer);
+                       return false;
+                       }
+                    }
+                 IgnoreFiles++;
+                 }
+           }
         dsyslog("removing %s", DirName);
         if (remove(DirName) < 0) {
            LOG_ERROR_STR(DirName);
@@ -958,7 +986,7 @@ cString cString::sprintf(const char *fmt, ...)
   return cString(buffer, true);
 }
 
-cString cString::sprintf(const char *fmt, va_list &ap)
+cString cString::vsprintf(const char *fmt, va_list &ap)
 {
   char *buffer;
   if (!fmt || vasprintf(&buffer, fmt, ap) < 0) {
@@ -1039,6 +1067,15 @@ cString DateString(time_t t)
   char *p = stpcpy(buf, WeekDayName(tm->tm_wday));
   *p++ = ' ';
   strftime(p, sizeof(buf) - (p - buf), "%d.%m.%Y", tm);
+  return buf;
+}
+
+cString ShortDateString(time_t t)
+{
+  char buf[32];
+  struct tm tm_r;
+  tm *tm = localtime_r(&t, &tm_r);
+  strftime(buf, sizeof(buf), "%d.%m.%y", tm);
   return buf;
 }
 

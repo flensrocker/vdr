@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: VDR 1.6.0\n"
 "Report-Msgid-Bugs-To: <vdr-bugs@tvdr.de>\n"
-"POT-Creation-Date: 2012-03-08 14:37+0100\n"
+"POT-Creation-Date: 2012-09-15 14:04+0200\n"
 "PO-Revision-Date: 2008-03-12 18:25+0100\n"
 "Last-Translator: Magnus Andersson <svankan@bahnhof.se>\n"
 "Language-Team: Swedish <vdr@linuxtv.org>\n"
@@ -512,12 +512,6 @@ msgstr "Användare8"
 msgid "Key$User9"
 msgstr "Användare9"
 
-msgid "Disk"
-msgstr "Disk"
-
-msgid "free"
-msgstr "ledigt"
-
 msgid "Free To Air"
 msgstr "Okodad"
 
@@ -858,6 +852,18 @@ msgstr ""
 msgid "Setup.OSD$Number keys for characters"
 msgstr ""
 
+msgid "Setup.OSD$Color key 0"
+msgstr ""
+
+msgid "Setup.OSD$Color key 1"
+msgstr ""
+
+msgid "Setup.OSD$Color key 2"
+msgstr ""
+
+msgid "Setup.OSD$Color key 3"
+msgstr ""
+
 msgid "EPG"
 msgstr "EPG"
 
@@ -925,6 +931,9 @@ msgstr "Knapp$Textning"
 
 msgid "Setup.DVB$Primary DVB interface"
 msgstr "Primär DVB enhet"
+
+msgid "Setup.DVB$Standard compliance"
+msgstr ""
 
 msgid "Setup.DVB$Video format"
 msgstr "Video format"
@@ -1071,6 +1080,9 @@ msgstr "Namnge direktinspelning"
 msgid "Setup.Recording$Instant rec. time (min)"
 msgstr "Direktinspelning längd (min)"
 
+msgid "Setup.Recording$present event"
+msgstr ""
+
 msgid "Setup.Recording$Max. video file size (MB)"
 msgstr "Maximal filstorlek för inspelning (MB)"
 
@@ -1125,6 +1137,9 @@ msgstr "Ljudstyrka vid uppstart"
 msgid "Setup.Miscellaneous$Channels wrap"
 msgstr ""
 
+msgid "Setup.Miscellaneous$Show channel names with source"
+msgstr ""
+
 msgid "Setup.Miscellaneous$Emergency exit"
 msgstr "Oförutsedd avslutning"
 
@@ -1149,9 +1164,6 @@ msgstr " Avsluta inspelning "
 
 msgid "Schedule"
 msgstr "Program"
-
-msgid "VDR"
-msgstr "VDR"
 
 #. TRANSLATORS: note the leading blank!
 msgid " Stop replaying"
@@ -1246,6 +1258,9 @@ msgstr ""
 msgid "Index file regeneration complete"
 msgstr ""
 
+msgid "Index file regeneration failed!"
+msgstr ""
+
 msgid "Can't shutdown - option '-s' not given!"
 msgstr "Kan inte avsluta, måste använda parameter '-s'"
 
@@ -1281,6 +1296,24 @@ msgstr "Volym "
 
 msgid "Classic VDR"
 msgstr "Klassisk VDR"
+
+msgid "DISK"
+msgstr ""
+
+msgid "LOAD"
+msgstr ""
+
+msgid "TIMERS"
+msgstr ""
+
+msgid "DEVICES"
+msgstr ""
+
+msgid "LIVE"
+msgstr ""
+
+msgid "PLAY"
+msgstr ""
 
 msgid "ST:TNG Panels"
 msgstr "ST:TNG konsol"
@@ -1344,3 +1377,9 @@ msgstr "Tryck valfri knapp för att återkalla omstart"
 #, c-format
 msgid "VDR will shut down in %s minutes"
 msgstr "VDR kommer att stängas ned om %s minuter"
+
+msgid "Disk"
+msgstr "Disk"
+
+msgid "free"
+msgstr "ledigt"

@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: VDR 1.6.0\n"
 "Report-Msgid-Bugs-To: <vdr-bugs@tvdr.de>\n"
-"POT-Creation-Date: 2012-03-08 14:37+0100\n"
+"POT-Creation-Date: 2012-09-15 14:04+0200\n"
 "PO-Revision-Date: 2008-03-02 19:02+0100\n"
 "Last-Translator: Luca Olivetti <luca@ventoso.org>\n"
 "Language-Team: Catalan <vdr@linuxtv.org>\n"
@@ -512,12 +512,6 @@ msgstr "Usuari 8"
 msgid "Key$User9"
 msgstr "Usuari 9"
 
-msgid "Disk"
-msgstr "Disc"
-
-msgid "free"
-msgstr "lliure"
-
 msgid "Free To Air"
 msgstr "No codificat"
 
@@ -858,6 +852,18 @@ msgstr ""
 msgid "Setup.OSD$Number keys for characters"
 msgstr ""
 
+msgid "Setup.OSD$Color key 0"
+msgstr ""
+
+msgid "Setup.OSD$Color key 1"
+msgstr ""
+
+msgid "Setup.OSD$Color key 2"
+msgstr ""
+
+msgid "Setup.OSD$Color key 3"
+msgstr ""
+
 msgid "EPG"
 msgstr "Guia de Programes"
 
@@ -925,6 +931,9 @@ msgstr "Subtítols"
 
 msgid "Setup.DVB$Primary DVB interface"
 msgstr "Tarja DVB primària"
+
+msgid "Setup.DVB$Standard compliance"
+msgstr ""
 
 msgid "Setup.DVB$Video format"
 msgstr "Format del vídeo"
@@ -1071,6 +1080,9 @@ msgstr "Anomenar gravacions instantànies"
 msgid "Setup.Recording$Instant rec. time (min)"
 msgstr "Temps de gravació instantània (min)"
 
+msgid "Setup.Recording$present event"
+msgstr ""
+
 msgid "Setup.Recording$Max. video file size (MB)"
 msgstr "Mida màxima de l'arxiu (MB)"
 
@@ -1125,6 +1137,9 @@ msgstr "Volum inicial"
 msgid "Setup.Miscellaneous$Channels wrap"
 msgstr ""
 
+msgid "Setup.Miscellaneous$Show channel names with source"
+msgstr ""
+
 msgid "Setup.Miscellaneous$Emergency exit"
 msgstr "Sortida d'emergència"
 
@@ -1149,9 +1164,6 @@ msgstr " Aturar la gravació "
 
 msgid "Schedule"
 msgstr "Guia de Programació"
-
-msgid "VDR"
-msgstr "VDR"
 
 #. TRANSLATORS: note the leading blank!
 msgid " Stop replaying"
@@ -1246,6 +1258,9 @@ msgstr ""
 msgid "Index file regeneration complete"
 msgstr ""
 
+msgid "Index file regeneration failed!"
+msgstr ""
+
 msgid "Can't shutdown - option '-s' not given!"
 msgstr "No puc apagar, falta la opció -s !"
 
@@ -1281,6 +1296,24 @@ msgstr "Volum "
 
 msgid "Classic VDR"
 msgstr "VDR clasico"
+
+msgid "DISK"
+msgstr ""
+
+msgid "LOAD"
+msgstr ""
+
+msgid "TIMERS"
+msgstr ""
+
+msgid "DEVICES"
+msgstr ""
+
+msgid "LIVE"
+msgstr ""
+
+msgid "PLAY"
+msgstr ""
 
 msgid "ST:TNG Panels"
 msgstr "Quadres ST:TNG"
@@ -1344,3 +1377,9 @@ msgstr "Prem qualsevol tecla per cancel·lar el reinici"
 #, c-format
 msgid "VDR will shut down in %s minutes"
 msgstr "VDR s'apagarà en %s minuts"
+
+msgid "Disk"
+msgstr "Disc"
+
+msgid "free"
+msgstr "lliure"

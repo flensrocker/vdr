@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: VDR 1.6.0\n"
 "Report-Msgid-Bugs-To: <vdr-bugs@tvdr.de>\n"
-"POT-Creation-Date: 2012-03-08 14:37+0100\n"
+"POT-Creation-Date: 2012-09-15 14:04+0200\n"
 "PO-Revision-Date: 2009-09-23 23:50+0800\n"
 "Last-Translator: Nan Feng <nfgx@21cn.com>\n"
 "Language-Team: Chinese (simplified) <vdr@linuxtv.org>\n"
@@ -512,12 +512,6 @@ msgstr "用户8"
 msgid "Key$User9"
 msgstr "用户9"
 
-msgid "Disk"
-msgstr "硬盘已使用"
-
-msgid "free"
-msgstr "可录像时间"
-
 msgid "Free To Air"
 msgstr "剩余空间"
 
@@ -858,6 +852,18 @@ msgstr ""
 msgid "Setup.OSD$Number keys for characters"
 msgstr ""
 
+msgid "Setup.OSD$Color key 0"
+msgstr ""
+
+msgid "Setup.OSD$Color key 1"
+msgstr ""
+
+msgid "Setup.OSD$Color key 2"
+msgstr ""
+
+msgid "Setup.OSD$Color key 3"
+msgstr ""
+
 msgid "EPG"
 msgstr "电子节目单设置"
 
@@ -925,6 +931,9 @@ msgstr "字幕"
 
 msgid "Setup.DVB$Primary DVB interface"
 msgstr "使用中卫星卡接口"
+
+msgid "Setup.DVB$Standard compliance"
+msgstr ""
 
 msgid "Setup.DVB$Video format"
 msgstr "视频格式"
@@ -1071,6 +1080,9 @@ msgstr "名字直接记录"
 msgid "Setup.Recording$Instant rec. time (min)"
 msgstr "直接录像时间(min)"
 
+msgid "Setup.Recording$present event"
+msgstr ""
+
 msgid "Setup.Recording$Max. video file size (MB)"
 msgstr "最大的视频文件容量 (MB)"
 
@@ -1125,6 +1137,9 @@ msgstr "初始化声音"
 msgid "Setup.Miscellaneous$Channels wrap"
 msgstr ""
 
+msgid "Setup.Miscellaneous$Show channel names with source"
+msgstr ""
+
 msgid "Setup.Miscellaneous$Emergency exit"
 msgstr "突发事件退出"
 
@@ -1149,9 +1164,6 @@ msgstr "是否停止录像?"
 
 msgid "Schedule"
 msgstr "任务列表"
-
-msgid "VDR"
-msgstr "VDR"
 
 #. TRANSLATORS: note the leading blank!
 msgid " Stop replaying"
@@ -1246,6 +1258,9 @@ msgstr ""
 msgid "Index file regeneration complete"
 msgstr ""
 
+msgid "Index file regeneration failed!"
+msgstr ""
+
 msgid "Can't shutdown - option '-s' not given!"
 msgstr "不能关机 - 操作 '-s' 不允许!"
 
@@ -1281,6 +1296,24 @@ msgstr "音量调整"
 
 msgid "Classic VDR"
 msgstr "经典VDR面板"
+
+msgid "DISK"
+msgstr ""
+
+msgid "LOAD"
+msgstr ""
+
+msgid "TIMERS"
+msgstr ""
+
+msgid "DEVICES"
+msgstr ""
+
+msgid "LIVE"
+msgstr ""
+
+msgid "PLAY"
+msgstr ""
 
 msgid "ST:TNG Panels"
 msgstr "ST:TNG 面板"
@@ -1344,3 +1377,9 @@ msgstr "请按任意键重启"
 #, c-format
 msgid "VDR will shut down in %s minutes"
 msgstr "VDR系统将要在%s分钟关闭"
+
+msgid "Disk"
+msgstr "硬盘已使用"
+
+msgid "free"
+msgstr "可录像时间"

@@ -4,7 +4,7 @@
  * See the main source file 'vdr.c' for copyright information and
  * how to reach the author.
  *
- * $Id: config.h 2.45 2012/03/11 10:41:44 kls Exp $
+ * $Id: config.h 2.53 2012/09/15 11:51:54 kls Exp $
  */
 
 #ifndef __CONFIG_H
@@ -22,13 +22,13 @@
 
 // VDR's own version number:
 
-#define VDRVERSION  "1.7.27"
-#define VDRVERSNUM   10727  // Version * 10000 + Major * 100 + Minor
+#define VDRVERSION  "1.7.31"
+#define VDRVERSNUM   10731  // Version * 10000 + Major * 100 + Minor
 
 // The plugin API's version number:
 
-#define APIVERSION  "1.7.27"
-#define APIVERSNUM   10727  // Version * 10000 + Major * 100 + Minor
+#define APIVERSION  "1.7.31"
+#define APIVERSNUM   10731  // Version * 10000 + Major * 100 + Minor
 
 // When loading plugins, VDR searches them by their APIVERSION, which
 // may be smaller than VDRVERSION in case there have been no changes to
@@ -42,6 +42,7 @@
 #define TRANSFERPRIORITY  (LIVEPRIORITY - 1) // priority used for actual local Transfer Mode
 #define IDLEPRIORITY      (MINPRIORITY - 1)  // priority of an idle device
 #define MAXLIFETIME       99
+#define DEFINSTRECTIME    180 // default instant recording time (minutes)
 
 #define MINOSDWIDTH   480
 #define MAXOSDWIDTH  1920
@@ -51,6 +52,16 @@
 #define MaxFileName 256
 #define MaxSkinName 16
 #define MaxThemeName 16
+
+// Basically VDR works according to the DVB standard, but there are countries/providers
+// that use other standards, which in some details deviate from the DVB standard.
+// This makes it necessary to handle things differently in some areas, depending on
+// which standard is actually used. The following macros are used to distinguish
+// these cases (make sure to adjust cMenuSetupDVB::standardComplianceTexts accordingly
+// when adding a new standard):
+
+#define STANDARD_DVB       0
+#define STANDARD_ANSISCTE  1
 
 typedef uint32_t in_addr_t; //XXX from /usr/include/netinet/in.h (apparently this is not defined on systems with glibc < 2.2)
 
@@ -255,6 +266,7 @@ public:
   int SetSystemTime;
   int TimeSource;
   int TimeTransponder;
+  int StandardCompliance;
   int MarginStart, MarginStop;
   int AudioLanguages[I18N_MAX_LANGUAGES + 1];
   int DisplaySubtitles;
@@ -277,6 +289,7 @@ public:
   int RecordingDirs;
   int FoldersInTimerMenu;
   int NumberKeysForChars;
+  int ColorKey0, ColorKey1, ColorKey2, ColorKey3;
   int VideoDisplayFormat;
   int VideoFormat;
   int UpdateChannels;
@@ -312,6 +325,7 @@ public:
   int CurrentDolby;
   int InitialVolume;
   int ChannelsWrap;
+  int ShowChannelNamesWithSource;
   int EmergencyExit;
   int __EndData__;
   cString InitialChannel;

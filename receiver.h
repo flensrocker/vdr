@@ -4,7 +4,7 @@
  * See the main source file 'vdr.c' for copyright information and
  * how to reach the author.
  *
- * $Id: receiver.h 2.6 2012/03/11 15:25:40 kls Exp $
+ * $Id: receiver.h 2.9 2012/09/02 09:27:20 kls Exp $
  */
 
 #ifndef __RECEIVER_H
@@ -13,8 +13,6 @@
 #include "device.h"
 
 #define MAXRECEIVEPIDS  64 // the maximum number of PIDs per receiver
-
-//#define LEGACY_CRECEIVER // Code enclosed with this macro is deprecated and may be removed in a future version
 
 class cReceiver {
   friend class cDevice;
@@ -29,7 +27,7 @@ protected:
   void Detach(void);
   virtual void Activate(bool On) {}
                ///< This function is called just before the cReceiver gets attached to
-               ///< (On == true) or detached from (On == false) a cDevice. It can be used
+               ///< (On == true) and right after it gets detached from (On == false) a cDevice. It can be used
                ///< to do things like starting/stopping a thread.
                ///< It is guaranteed that Receive() will not be called before Activate(true).
   virtual void Receive(uchar *Data, int Length) = 0;
@@ -40,9 +38,6 @@ protected:
                ///< will be delivered only ONCE, so the cReceiver must make sure that
                ///< it will be able to buffer the data if necessary.
 public:
-#ifdef LEGACY_CRECEIVER
-  cReceiver(tChannelID ChannelID, int Priority, int Pid, const int *Pids1 = NULL, const int *Pids2 = NULL, const int *Pids3 = NULL);
-#endif
   cReceiver(const cChannel *Channel = NULL, int Priority = MINPRIORITY);
                ///< Creates a new receiver for the given Channel with the given Priority.
                ///< If Channel is not NULL, its pids are set by a call to SetPids().
@@ -62,7 +57,7 @@ public:
                ///< Adds the given Pids to the list of PIDs of this receiver.
   bool SetPids(const cChannel *Channel);
                ///< Sets the PIDs of this receiver to those of the given Channel,
-               ///< replacing and previously stored PIDs. If Channel is NULL, all
+               ///< replacing any previously stored PIDs. If Channel is NULL, all
                ///< PIDs will be cleared. Parameters in the Setup may control whether
                ///< certain types of PIDs (like Dolby Digital, for instance) are
                ///< actually set. The Channel's ID is stored and can later be retrieved

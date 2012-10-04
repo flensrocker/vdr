@@ -4,7 +4,7 @@
 # See the main source file 'vdr.c' for copyright information and
 # how to reach the author.
 #
-# $Id: Makefile 2.26 2012/03/11 15:33:57 kls Exp $
+# $Id: Makefile 2.29 2012/09/07 14:11:37 kls Exp $
 
 .DELETE_ON_ERROR:
 
@@ -27,8 +27,9 @@ INCLUDES ?= $(shell pkg-config --cflags freetype2 fontconfig)
 PLUGINDIR= ./PLUGINS
 PLUGINLIBDIR= $(PLUGINDIR)/lib
 
-VIDEODIR = /video
-CONFDIR  = $(VIDEODIR)
+# By default VDR requires only one single directory to operate:
+VIDEODIR     = /video
+# See Make.config.template if you want to build VDR according to the FHS ("File system Hierarchy Standard")
 
 DOXYGEN ?= /usr/bin/doxygen
 DOXYFILE = Doxyfile
@@ -44,7 +45,7 @@ OBJS = audio.o channels.o ci.o config.o cutter.o device.o diseqc.o dvbdevice.o d
        dvbplayer.o dvbspu.o dvbsubtitle.o eit.o eitscan.o epg.o filter.o font.o i18n.o interface.o keys.o\
        lirc.o menu.o menuitems.o nit.o osdbase.o osd.o pat.o player.o plugin.o\
        receiver.o recorder.o recording.o remote.o remux.o ringbuffer.o sdt.o sections.o shutdown.o\
-       skinclassic.o skins.o skinsttng.o sourceparams.o sources.o spu.o status.o svdrp.o themes.o thread.o\
+       skinclassic.o skinlcars.o skins.o skinsttng.o sourceparams.o sources.o spu.o status.o svdrp.o themes.o thread.o\
        timers.o tools.o transfer.o vdr.o videodir.o
 
 ifndef NO_KBD
@@ -70,8 +71,16 @@ DEFINES += -D_GNU_SOURCE
 
 DEFINES += -DVIDEODIR=\"$(VIDEODIR)\"
 DEFINES += -DCONFDIR=\"$(CONFDIR)\"
+DEFINES += -DCACHEDIR=\"$(CACHEDIR)\"
+DEFINES += -DRESDIR=\"$(RESDIR)\"
 DEFINES += -DPLUGINDIR=\"$(PLUGINLIBDIR)\"
 DEFINES += -DLOCDIR=\"$(LOCDIR)\"
+
+# Default values for directories:
+
+CONFDIRDEF  = $(firstword $(CONFDIR)  $(VIDEODIR))
+CACHEDIRDEF = $(firstword $(CACHEDIR) $(VIDEODIR))
+RESDIRDEF   = $(firstword $(RESDIR)   $(CONFDIRDEF))
 
 # The version numbers of VDR and the plugin API (taken from VDR's "config.h"):
 
@@ -109,8 +118,10 @@ $(SILIB):
 vdr.pc: Makefile Make.global
 	@echo "bindir=$(BINDIR)" > $@
 	@echo "includedir=$(INCDIR)" >> $@
-	@echo "configdir=$(CONFDIR)" >> $@
+	@echo "configdir=$(CONFDIRDEF)" >> $@
 	@echo "videodir=$(VIDEODIR)" >> $@
+	@echo "cachedir=$(CACHEDIRDEF)" >> $@
+	@echo "resdir=$(RESDIRDEF)" >> $@
 	@echo "plugindir=$(PLUGINLIBDIR)" >> $@
 	@echo "localedir=$(LOCDIR)" >> $@
 	@echo "apiversion=$(APIVERSION)" >> $@
@@ -183,7 +194,7 @@ clean-plugins:
 
 # Install the files:
 
-install: install-bin install-conf install-doc install-plugins install-i18n install-includes install-pc
+install: install-bin install-dirs install-conf install-doc install-plugins install-i18n install-includes install-pc
 
 # VDR binary:
 
@@ -193,12 +204,15 @@ install-bin: vdr
 
 # Configuration files:
 
-install-conf:
+install-dirs:
 	@mkdir -p $(DESTDIR)$(VIDEODIR)
-	@if [ ! -d $(DESTDIR)$(CONFDIR) ]; then\
-	    mkdir -p $(DESTDIR)$(CONFDIR);\
-	    cp *.conf $(DESTDIR)$(CONFDIR);\
-	    fi
+	@mkdir -p $(DESTDIR)$(CONFDIRDEF)
+	@mkdir -p $(DESTDIR)$(CACHEDIRDEF)
+	@mkdir -p $(DESTDIR)$(RESDIRDEF)
+
+install-conf:
+	@cp *.conf $(DESTDIR)$(CONFDIRDEF)
+
 
 # Documentation:
 

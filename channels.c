@@ -4,7 +4,7 @@
  * See the main source file 'vdr.c' for copyright information and
  * how to reach the author.
  *
- * $Id: channels.c 2.21 2012/03/11 13:29:06 kls Exp $
+ * $Id: channels.c 2.24 2012/07/14 12:34:47 kls Exp $
  */
 
 #include "channels.h"
@@ -112,8 +112,32 @@ cChannel& cChannel::operator= (const cChannel &Channel)
   provider = strcpyrealloc(provider, Channel.provider);
   portalName = strcpyrealloc(portalName, Channel.portalName);
   memcpy(&__BeginData__, &Channel.__BeginData__, (char *)&Channel.__EndData__ - (char *)&Channel.__BeginData__);
+  nameSource = NULL; // these will be recalculated automatically
+  shortNameSource = NULL;
   parameters = Channel.parameters;
   return *this;
+}
+
+const char *cChannel::Name(void) const
+{
+  if (Setup.ShowChannelNamesWithSource && !groupSep) {
+     if (isempty(nameSource))
+        nameSource = cString::sprintf("%s (%c)", name, cSource::ToChar(source));
+     return nameSource;
+     }
+  return name;
+}
+
+const char *cChannel::ShortName(bool OrName) const
+{
+  if (OrName && isempty(shortName))
+     return Name();
+  if (Setup.ShowChannelNamesWithSource && !groupSep) {
+     if (isempty(shortNameSource))
+        shortNameSource = cString::sprintf("%s (%c)", shortName, cSource::ToChar(source));
+     return shortNameSource;
+     }
+  return shortName;
 }
 
 int cChannel::Transponder(int Frequency, char Polarization)
@@ -193,6 +217,8 @@ bool cChannel::SetTransponderData(int Source, int Frequency, int Srate, const ch
      srate = Srate;
      parameters = Parameters;
      schedule = NULL;
+     nameSource = NULL;
+     shortNameSource = NULL;
      if (Number() && !Quiet) {
         dsyslog("changing transponder data of channel %d from %s to %s", Number(), *OldTransponderData, *TransponderDataToString());
         modification |= CHANNELMOD_TRANSP;
@@ -233,10 +259,14 @@ void cChannel::SetName(const char *Name, const char *ShortName, const char *Prov
            modification |= CHANNELMOD_NAME;
            Channels.SetModified();
            }
-        if (nn)
+        if (nn) {
            name = strcpyrealloc(name, Name);
-        if (ns)
+           nameSource = NULL;
+           }
+        if (ns) {
            shortName = strcpyrealloc(shortName, ShortName);
+           shortNameSource = NULL;
+           }
         if (np)
            provider = strcpyrealloc(provider, Provider);
         }
@@ -721,6 +751,8 @@ bool cChannel::Parse(const char *s)
         free(tpidbuf);
         free(caidbuf);
         free(namebuf);
+        nameSource = NULL;
+        shortNameSource = NULL;
         if (!GetChannelID().Valid()) {
            esyslog("ERROR: channel data results in invalid ID!");
            return false;
@@ -955,7 +987,7 @@ int cChannels::MaxShortChannelNameLength(void)
   if (!maxShortChannelNameLength) {
      for (cChannel *channel = First(); channel; channel = Next(channel)) {
          if (!channel->GroupSep())
-            maxShortChannelNameLength = max(Utf8StrLen(channel->ShortName()), maxShortChannelNameLength);
+            maxShortChannelNameLength = max(Utf8StrLen(channel->ShortName(true)), maxShortChannelNameLength);
          }
      }
   return maxShortChannelNameLength;

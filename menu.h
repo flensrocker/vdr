@@ -4,7 +4,7 @@
  * See the main source file 'vdr.c' for copyright information and
  * how to reach the author.
  *
- * $Id: menu.h 2.5 2012/03/08 13:11:40 kls Exp $
+ * $Id: menu.h 2.12 2012/09/07 08:48:34 kls Exp $
  */
 
 #ifndef __MENU_H
@@ -187,6 +187,7 @@ public:
   };
 
 cOsdObject *CamControl(void);
+bool CamMenuActive(void);
 
 class cMenuRecordingItem;
 
@@ -196,7 +197,6 @@ private:
   int level;
   int recordingsState;
   int helpKeys;
-  bool SetFreeDiskDisplay(bool Force = false);
   void SetHelpKeys(void);
   void Set(bool Refresh = false);
   bool Open(bool OpenSubMenus = false);
@@ -204,8 +204,10 @@ private:
   eOSState Rewind(void);
   eOSState Delete(void);
   eOSState Info(void);
+  eOSState Sort(void);
   eOSState Commands(eKeys Key = kNone);
 protected:
+  cString DirectoryName(void);
   cRecording *GetRecording(cMenuRecordingItem *Item);
 public:
   cMenuRecordings(const char *Base = NULL, int Level = 0, bool OpenSubMenus = false);
@@ -243,6 +245,9 @@ public:
   static bool PauseLiveVideo(void);
   static const char *GetInstantId(const char *LastInstantId);
   static cRecordControl *GetRecordControl(const char *FileName);
+  static cRecordControl *GetRecordControl(const cTimer *Timer);
+         ///< Returns the cRecordControl for the given Timer.
+         ///< If there is no cRecordControl for Timer, NULL is returned.
   static void Process(time_t t);
   static void ChannelDataModified(cChannel *Channel);
   static bool Active(void);
@@ -255,6 +260,7 @@ class cReplayControl : public cDvbPlayerControl {
 private:
   cSkinDisplayReplay *displayReplay;
   cMarks marks;
+  bool marksModified;
   bool visible, modeOnly, shown, displayFrames;
   int lastCurrent, lastTotal;
   bool lastPlay, lastForward;
@@ -267,8 +273,7 @@ private:
   void TimeSearch(void);
   void ShowTimed(int Seconds = 0);
   static cReplayControl *currentReplayControl;
-  static char *fileName;
-  static char *title;
+  static cString fileName;
   void ShowMode(void);
   bool ShowProgress(bool Initial);
   void MarkToggle(void);
@@ -281,11 +286,12 @@ public:
   virtual ~cReplayControl();
   void Stop(void);
   virtual cOsdObject *GetInfo(void);
+  virtual const cRecording *GetRecording(void);
   virtual eOSState ProcessKey(eKeys Key);
   virtual void Show(void);
   virtual void Hide(void);
   bool Visible(void) { return visible; }
-  static void SetRecording(const char *FileName, const char *Title);
+  static void SetRecording(const char *FileName);
   static const char *NowReplaying(void);
   static const char *LastReplayed(void);
   static void ClearLastReplayed(const char *FileName);

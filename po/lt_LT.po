@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: VDR 1.7.16\n"
 "Report-Msgid-Bugs-To: <vdr-bugs@tvdr.de>\n"
-"POT-Creation-Date: 2012-03-08 14:37+0100\n"
+"POT-Creation-Date: 2012-09-15 14:04+0200\n"
 "PO-Revision-Date: 2010-10-30 11:55+0200\n"
 "Last-Translator: Valdemaras Pipiras <varas@ambernet.lt>\n"
 "Language-Team: Lithuanian <vdr@linuxtv.org>\n"
@@ -509,12 +509,6 @@ msgstr "Vartotojas8"
 msgid "Key$User9"
 msgstr "Vartotojas9"
 
-msgid "Disk"
-msgstr "Diskas"
-
-msgid "free"
-msgstr "laisva"
-
 msgid "Free To Air"
 msgstr "Nekoduotas kanalas"
 
@@ -855,6 +849,18 @@ msgstr "Katalogai esantys laikmačių meniu"
 msgid "Setup.OSD$Number keys for characters"
 msgstr "Skaičių mygtukai simboliams"
 
+msgid "Setup.OSD$Color key 0"
+msgstr ""
+
+msgid "Setup.OSD$Color key 1"
+msgstr ""
+
+msgid "Setup.OSD$Color key 2"
+msgstr ""
+
+msgid "Setup.OSD$Color key 3"
+msgstr ""
+
 msgid "EPG"
 msgstr "Elektroninis programų gidas (EPG)"
 
@@ -922,6 +928,9 @@ msgstr "Subtitrai"
 
 msgid "Setup.DVB$Primary DVB interface"
 msgstr "Pirminiė DVB įvestis"
+
+msgid "Setup.DVB$Standard compliance"
+msgstr ""
 
 msgid "Setup.DVB$Video format"
 msgstr "Video formatas"
@@ -1068,6 +1077,9 @@ msgstr "Rankiniu būdu vykdomų įrašų įvardinimo schama"
 msgid "Setup.Recording$Instant rec. time (min)"
 msgstr "Rankiniu būdu vykdomo įrašo laikas (min)"
 
+msgid "Setup.Recording$present event"
+msgstr ""
+
 msgid "Setup.Recording$Max. video file size (MB)"
 msgstr "Maks. video failo dydis (MB)"
 
@@ -1122,6 +1134,9 @@ msgstr "Garsas įjungimo metu"
 msgid "Setup.Miscellaneous$Channels wrap"
 msgstr "Kanalų pridengimas"
 
+msgid "Setup.Miscellaneous$Show channel names with source"
+msgstr ""
+
 msgid "Setup.Miscellaneous$Emergency exit"
 msgstr "Avarinis išėjimas"
 
@@ -1146,9 +1161,6 @@ msgstr " Sustabdyti įrašinėjimą "
 
 msgid "Schedule"
 msgstr "Programa"
-
-msgid "VDR"
-msgstr "VDR"
 
 #. TRANSLATORS: note the leading blank!
 msgid " Stop replaying"
@@ -1243,6 +1255,9 @@ msgstr "Pergeneruojamas index failas"
 msgid "Index file regeneration complete"
 msgstr "Index failo pergeneravimas baigtas"
 
+msgid "Index file regeneration failed!"
+msgstr ""
+
 msgid "Can't shutdown - option '-s' not given!"
 msgstr "Sistemos negalima išjungti, nes starto metu nebuvo komandinėj eilutėj paduota savybė '-s'!"
 
@@ -1278,6 +1293,24 @@ msgstr "Garsas "
 
 msgid "Classic VDR"
 msgstr "Klasikinis VDR"
+
+msgid "DISK"
+msgstr ""
+
+msgid "LOAD"
+msgstr ""
+
+msgid "TIMERS"
+msgstr ""
+
+msgid "DEVICES"
+msgstr ""
+
+msgid "LIVE"
+msgstr ""
+
+msgid "PLAY"
+msgstr ""
 
 msgid "ST:TNG Panels"
 msgstr "ST:TNG Skydeliai"
@@ -1341,3 +1374,9 @@ msgstr "Paspauskit bet kurį mygtuką kad sustabdytumėte perkrovimą"
 #, c-format
 msgid "VDR will shut down in %s minutes"
 msgstr "VDR išsijungs per %s minutes"
+
+msgid "Disk"
+msgstr "Diskas"
+
+msgid "free"
+msgstr "laisva"

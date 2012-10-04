@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: VDR 1.6.0\n"
 "Report-Msgid-Bugs-To: <vdr-bugs@tvdr.de>\n"
-"POT-Creation-Date: 2012-03-08 14:37+0100\n"
+"POT-Creation-Date: 2012-09-15 14:04+0200\n"
 "PO-Revision-Date: 2010-01-16 16:46+0100\n"
 "Last-Translator: Klaus Schmidinger <kls@tvdr.de>\n"
 "Language-Team: German <vdr@linuxtv.org>\n"
@@ -509,12 +509,6 @@ msgstr "Benutzer8"
 msgid "Key$User9"
 msgstr "Benutzer9"
 
-msgid "Disk"
-msgstr "Disk"
-
-msgid "free"
-msgstr "frei"
-
 msgid "Free To Air"
 msgstr "frei empfangbar"
 
@@ -855,6 +849,18 @@ msgstr "Verzeichnisse im Timer-Menü"
 msgid "Setup.OSD$Number keys for characters"
 msgstr "Nummerntasten für Zeichen"
 
+msgid "Setup.OSD$Color key 0"
+msgstr "Farbtaste 0"
+
+msgid "Setup.OSD$Color key 1"
+msgstr "Farbtaste 1"
+
+msgid "Setup.OSD$Color key 2"
+msgstr "Farbtaste 2"
+
+msgid "Setup.OSD$Color key 3"
+msgstr "Farbtaste 3"
+
 msgid "EPG"
 msgstr "EPG"
 
@@ -922,6 +928,9 @@ msgstr "Untertitel"
 
 msgid "Setup.DVB$Primary DVB interface"
 msgstr "Primäres DVB-Interface"
+
+msgid "Setup.DVB$Standard compliance"
+msgstr "Standardkonformität"
 
 msgid "Setup.DVB$Video format"
 msgstr "Videoformat"
@@ -1068,6 +1077,9 @@ msgstr "Direktaufzeichnung benennen"
 msgid "Setup.Recording$Instant rec. time (min)"
 msgstr "Dauer der Direktaufzeichnung (min)"
 
+msgid "Setup.Recording$present event"
+msgstr "laufende Sendung"
+
 msgid "Setup.Recording$Max. video file size (MB)"
 msgstr "Max. Videodateigröße (MB)"
 
@@ -1122,6 +1134,9 @@ msgstr "Lautstärke beim Einschalten"
 msgid "Setup.Miscellaneous$Channels wrap"
 msgstr "Rundum zappen"
 
+msgid "Setup.Miscellaneous$Show channel names with source"
+msgstr "Kanalnamen mit Quelle anzeigen"
+
 msgid "Setup.Miscellaneous$Emergency exit"
 msgstr "Notausstieg"
 
@@ -1146,9 +1161,6 @@ msgstr " Aufzeichnung beenden "
 
 msgid "Schedule"
 msgstr "Programm"
-
-msgid "VDR"
-msgstr "VDR"
 
 #. TRANSLATORS: note the leading blank!
 msgid " Stop replaying"
@@ -1243,6 +1255,9 @@ msgstr "Index-Datei wird regeneriert"
 msgid "Index file regeneration complete"
 msgstr "Regenerierung der Index-Datei abgeschlossen"
 
+msgid "Index file regeneration failed!"
+msgstr "Regenerierung der Index-Datei fehlgeschlagen!"
+
 msgid "Can't shutdown - option '-s' not given!"
 msgstr "Ausschalten unmöglich - Option '-s' fehlt!"
 
@@ -1278,6 +1293,24 @@ msgstr "Lautstärke "
 
 msgid "Classic VDR"
 msgstr "Klassischer VDR"
+
+msgid "DISK"
+msgstr "PLATTE"
+
+msgid "LOAD"
+msgstr "LAST"
+
+msgid "TIMERS"
+msgstr "TIMER"
+
+msgid "DEVICES"
+msgstr "EMPFÄNGER"
+
+msgid "LIVE"
+msgstr "LIVE"
+
+msgid "PLAY"
+msgstr "WIEDERGABE"
 
 msgid "ST:TNG Panels"
 msgstr "ST:TNG-Konsolen"
@@ -1341,3 +1374,9 @@ msgstr "Taste drücken, um Neustart abzubrechen"
 #, c-format
 msgid "VDR will shut down in %s minutes"
 msgstr "VDR wird in %s Minuten abgeschaltet"
+
+msgid "Disk"
+msgstr "Disk"
+
+msgid "free"
+msgstr "frei"

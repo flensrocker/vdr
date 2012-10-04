@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: VDR 1.7.0\n"
 "Report-Msgid-Bugs-To: <vdr-bugs@tvdr.de>\n"
-"POT-Creation-Date: 2012-03-08 14:37+0100\n"
+"POT-Creation-Date: 2012-09-15 14:04+0200\n"
 "PO-Revision-Date: 2008-10-16 11:16-0400\n"
 "Last-Translator: Osama Alrawab <alrawab@hotmail.com>\n"
 "Language-Team: Arabic <ar@li.org>\n"
@@ -517,12 +517,6 @@ msgstr "المستخدم 8"
 msgid "Key$User9"
 msgstr "المستخدم 9"
 
-msgid "Disk"
-msgstr "القرص الصلب"
-
-msgid "free"
-msgstr "مساحة حرة"
-
 msgid "Free To Air"
 msgstr "غير مشفر"
 
@@ -876,6 +870,18 @@ msgstr "مدة معلومات القناة"
 msgid "Setup.OSD$Number keys for characters"
 msgstr "زر اغلاق القاائمة"
 
+msgid "Setup.OSD$Color key 0"
+msgstr ""
+
+msgid "Setup.OSD$Color key 1"
+msgstr ""
+
+msgid "Setup.OSD$Color key 2"
+msgstr ""
+
+msgid "Setup.OSD$Color key 3"
+msgstr ""
+
 msgid "EPG"
 msgstr "الدليل الالكتونى للقنوات"
 
@@ -943,6 +949,9 @@ msgstr "الترجمة"
 
 msgid "Setup.DVB$Primary DVB interface"
 msgstr "كرت الستالايت الاولى"
+
+msgid "Setup.DVB$Standard compliance"
+msgstr ""
 
 msgid "Setup.DVB$Video format"
 msgstr "نوع الفيديو  "
@@ -1093,6 +1102,9 @@ msgstr "اسم التسجيل الفورى"
 msgid "Setup.Recording$Instant rec. time (min)"
 msgstr "مدة التسجيل الفورى بالدقيقة"
 
+msgid "Setup.Recording$present event"
+msgstr ""
+
 msgid "Setup.Recording$Max. video file size (MB)"
 msgstr "اقصى حجم لملف الفيديو ب م ب"
 
@@ -1149,6 +1161,9 @@ msgstr "فعل الصوت"
 msgid "Setup.Miscellaneous$Channels wrap"
 msgstr "كسابق"
 
+msgid "Setup.Miscellaneous$Show channel names with source"
+msgstr ""
+
 msgid "Setup.Miscellaneous$Emergency exit"
 msgstr "خروج طارىء"
 
@@ -1173,9 +1188,6 @@ msgstr " ايقاف التسجيل "
 
 msgid "Schedule"
 msgstr "جدولة"
-
-msgid "VDR"
-msgstr ""
 
 #. TRANSLATORS: note the leading blank!
 msgid " Stop replaying"
@@ -1271,6 +1283,9 @@ msgstr ""
 msgid "Index file regeneration complete"
 msgstr ""
 
+msgid "Index file regeneration failed!"
+msgstr ""
+
 msgid "Can't shutdown - option '-s' not given!"
 msgstr "لا يمكن قفل الحاسوب الرمز s لم يحدد"
 
@@ -1306,6 +1321,24 @@ msgstr "الصوت "
 
 msgid "Classic VDR"
 msgstr "VDR تقليدى  "
+
+msgid "DISK"
+msgstr ""
+
+msgid "LOAD"
+msgstr ""
+
+msgid "TIMERS"
+msgstr ""
+
+msgid "DEVICES"
+msgstr ""
+
+msgid "LIVE"
+msgstr ""
+
+msgid "PLAY"
+msgstr ""
 
 msgid "ST:TNG Panels"
 msgstr "ST:TNG شاشة "
@@ -1370,3 +1403,9 @@ msgstr "اضغط اى زر لالغاء اعادة التشغيل"
 #, c-format
 msgid "VDR will shut down in %s minutes"
 msgstr "البرنامج سيقوم بالاغلاق بعد%s دقيقة "
+
+msgid "Disk"
+msgstr "القرص الصلب"
+
+msgid "free"
+msgstr "مساحة حرة"

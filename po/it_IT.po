@@ -11,8 +11,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: VDR 1.6.0\n"
 "Report-Msgid-Bugs-To: <vdr-bugs@tvdr.de>\n"
-"POT-Creation-Date: 2012-03-08 14:37+0100\n"
-"PO-Revision-Date: 2012-03-19 01:08+0100\n"
+"POT-Creation-Date: 2012-09-15 14:04+0200\n"
+"PO-Revision-Date: 2012-06-06 22:50+0100\n"
 "Last-Translator: Diego Pierotto <vdr-italian@tiscali.it>\n"
 "Language-Team: Italian <vdr@linuxtv.org>\n"
 "Language: it\n"
@@ -516,12 +516,6 @@ msgstr "Utente8"
 msgid "Key$User9"
 msgstr "Utente9"
 
-msgid "Disk"
-msgstr "Disco"
-
-msgid "free"
-msgstr "disponibili"
-
 msgid "Free To Air"
 msgstr "in chiaro"
 
@@ -862,6 +856,18 @@ msgstr "Cartelle nel menu timer"
 msgid "Setup.OSD$Number keys for characters"
 msgstr "Tasti numerici per i caratteri"
 
+msgid "Setup.OSD$Color key 0"
+msgstr ""
+
+msgid "Setup.OSD$Color key 1"
+msgstr ""
+
+msgid "Setup.OSD$Color key 2"
+msgstr ""
+
+msgid "Setup.OSD$Color key 3"
+msgstr ""
+
 msgid "EPG"
 msgstr "Guida programmi EPG"
 
@@ -929,6 +935,9 @@ msgstr "Sottotitoli"
 
 msgid "Setup.DVB$Primary DVB interface"
 msgstr "Scheda DVB primaria"
+
+msgid "Setup.DVB$Standard compliance"
+msgstr "Modalità base"
 
 msgid "Setup.DVB$Video format"
 msgstr "Formato video"
@@ -1075,6 +1084,9 @@ msgstr "Nome reg. immediata"
 msgid "Setup.Recording$Instant rec. time (min)"
 msgstr "Durata reg. immediata (min)"
 
+msgid "Setup.Recording$present event"
+msgstr ""
+
 msgid "Setup.Recording$Max. video file size (MB)"
 msgstr "Dim. massima file video (MB)"
 
@@ -1129,6 +1141,9 @@ msgstr "Volume iniziale"
 msgid "Setup.Miscellaneous$Channels wrap"
 msgstr "Riavvolgimento canali"
 
+msgid "Setup.Miscellaneous$Show channel names with source"
+msgstr ""
+
 msgid "Setup.Miscellaneous$Emergency exit"
 msgstr "Uscita di emergenza"
 
@@ -1153,9 +1168,6 @@ msgstr " Ferma registrazione "
 
 msgid "Schedule"
 msgstr "Programmi"
-
-msgid "VDR"
-msgstr "VDR"
 
 #. TRANSLATORS: note the leading blank!
 msgid " Stop replaying"
@@ -1250,6 +1262,9 @@ msgstr "Rigenerazione file indice"
 msgid "Index file regeneration complete"
 msgstr "Rigenerazione file indice completata"
 
+msgid "Index file regeneration failed!"
+msgstr ""
+
 msgid "Can't shutdown - option '-s' not given!"
 msgstr "Impossibile spegnere - parametro '-s' non assegnato!"
 
@@ -1285,6 +1300,24 @@ msgstr "Volume "
 
 msgid "Classic VDR"
 msgstr "VDR Classico"
+
+msgid "DISK"
+msgstr "DISCO"
+
+msgid "LOAD"
+msgstr "CARICA"
+
+msgid "TIMERS"
+msgstr "TIMER"
+
+msgid "DEVICES"
+msgstr "SCHEDE"
+
+msgid "LIVE"
+msgstr "DAL VIVO"
+
+msgid "PLAY"
+msgstr "RIPRODUCI"
 
 msgid "ST:TNG Panels"
 msgstr "Consolle ST:TNG"
@@ -1348,3 +1381,9 @@ msgstr "Premi un tasto per annullare il riavvio"
 #, c-format
 msgid "VDR will shut down in %s minutes"
 msgstr "VDR si spegnerà tra %s minuti"
+
+msgid "Disk"
+msgstr "Disco"
+
+msgid "free"
+msgstr "disponibili"

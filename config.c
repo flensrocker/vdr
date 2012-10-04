@@ -4,7 +4,7 @@
  * See the main source file 'vdr.c' for copyright information and
  * how to reach the author.
  *
- * $Id: config.c 2.20 2012/02/29 10:15:54 kls Exp $
+ * $Id: config.c 2.28 2012/09/15 11:52:03 kls Exp $
  */
 
 #include "config.h"
@@ -309,9 +309,9 @@ cSetupLine::cSetupLine(void)
 
 cSetupLine::cSetupLine(const char *Name, const char *Value, const char *Plugin)
 {
-  name = strdup(Name);
-  value = strdup(Value);
-  plugin = Plugin ? strdup(Plugin) : NULL;
+  name = strreplace(strdup(Name), '\n', 0);
+  value = strreplace(strdup(Value), '\n', 0);
+  plugin = Plugin ? strreplace(strdup(Plugin), '\n', 0) : NULL;
 }
 
 cSetupLine::~cSetupLine()
@@ -373,7 +373,7 @@ cSetup Setup;
 cSetup::cSetup(void)
 {
   strcpy(OSDLanguage, ""); // default is taken from environment
-  strcpy(OSDSkin, "sttng");
+  strcpy(OSDSkin, "lcars");
   strcpy(OSDTheme, "default");
   PrimaryDVB = 1;
   ShowInfoOnChSwitch = 1;
@@ -383,7 +383,7 @@ cSetup::cSetup(void)
   MenuKeyCloses = 0;
   MarkInstantRecord = 1;
   strcpy(NameInstantRecord, "TITLE EPISODE");
-  InstantRecordTime = 180;
+  InstantRecordTime = DEFINSTRECTIME;
   LnbSLOF    = 11700;
   LnbFrequLo =  9750;
   LnbFrequHi = 10600;
@@ -391,6 +391,7 @@ cSetup::cSetup(void)
   SetSystemTime = 0;
   TimeSource = 0;
   TimeTransponder = 0;
+  StandardCompliance = STANDARD_DVB;
   MarginStart = 2;
   MarginStop = 10;
   AudioLanguages[0] = -1;
@@ -417,16 +418,20 @@ cSetup::cSetup(void)
   RecordingDirs = 1;
   FoldersInTimerMenu = 1;
   NumberKeysForChars = 1;
+  ColorKey0 = 0;
+  ColorKey1 = 1;
+  ColorKey2 = 2;
+  ColorKey3 = 3;
   VideoDisplayFormat = 1;
   VideoFormat = 0;
   UpdateChannels = 5;
   UseDolbyDigital = 1;
   ChannelInfoPos = 0;
   ChannelInfoTime = 5;
-  OSDLeftP = 0.08;
-  OSDTopP = 0.08;
-  OSDWidthP = 0.87;
-  OSDHeightP = 0.84;
+  OSDLeftP = 0.03;
+  OSDTopP = 0.03;
+  OSDWidthP = 0.93;
+  OSDHeightP = 0.93;
   OSDLeft = 54;
   OSDTop = 45;
   OSDWidth = 624;
@@ -438,9 +443,9 @@ cSetup::cSetup(void)
   strcpy(FontOsd, DefaultFontOsd);
   strcpy(FontSml, DefaultFontSml);
   strcpy(FontFix, DefaultFontFix);
-  FontOsdSizeP = 0.038;
-  FontSmlSizeP = 0.035;
-  FontFixSizeP = 0.031;
+  FontOsdSizeP = 0.031;
+  FontSmlSizeP = 0.028;
+  FontFixSizeP = 0.030;
   FontOsdSize = 22;
   FontSmlSize = 18;
   FontFixSize = 20;
@@ -461,6 +466,7 @@ cSetup::cSetup(void)
   DeviceBondings = "";
   InitialVolume = -1;
   ChannelsWrap = 0;
+  ShowChannelNamesWithSource = 0;
   EmergencyExit = 1;
 }
 
@@ -585,6 +591,7 @@ bool cSetup::Parse(const char *Name, const char *Value)
   else if (!strcasecmp(Name, "SetSystemTime"))       SetSystemTime      = atoi(Value);
   else if (!strcasecmp(Name, "TimeSource"))          TimeSource         = cSource::FromString(Value);
   else if (!strcasecmp(Name, "TimeTransponder"))     TimeTransponder    = atoi(Value);
+  else if (!strcasecmp(Name, "StandardCompliance"))  StandardCompliance = atoi(Value);
   else if (!strcasecmp(Name, "MarginStart"))         MarginStart        = atoi(Value);
   else if (!strcasecmp(Name, "MarginStop"))          MarginStop         = atoi(Value);
   else if (!strcasecmp(Name, "AudioLanguages"))      return ParseLanguages(Value, AudioLanguages);
@@ -611,6 +618,10 @@ bool cSetup::Parse(const char *Name, const char *Value)
   else if (!strcasecmp(Name, "RecordingDirs"))       RecordingDirs      = atoi(Value);
   else if (!strcasecmp(Name, "FoldersInTimerMenu"))  FoldersInTimerMenu = atoi(Value);
   else if (!strcasecmp(Name, "NumberKeysForChars"))  NumberKeysForChars = atoi(Value);
+  else if (!strcasecmp(Name, "ColorKey0"))           ColorKey0          = atoi(Value);
+  else if (!strcasecmp(Name, "ColorKey1"))           ColorKey1          = atoi(Value);
+  else if (!strcasecmp(Name, "ColorKey2"))           ColorKey2          = atoi(Value);
+  else if (!strcasecmp(Name, "ColorKey3"))           ColorKey3          = atoi(Value);
   else if (!strcasecmp(Name, "VideoDisplayFormat"))  VideoDisplayFormat = atoi(Value);
   else if (!strcasecmp(Name, "VideoFormat"))         VideoFormat        = atoi(Value);
   else if (!strcasecmp(Name, "UpdateChannels"))      UpdateChannels     = atoi(Value);
@@ -655,6 +666,7 @@ bool cSetup::Parse(const char *Name, const char *Value)
   else if (!strcasecmp(Name, "InitialVolume"))       InitialVolume      = atoi(Value);
   else if (!strcasecmp(Name, "DeviceBondings"))      DeviceBondings     = Value;
   else if (!strcasecmp(Name, "ChannelsWrap"))        ChannelsWrap       = atoi(Value);
+  else if (!strcasecmp(Name, "ShowChannelNamesWithSource")) ShowChannelNamesWithSource = atoi(Value);
   else if (!strcasecmp(Name, "EmergencyExit"))       EmergencyExit      = atoi(Value);
   else
      return false;
@@ -682,6 +694,7 @@ bool cSetup::Save(void)
   Store("SetSystemTime",      SetSystemTime);
   Store("TimeSource",         cSource::ToString(TimeSource));
   Store("TimeTransponder",    TimeTransponder);
+  Store("StandardCompliance", StandardCompliance);
   Store("MarginStart",        MarginStart);
   Store("MarginStop",         MarginStop);
   StoreLanguages("AudioLanguages", AudioLanguages);
@@ -708,6 +721,10 @@ bool cSetup::Save(void)
   Store("RecordingDirs",      RecordingDirs);
   Store("FoldersInTimerMenu", FoldersInTimerMenu);
   Store("NumberKeysForChars", NumberKeysForChars);
+  Store("ColorKey0",          ColorKey0);
+  Store("ColorKey1",          ColorKey1);
+  Store("ColorKey2",          ColorKey2);
+  Store("ColorKey3",          ColorKey3);
   Store("VideoDisplayFormat", VideoDisplayFormat);
   Store("VideoFormat",        VideoFormat);
   Store("UpdateChannels",     UpdateChannels);
@@ -752,6 +769,7 @@ bool cSetup::Save(void)
   Store("InitialVolume",      InitialVolume);
   Store("DeviceBondings",     DeviceBondings);
   Store("ChannelsWrap",       ChannelsWrap);
+  Store("ShowChannelNamesWithSource", ShowChannelNamesWithSource);
   Store("EmergencyExit",      EmergencyExit);
 
   Sort();

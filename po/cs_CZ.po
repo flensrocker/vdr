@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: VDR 1.7.14\n"
 "Report-Msgid-Bugs-To: <vdr-bugs@tvdr.de>\n"
-"POT-Creation-Date: 2012-03-08 14:37+0100\n"
+"POT-Creation-Date: 2012-09-15 14:04+0200\n"
 "PO-Revision-Date: 2010-05-06 11:00+0200\n"
 "Last-Translator: Radek Šťastný <dedkus@gmail.com>\n"
 "Language-Team: Czech <vdr@linuxtv.org>\n"
@@ -511,12 +511,6 @@ msgstr "Uživatel8"
 msgid "Key$User9"
 msgstr "Uživatel9"
 
-msgid "Disk"
-msgstr "Disk"
-
-msgid "free"
-msgstr "volno"
-
 msgid "Free To Air"
 msgstr "volný"
 
@@ -857,6 +851,18 @@ msgstr "Složky v menu časovače"
 msgid "Setup.OSD$Number keys for characters"
 msgstr ""
 
+msgid "Setup.OSD$Color key 0"
+msgstr ""
+
+msgid "Setup.OSD$Color key 1"
+msgstr ""
+
+msgid "Setup.OSD$Color key 2"
+msgstr ""
+
+msgid "Setup.OSD$Color key 3"
+msgstr ""
+
 msgid "EPG"
 msgstr "EPG"
 
@@ -924,6 +930,9 @@ msgstr "Titulky"
 
 msgid "Setup.DVB$Primary DVB interface"
 msgstr "Primární DVB zařízení"
+
+msgid "Setup.DVB$Standard compliance"
+msgstr ""
 
 msgid "Setup.DVB$Video format"
 msgstr "Formát videa"
@@ -1070,6 +1079,9 @@ msgstr "Pojmenovat okamžité nahrávky"
 msgid "Setup.Recording$Instant rec. time (min)"
 msgstr "Délka okamžitého nahrávání (min)"
 
+msgid "Setup.Recording$present event"
+msgstr ""
+
 msgid "Setup.Recording$Max. video file size (MB)"
 msgstr "Maximální velikost nahrávky (MB)"
 
@@ -1124,6 +1136,9 @@ msgstr "Hlasitost po spuštění"
 msgid "Setup.Miscellaneous$Channels wrap"
 msgstr ""
 
+msgid "Setup.Miscellaneous$Show channel names with source"
+msgstr ""
+
 msgid "Setup.Miscellaneous$Emergency exit"
 msgstr "Nouzové ukončení"
 
@@ -1148,9 +1163,6 @@ msgstr " Zastavit nahrávání "
 
 msgid "Schedule"
 msgstr "Program (EPG)"
-
-msgid "VDR"
-msgstr "VDR"
 
 #. TRANSLATORS: note the leading blank!
 msgid " Stop replaying"
@@ -1245,6 +1257,9 @@ msgstr "Generování index souboru"
 msgid "Index file regeneration complete"
 msgstr "Generování index souboru dokončeno"
 
+msgid "Index file regeneration failed!"
+msgstr ""
+
 msgid "Can't shutdown - option '-s' not given!"
 msgstr "Vypnutí není možné - chybí volba '-s'!"
 
@@ -1280,6 +1295,24 @@ msgstr "Hlasitost "
 
 msgid "Classic VDR"
 msgstr "Klasické VDR"
+
+msgid "DISK"
+msgstr ""
+
+msgid "LOAD"
+msgstr ""
+
+msgid "TIMERS"
+msgstr ""
+
+msgid "DEVICES"
+msgstr ""
+
+msgid "LIVE"
+msgstr ""
+
+msgid "PLAY"
+msgstr ""
 
 msgid "ST:TNG Panels"
 msgstr "ST:TNG konzola"
@@ -1343,3 +1376,9 @@ msgstr "Jakákoliv klávesa zruší restart"
 #, c-format
 msgid "VDR will shut down in %s minutes"
 msgstr "VDR se vypne za %s minut"
+
+msgid "Disk"
+msgstr "Disk"
+
+msgid "free"
+msgstr "volno"

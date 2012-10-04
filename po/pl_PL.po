@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: VDR 1.6.0\n"
 "Report-Msgid-Bugs-To: <vdr-bugs@tvdr.de>\n"
-"POT-Creation-Date: 2012-03-08 14:37+0100\n"
+"POT-Creation-Date: 2012-09-15 14:04+0200\n"
 "PO-Revision-Date: 2008-03-09 12:59+0100\n"
 "Last-Translator: Michael Rakowski <mrak@gmx.de>\n"
 "Language-Team: Polish <vdr@linuxtv.org>\n"
@@ -510,12 +510,6 @@ msgstr "U¿ytkownik 8"
 msgid "Key$User9"
 msgstr "U¿ytkownik 9"
 
-msgid "Disk"
-msgstr "Dysk"
-
-msgid "free"
-msgstr "wolnego"
-
 msgid "Free To Air"
 msgstr "nieszyfrowany"
 
@@ -856,6 +850,18 @@ msgstr ""
 msgid "Setup.OSD$Number keys for characters"
 msgstr ""
 
+msgid "Setup.OSD$Color key 0"
+msgstr ""
+
+msgid "Setup.OSD$Color key 1"
+msgstr ""
+
+msgid "Setup.OSD$Color key 2"
+msgstr ""
+
+msgid "Setup.OSD$Color key 3"
+msgstr ""
+
 msgid "EPG"
 msgstr "EPG"
 
@@ -923,6 +929,9 @@ msgstr "Napisy"
 
 msgid "Setup.DVB$Primary DVB interface"
 msgstr "Pierwszy interfejs DVB"
+
+msgid "Setup.DVB$Standard compliance"
+msgstr ""
 
 msgid "Setup.DVB$Video format"
 msgstr "Format obrazu"
@@ -1069,6 +1078,9 @@ msgstr "Nazywaj natychm. nagrywanie"
 msgid "Setup.Recording$Instant rec. time (min)"
 msgstr "Czas natychm. nagrywania (min)"
 
+msgid "Setup.Recording$present event"
+msgstr ""
+
 msgid "Setup.Recording$Max. video file size (MB)"
 msgstr "Maksymalny rozmiar pliku (MB)"
 
@@ -1123,6 +1135,9 @@ msgstr "Pocz±tkowa g³o¶no¶æ"
 msgid "Setup.Miscellaneous$Channels wrap"
 msgstr ""
 
+msgid "Setup.Miscellaneous$Show channel names with source"
+msgstr ""
+
 msgid "Setup.Miscellaneous$Emergency exit"
 msgstr "Wyj¶cie awaryjne"
 
@@ -1147,9 +1162,6 @@ msgstr " Zatrzymaj nagrywanie "
 
 msgid "Schedule"
 msgstr "Program"
-
-msgid "VDR"
-msgstr "VDR"
 
 #. TRANSLATORS: note the leading blank!
 msgid " Stop replaying"
@@ -1244,6 +1256,9 @@ msgstr ""
 msgid "Index file regeneration complete"
 msgstr ""
 
+msgid "Index file regeneration failed!"
+msgstr ""
+
 msgid "Can't shutdown - option '-s' not given!"
 msgstr "Nie mo¿na wy³±czyæ - nie podano opcji '-s'!"
 
@@ -1279,6 +1294,24 @@ msgstr "G³o¶no¶æ "
 
 msgid "Classic VDR"
 msgstr "Klasyczny VDR"
+
+msgid "DISK"
+msgstr ""
+
+msgid "LOAD"
+msgstr ""
+
+msgid "TIMERS"
+msgstr ""
+
+msgid "DEVICES"
+msgstr ""
+
+msgid "LIVE"
+msgstr ""
+
+msgid "PLAY"
+msgstr ""
 
 msgid "ST:TNG Panels"
 msgstr "Panel ST:TNG"
@@ -1342,3 +1375,9 @@ msgstr "Naci¶nij dowolny klawisz aby nie zrestartowaæ"
 #, c-format
 msgid "VDR will shut down in %s minutes"
 msgstr "VDR zostanie wy³±czony za %s minut"
+
+msgid "Disk"
+msgstr "Dysk"
+
+msgid "free"
+msgstr "wolnego"

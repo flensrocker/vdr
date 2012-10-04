@@ -8,7 +8,7 @@
  * Robert Schneider <Robert.Schneider@web.de> and Rolf Hakenes <hakenes@hippomi.de>.
  * Adapted to 'libsi' for VDR 1.3.0 by Marcel Wiesweg <marcel.wiesweg@gmx.de>.
  *
- * $Id: eit.c 2.16 2012/03/14 10:11:15 kls Exp $
+ * $Id: eit.c 2.21 2012/08/25 11:13:00 kls Exp $
  */
 
 #include "eit.h"
@@ -45,6 +45,7 @@ cEIT::cEIT(cSchedules *Schedules, int Source, u_char Tid, const u_char *Data, bo
      return;
      }
 
+  bool handledExternally = EpgHandlers.HandledExternally(channel);
   cSchedule *pSchedule = (cSchedule *)Schedules->GetSchedule(channel, true);
 
   bool Empty = true;
@@ -70,15 +71,18 @@ cEIT::cEIT(cSchedules *Schedules, int Source, u_char Tid, const u_char *Data, bo
       cEvent *newEvent = NULL;
       cEvent *rEvent = NULL;
       cEvent *pEvent = (cEvent *)pSchedule->GetEvent(SiEitEvent.getEventId(), StartTime);
-      if (!pEvent) {
+      if (!pEvent || handledExternally) {
          if (OnlyRunningStatus)
+            continue;
+         if (handledExternally && !EpgHandlers.IsUpdate(SiEitEvent.getEventId(), StartTime, Tid, getVersionNumber()))
             continue;
          // If we don't have that event yet, we create a new one.
          // Otherwise we copy the information into the existing event anyway, because the data might have changed.
          pEvent = newEvent = new cEvent(SiEitEvent.getEventId());
          newEvent->SetStartTime(StartTime);
          newEvent->SetDuration(Duration);
-         pSchedule->AddEvent(newEvent);
+         if (!handledExternally)
+            pSchedule->AddEvent(newEvent);
          }
       else {
          // We have found an existing event, either through its event ID or its start time.
@@ -283,13 +287,15 @@ cEIT::cEIT(cSchedules *Schedules, int Source, u_char Tid, const u_char *Data, bo
       delete ExtendedEventDescriptors;
       delete ShortEventDescriptor;
 
-      pEvent->SetComponents(Components);
+      EpgHandlers.SetComponents(pEvent, Components);
 
       EpgHandlers.FixEpgBugs(pEvent);
       if (LinkChannels)
          channel->SetLinkChannels(LinkChannels);
       Modified = true;
       EpgHandlers.HandleEvent(pEvent);
+      if (handledExternally)
+         delete pEvent;
       }
   if (Tid == 0x4E) {
      if (Empty && getSectionNumber() == 0)

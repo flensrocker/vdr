@@ -88,6 +88,15 @@ vdr:123:respawn:/usr/local/bin/vdr --terminal=/dev/tty8 -w 60
 
 See the man page vdr(1) for complete information about all command line options.
 
+Standard compliance
+-------------------
+
+Basically VDR works according to the DVB standard, but there are countries/providers
+that use other standards, which in some details deviate from the DVB standard.
+This makes it necessary to handle things differently in some areas, depending on
+which standard is actually used. If this is the case in your area, you may need
+to adjust the option "DVB/Standard compliance" in the Setup menu accordingly.
+
 Locale
 ------
 
@@ -233,18 +242,22 @@ Executing commands before and after a recording:
 
 You can use the '-r' option to define a program or script that gets called
 before and after a recording is performed, and after an editing process
-has finished.
+has finished or a recording has been deleted.
 
-The program will be called with two string parameters. The first parameter
-is one of
+The program will be called with two or three (in case of "edited") string
+parameters. The first parameter is one of
 
   before      if this is *before* a recording starts
   after       if this is *after* a recording has finished
   edited      if this is after a recording has been *edited*
+  deleted     if this is after a recording has been *deleted*
 
 and the second parameter contains the full name of the recording's
 directory (which may not yet exists at that moment in the "before" case).
-In the "edited" case it will be the name of the edited version.
+In the "edited" case it will be the name of the edited version (second
+parameter) and the name of the source version (third parameter).
+In the "deleted" case the extension of the directory name is ".del"
+instead of ".rec".
 
 Within this program you can do anything you would like to do before and/or
 after a recording or after an editing process. However, the program must return
@@ -265,6 +278,10 @@ case "$1" in
             ;;
      edited)
             echo "Edited recording $2"
+            echo "Source recording $3"
+            ;;
+     deleted)
+            echo "Deleted recording $2"
             ;;
      *)
             echo "ERROR: unknown state: $1"
@@ -374,6 +391,15 @@ listed in the default 'channels.conf' file have been verified by the author.
 As a starting point you can copy the 'channels.conf' file that comes with the
 VDR archive into your video directory (or into your config directory,
 respectively, in case you have redirected it with the -c option).
+
+If you prefer to have your system set up according to the FHS
+("File system Hierarchy Standard") and thus have your files spread
+all over the place ;-), you can do this by copying the file Make.config.template
+to Make.config in the VDR source directory, and activating the line
+
+#USEFHS = 1
+
+in that file.
 
 Setting up DiSEqC:
 ------------------

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: VDR-1.7.14\n"
 "Report-Msgid-Bugs-To: <vdr-bugs@tvdr.de>\n"
-"POT-Creation-Date: 2012-03-08 14:37+0100\n"
+"POT-Creation-Date: 2012-09-15 14:04+0200\n"
 "PO-Revision-Date: 2010-03-11 00:54+0100\n"
 "Last-Translator: Dimitar Petrovski <dimeptr@gmail.com>\n"
 "Language-Team: Macedonian <en@li.org>\n"
@@ -510,12 +510,6 @@ msgstr "Корисник8"
 msgid "Key$User9"
 msgstr "Корисник9"
 
-msgid "Disk"
-msgstr "Диск"
-
-msgid "free"
-msgstr "слободен"
-
 msgid "Free To Air"
 msgstr "Слободно"
 
@@ -856,6 +850,18 @@ msgstr "Директориуми во менито за тајмер"
 msgid "Setup.OSD$Number keys for characters"
 msgstr ""
 
+msgid "Setup.OSD$Color key 0"
+msgstr ""
+
+msgid "Setup.OSD$Color key 1"
+msgstr ""
+
+msgid "Setup.OSD$Color key 2"
+msgstr ""
+
+msgid "Setup.OSD$Color key 3"
+msgstr ""
+
 msgid "EPG"
 msgstr "EPG (електронски водич на програми)"
 
@@ -923,6 +929,9 @@ msgstr "Титл"
 
 msgid "Setup.DVB$Primary DVB interface"
 msgstr "Примарен DVB уред"
+
+msgid "Setup.DVB$Standard compliance"
+msgstr ""
 
 msgid "Setup.DVB$Video format"
 msgstr "Видео формат"
@@ -1069,6 +1078,9 @@ msgstr "Име на директно снимање"
 msgid "Setup.Recording$Instant rec. time (min)"
 msgstr "Траење на директно снимање (мин)"
 
+msgid "Setup.Recording$present event"
+msgstr ""
+
 msgid "Setup.Recording$Max. video file size (MB)"
 msgstr "Максимална големина на датотека (MB)"
 
@@ -1123,6 +1135,9 @@ msgstr "Почетна јачина на звук"
 msgid "Setup.Miscellaneous$Channels wrap"
 msgstr "Премотување канали"
 
+msgid "Setup.Miscellaneous$Show channel names with source"
+msgstr ""
+
 msgid "Setup.Miscellaneous$Emergency exit"
 msgstr "Итен излез"
 
@@ -1147,9 +1162,6 @@ msgstr " Запри снимање "
 
 msgid "Schedule"
 msgstr "Распоред"
-
-msgid "VDR"
-msgstr "VDR"
 
 #. TRANSLATORS: note the leading blank!
 msgid " Stop replaying"
@@ -1244,6 +1256,9 @@ msgstr "Регенерирање на индекс датотека"
 msgid "Index file regeneration complete"
 msgstr "Регенерирањето на индексот заврши"
 
+msgid "Index file regeneration failed!"
+msgstr ""
+
 msgid "Can't shutdown - option '-s' not given!"
 msgstr "Невозможно гаснење - недостасува опцијата '-s'!"
 
@@ -1279,6 +1294,24 @@ msgstr "Глас"
 
 msgid "Classic VDR"
 msgstr "Класичен VDR"
+
+msgid "DISK"
+msgstr ""
+
+msgid "LOAD"
+msgstr ""
+
+msgid "TIMERS"
+msgstr ""
+
+msgid "DEVICES"
+msgstr ""
+
+msgid "LIVE"
+msgstr ""
+
+msgid "PLAY"
+msgstr ""
 
 msgid "ST:TNG Panels"
 msgstr "ST:TNG Панели"
@@ -1342,3 +1375,9 @@ msgstr "Притиснете копче за откажување на рест�
 #, c-format
 msgid "VDR will shut down in %s minutes"
 msgstr "VDR ќе се исклучи за %s минути"
+
+msgid "Disk"
+msgstr "Диск"
+
+msgid "free"
+msgstr "слободен"

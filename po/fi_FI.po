@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: VDR 1.6.0\n"
 "Report-Msgid-Bugs-To: <vdr-bugs@tvdr.de>\n"
-"POT-Creation-Date: 2012-03-08 14:37+0100\n"
+"POT-Creation-Date: 2012-09-13 13:15+0200\n"
 "PO-Revision-Date: 2007-08-15 15:52+0200\n"
 "Last-Translator: Rolf Ahrenberg <rahrenbe@cc.hut.fi>\n"
 "Language-Team: Finnish <vdr@linuxtv.org>\n"
@@ -512,12 +512,6 @@ msgstr "Lisänäppäin 8"
 msgid "Key$User9"
 msgstr "Lisänäppäin 9"
 
-msgid "Disk"
-msgstr "Levy"
-
-msgid "free"
-msgstr "vapaana"
-
 msgid "Free To Air"
 msgstr "vapaa"
 
@@ -858,6 +852,18 @@ msgstr "Näytä kansiot ajastinvalikossa"
 msgid "Setup.OSD$Number keys for characters"
 msgstr "Käytä numeronäppäimiä tekstisyötteessä"
 
+msgid "Setup.OSD$Color key 0"
+msgstr ""
+
+msgid "Setup.OSD$Color key 1"
+msgstr ""
+
+msgid "Setup.OSD$Color key 2"
+msgstr ""
+
+msgid "Setup.OSD$Color key 3"
+msgstr ""
+
 msgid "EPG"
 msgstr "Ohjelmaopas"
 
@@ -925,6 +931,9 @@ msgstr "Tekstitys"
 
 msgid "Setup.DVB$Primary DVB interface"
 msgstr "Ensisijainen DVB-sovitin"
+
+msgid "Setup.DVB$Standard compliance"
+msgstr "Noudatettava standardi"
 
 msgid "Setup.DVB$Video format"
 msgstr "Kuvasuhde"
@@ -1071,6 +1080,9 @@ msgstr "Nimeä pikatallenne"
 msgid "Setup.Recording$Instant rec. time (min)"
 msgstr "Pikatallennuksen kesto (min)"
 
+msgid "Setup.Recording$present event"
+msgstr "nykyinen tapahtuma"
+
 msgid "Setup.Recording$Max. video file size (MB)"
 msgstr "Suurin tiedostokoko (Mt)"
 
@@ -1125,6 +1137,9 @@ msgstr "Äänenvoimakkuus käynnistettäessä"
 msgid "Setup.Miscellaneous$Channels wrap"
 msgstr "Kanavien rullaus"
 
+msgid "Setup.Miscellaneous$Show channel names with source"
+msgstr "Näytä lähde kanavien nimissä"
+
 msgid "Setup.Miscellaneous$Emergency exit"
 msgstr "Käytä hätäsammutusta"
 
@@ -1149,9 +1164,6 @@ msgstr " Lopeta tallennus "
 
 msgid "Schedule"
 msgstr "Ohjelmisto"
-
-msgid "VDR"
-msgstr "VDR"
 
 #. TRANSLATORS: note the leading blank!
 msgid " Stop replaying"
@@ -1246,6 +1258,9 @@ msgstr "Luodaan indeksitiedosto uudelleen"
 msgid "Index file regeneration complete"
 msgstr "Indeksitiedosto valmistui"
 
+msgid "Index file regeneration failed!"
+msgstr ""
+
 msgid "Can't shutdown - option '-s' not given!"
 msgstr "Sammutus ei onnistu - '-s' parametri puuttuu!"
 
@@ -1281,6 +1296,24 @@ msgstr "Äänenvoimakkuus "
 
 msgid "Classic VDR"
 msgstr "Klassinen VDR"
+
+msgid "DISK"
+msgstr "LEVY"
+
+msgid "LOAD"
+msgstr "KUORMA"
+
+msgid "TIMERS"
+msgstr "AJASTIMET"
+
+msgid "DEVICES"
+msgstr "LAITTEET"
+
+msgid "LIVE"
+msgstr "LIVE"
+
+msgid "PLAY"
+msgstr "TOISTO"
 
 msgid "ST:TNG Panels"
 msgstr "ST:TNG konsoli"
@@ -1344,3 +1377,9 @@ msgstr "Peru uudelleenkäynnistys painamalla mitä tahansa näppäintä"
 #, c-format
 msgid "VDR will shut down in %s minutes"
 msgstr "VDR sammuu %s minuutin kuluttua"
+
+msgid "Disk"
+msgstr "Levy"
+
+msgid "free"
+msgstr "vapaana"
