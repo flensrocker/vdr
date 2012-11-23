@@ -1066,9 +1066,8 @@ cDvbDevice::cDvbDevice(int Adapter, int Frontend, cDevice *ParentDevice)
 
   // Common Interface:
 
-  fd_ca = DvbOpen(DEV_DVB_CA, adapter, frontend, O_RDWR);
-  if (fd_ca >= 0)
-     ciAdapter = cDvbCiAdapter::CreateCiAdapter(parentDevice ? parentDevice : this, fd_ca, adapter, frontend);
+  int fd_ca = DvbOpen(DEV_DVB_CA, adapter, frontend, O_RDWR);
+  ciAdapter = cDvbCiAdapter::CreateCiAdapter(parentDevice ? parentDevice : this, fd_ca, adapter, frontend);
 
   // The DVR device (will be opened and closed as needed):
 
@@ -1631,8 +1630,12 @@ bool cDvbDevice::OpenDvr(void)
 {
   CloseDvr();
   fd_dvr = DvbOpen(DEV_DVB_DVR, adapter, frontend, O_RDONLY | O_NONBLOCK, true);
-  if (fd_dvr >= 0)
-     tsBuffer = new cTSBuffer(fd_dvr, MEGABYTE(5), CardIndex() + 1);
+  if (fd_dvr >= 0) {
+     if (ciAdapter)
+        tsBuffer = ciAdapter->GetTSBuffer(fd_dvr);
+     if (tsBuffer == NULL)
+        tsBuffer = new cTSBuffer(fd_dvr, MEGABYTE(5), CardIndex() + 1);
+     }
   return fd_dvr >= 0;
 }
 
