@@ -287,6 +287,7 @@ class cDvbTuner : public cThread {
 private:
   static cMutex bondMutex;
   enum eTunerStatus { tsIdle, tsSet, tsTuned, tsLocked };
+  bool SendDiseqc;
   int frontendType;
   const cDvbDevice *device;
   mutable int fd_frontend;
@@ -308,6 +309,7 @@ private:
   bool SetFrontendType(const cChannel *Channel);
   cString GetBondingParams(const cChannel *Channel = NULL) const;
   void ClearEventQueue(void) const;
+  dvb_diseqc_master_cmd diseqc_cmd;
   bool GetFrontendStatus(fe_status_t &Status) const;
   void ExecuteDiseqc(const cDiseqc *Diseqc, unsigned int *Frequency);
   void ResetToneAndVoltage(void);
@@ -329,6 +331,7 @@ public:
   uint32_t SubsystemId(void) const { return subsystemId; }
   bool IsTunedTo(const cChannel *Channel) const;
   void SetChannel(const cChannel *Channel);
+  bool SendDiseqcCmd(dvb_diseqc_master_cmd cmd);
   bool Locked(int TimeoutMs = 0);
   int GetSignalStrength(void) const;
   int GetSignalQuality(void) const;
@@ -344,6 +347,7 @@ cDvbTuner::cDvbTuner(const cDvbDevice *Device, int Fd_Frontend, int Adapter, int
   frontendType = SYS_UNDEFINED;
   device = Device;
   fd_frontend = Fd_Frontend;
+  SendDiseqc=false;
   adapter = Adapter;
   frontend = Frontend;
   subsystemId = cDvbDeviceProbe::GetSubsystemId(adapter, frontend);
@@ -722,6 +726,24 @@ static int GetRequiredDeliverySystem(const cChannel *Channel, const cDvbTranspon
   return ds;
 }
 
+bool cDvbTuner::SendDiseqcCmd(dvb_diseqc_master_cmd cmd)
+{
+  cMutexLock MutexLock(&mutex);
+  cDvbTransponderParameters dtp(channel.Parameters());
+
+  // Determine the required frontend type:
+  int frontendType = GetRequiredDeliverySystem(&channel, &dtp);
+
+  if ((frontendType!=SYS_DVBS2 && frontendType!=SYS_DVBS) || SendDiseqc)
+    return false;
+  if (!OpenFrontend())
+     return false;
+  diseqc_cmd=cmd;
+  SendDiseqc=true;
+  newSet.Broadcast();
+  return true;
+}
+
 bool cDvbTuner::SetFrontend(void)
 {
   if (!OpenFrontend())
@@ -877,6 +899,10 @@ void cDvbTuner::Action(void)
               Status = NewStatus;
            }
         cMutexLock MutexLock(&mutex);
+        if (SendDiseqc) {
+           CHECK(ioctl(fd_frontend, FE_DISEQC_SEND_MASTER_CMD, &diseqc_cmd));
+           SendDiseqc=false;
+           }
         int WaitTime = 1000;
         switch (tunerStatus) {
           case tsIdle:
@@ -1619,6 +1645,11 @@ bool cDvbDevice::SetChannelDevice(const cChannel *Channel, bool LiveView)
 bool cDvbDevice::HasLock(int TimeoutMs)
 {
   return dvbTuner ? dvbTuner->Locked(TimeoutMs) : false;
+}
+
+bool cDvbDevice::SendDiseqcCmd(dvb_diseqc_master_cmd cmd)
+{
+  return dvbTuner->SendDiseqcCmd(cmd);
 }
 
 void cDvbDevice::SetTransferModeForDolbyDigital(int Mode)
