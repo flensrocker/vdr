@@ -194,6 +194,7 @@ protected:
   virtual bool SetChannelDevice(const cChannel *Channel, bool LiveView);
 public:
   virtual bool HasLock(int TimeoutMs = 0);
+  virtual bool SendDiseqcCmd(dvb_diseqc_master_cmd cmd);
 
 // PID handle facilities
 
