@@ -22,23 +22,8 @@ cDvbCiAdapter::cDvbCiAdapter(cDevice *Device, int Fd, int Adapter, int Frontend)
   adapter = Adapter;
   frontend = Frontend;
   idle = false;
-  ca_caps_t Caps;
-  if (ioctl(fd, CA_GET_CAP, &Caps) == 0) {
-     if ((Caps.slot_type & CA_CI_LINK) != 0) {
-        int NumSlots = Caps.slot_num;
-        if (NumSlots > 0) {
-           for (int i = 0; i < NumSlots; i++)
-               new cCamSlot(this);
-           Start();
-           }
-        else
-           esyslog("ERROR: no CAM slots found on device %d", device->DeviceNumber());
-        }
-     else
-        isyslog("device %d doesn't support CI link layer interface", device->DeviceNumber());
-     }
-  else
-     esyslog("ERROR: can't get CA capabilities on device %d", device->DeviceNumber());
+  GetNumCamSlots(Device, Fd, this);
+  Start();
 }
 
 cDvbCiAdapter::~cDvbCiAdapter()
@@ -76,6 +61,13 @@ bool cDvbCiAdapter::SetIdle(bool Idle, bool TestOnly)
      OpenCa();
   idle = Idle;
   return true;
+}
+
+cTSBufferBase *cDvbCiAdapter::GetTSBuffer(int FdDvr)
+{
+  if (device)
+     return new cTSBuffer(FdDvr, MEGABYTE(5), device->CardIndex() + 1);
+  return NULL;
 }
 
 int cDvbCiAdapter::Read(uint8_t *Buffer, int MaxLength)
@@ -142,10 +134,60 @@ bool cDvbCiAdapter::Assign(cDevice *Device, bool Query)
   return true;
 }
 
+int cDvbCiAdapter::GetNumCamSlots(cDevice *Device, int Fd, cCiAdapter *CiAdapter)
+{
+  int NumSlots = -1;
+  if (Fd >= 0) {
+     ca_caps_t Caps;
+     if (ioctl(Fd, CA_GET_CAP, &Caps) == 0) {
+        if ((Caps.slot_type & CA_CI_LINK) != 0) {
+           NumSlots = Caps.slot_num;
+           if (NumSlots == 0)
+              esyslog("ERROR: no CAM slots found on device %d", Device->DeviceNumber());
+           else if (CiAdapter != NULL) {
+              for (int i = 0; i < NumSlots; i++)
+                  new cCamSlot(CiAdapter);
+              }
+           else
+              return NumSlots;
+           }
+        else
+           isyslog("device %d doesn't support CI link layer interface", Device->DeviceNumber());
+        }
+     else
+        esyslog("ERROR: can't get CA capabilities on device %d", Device->DeviceNumber());
+     }
+  return -1;
+}
+
 cDvbCiAdapter *cDvbCiAdapter::CreateCiAdapter(cDevice *Device, int Fd, int Adapter, int Frontend)
 {
-  // TODO check whether a CI is actually present?
-  if (Device)
+  // don't create a ci-adapter if it's not useable
+  if (Device && (Fd >= 0) && (GetNumCamSlots(Device, Fd, NULL) > 0))
      return new cDvbCiAdapter(Device, Fd, Adapter, Frontend);
-  return NULL;
+
+  if (Fd >= 0)
+     close(Fd);
+
+  // try to find an external ci-adapter
+  for (cDvbCiAdapterProbe *cp = DvbCiAdapterProbes.First(); cp; cp = DvbCiAdapterProbes.Next(cp)) {
+      cDvbCiAdapter *ca = cp->Probe(Device);
+      if (ca)
+         return ca;
+      }
+ return NULL;
+}
+
+// --- cDvbCiAdapterProbe -------------------------------------------------------
+
+cList<cDvbCiAdapterProbe> DvbCiAdapterProbes;
+
+cDvbCiAdapterProbe::cDvbCiAdapterProbe(void)
+{
+  DvbCiAdapterProbes.Add(this);
+}
+
+cDvbCiAdapterProbe::~cDvbCiAdapterProbe()
+{
+  DvbCiAdapterProbes.Del(this, false);
 }
