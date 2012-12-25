@@ -1571,8 +1571,6 @@ cCamSlot::cCamSlot(cCiAdapter *CiAdapter)
 
 cCamSlot::~cCamSlot()
 {
-  if (ciAdapter && ciAdapter->assignedDevice)
-     ciAdapter->assignedDevice->SetCamSlot(NULL);
   CamSlots.Del(this, false);
   DeleteAllConnections();
 }
