@@ -24,6 +24,7 @@
 #include "spu.h"
 #include "thread.h"
 #include "tools.h"
+#include <linux/dvb/frontend.h>
 
 #define MAXDEVICES         16 // the maximum number of devices in the system
 #define MAXPIDHANDLES      64 // the maximum number of different PIDs per device
@@ -334,6 +335,7 @@ public:
          ///< Returns true if the device is currently showing any programme to
          ///< the user, either through replaying or live.
 
+  virtual bool SendDiseqcCmd(dvb_diseqc_master_cmd cmd) {return false;}
 // PID handle facilities
 
 private:
