@@ -12,7 +12,6 @@
 
 #include <stdlib.h>
 #include "tools.h"
-#include "thread.h"
 
 extern cStringList ExtraVideoDirectories;
 
