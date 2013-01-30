@@ -12,12 +12,18 @@
 
 #include <stdlib.h>
 #include "tools.h"
+#include "thread.h"
 
-extern const char *VideoDirectory;
 extern cStringList ExtraVideoDirectories;
 
-void SetVideoDirectory(const char *Directory);
+bool LockExtraVideoDirectories(bool Wait = true);
+void UnlockExtraVideoDirectories(void);
 void AddExtraVideoDirectory(const char *Directory);
+void DelExtraVideoDirectory(const char *Directory);
+
+extern const char *VideoDirectory;
+
+void SetVideoDirectory(const char *Directory);
 cUnbufferedFile *OpenVideoFile(const char *FileName, int Flags);
 int CloseVideoFile(cUnbufferedFile *File);
 bool RenameVideoFile(const char *OldName, const char *NewName);

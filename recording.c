@@ -615,6 +615,7 @@ cRecording::cRecording(cTimer *Timer, const cEvent *Event)
   resume = RESUME_NOT_INITIALIZED;
   titleBuffer = NULL;
   sortBufferName = sortBufferTime = NULL;
+  videoDir = VideoDirectory;
   fileName = NULL;
   name = NULL;
   fileSizeMB = -1; // unknown
@@ -688,7 +689,7 @@ cRecording::cRecording(const char *FileName, const char *VideoDir)
   deleted = 0;
   titleBuffer = NULL;
   sortBufferName = sortBufferTime = NULL;
-  videoDir = VideoDir == NULL ? VideoDirectory : VideoDir;
+  videoDir = VideoDir == NULL ? VideoDirectory : strdup(VideoDir);
   FileName = fileName = strdup(FileName);
   if (*(fileName + strlen(fileName) - 1) == '/')
      *(fileName + strlen(fileName) - 1) = 0;
@@ -800,6 +801,8 @@ cRecording::cRecording(const char *FileName, const char *VideoDir)
 
 cRecording::~cRecording()
 {
+  if (videoDir != VideoDirectory)
+     free((char*)videoDir);
   free(titleBuffer);
   free(sortBufferName);
   free(sortBufferTime);
@@ -874,7 +877,7 @@ const char *cRecording::FileName(void) const
      int ch = isPesRecording ? priority : channel;
      int ri = isPesRecording ? lifetime : instanceId;
      name = ExchangeChars(name, true);
-     fileName = strdup(cString::sprintf(fmt, VideoDirectory, name, t->tm_year + 1900, t->tm_mon + 1, t->tm_mday, t->tm_hour, t->tm_min, ch, ri));
+     fileName = strdup(cString::sprintf(fmt, videoDir, name, t->tm_year + 1900, t->tm_mon + 1, t->tm_mday, t->tm_hour, t->tm_min, ch, ri));
      name = ExchangeChars(name, false);
      }
   return fileName;
@@ -1141,9 +1144,12 @@ void cRecordings::Refresh(bool Foreground)
   Clear();
   ChangeState();
   Unlock();
-  ScanVideoDir(VideoDirectory, Foreground, 0, VideoDirectory);
-  for (int i = 0; i < ExtraVideoDirectories.Size(); i++)
-      ScanVideoDir(ExtraVideoDirectories.At(i), Foreground, 0, ExtraVideoDirectories.At(i));
+  ScanVideoDir(VideoDirectory, Foreground);
+  if (LockExtraVideoDirectories()) {
+     for (int i = 0; i < ExtraVideoDirectories.Size(); i++)
+         ScanVideoDir(ExtraVideoDirectories.At(i), Foreground, 0, ExtraVideoDirectories.At(i));
+     UnlockExtraVideoDirectories();
+     }
 }
 
 void cRecordings::ScanVideoDir(const char *DirName, bool Foreground, int LinkLevel, const char *BaseVideoDir)
