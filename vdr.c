@@ -194,6 +194,7 @@ int main(int argc, char *argv[])
   int SVDRPport = DEFAULTSVDRPPORT;
   const char *AudioCommand = NULL;
   const char *VideoDirectory = DEFAULTVIDEODIR;
+  const char *ExtraVideoDirectory = NULL;
   const char *ConfigDirectory = NULL;
   const char *CacheDirectory = NULL;
   const char *ResourceDirectory = NULL;
@@ -252,6 +253,7 @@ int main(int argc, char *argv[])
       { "version",  no_argument,       NULL, 'V' },
       { "vfat",     no_argument,       NULL, 'v' | 0x100 },
       { "video",    required_argument, NULL, 'v' },
+      { "extravideo", required_argument, NULL, 'v' | 0x200 },
       { "watchdog", required_argument, NULL, 'w' },
       { NULL,       no_argument,       NULL,  0  }
     };
@@ -390,6 +392,12 @@ int main(int argc, char *argv[])
                     while (optarg && *optarg && optarg[strlen(optarg) - 1] == '/')
                           optarg[strlen(optarg) - 1] = 0;
                     break;
+          case 'v' | 0x200:
+                    ExtraVideoDirectory = optarg;
+                    while (optarg && *optarg && optarg[strlen(optarg) - 1] == '/')
+                          optarg[strlen(optarg) - 1] = 0;
+                    AddExtraVideoDirectory(ExtraVideoDirectory);
+                    break;
           case 'w': if (isnumber(optarg)) {
                        int t = atoi(optarg);
                        if (t >= 0) {
@@ -476,6 +484,8 @@ int main(int argc, char *argv[])
                "                           root\n"
                "            --userdump     allow coredumps if -u is given (debugging)\n"
                "  -v DIR,   --video=DIR    use DIR as video directory (default: %s)\n"
+               "            --extravideo=DIR use DIR as an additional readonly video directory\n"
+               "                           can be used multiple times\n"
                "  -V,       --version      print version information and exit\n"
                "            --vfat         encode special characters in recording names to\n"
                "                           avoid problems with VFAT file systems\n"

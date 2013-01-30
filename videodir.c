@@ -20,10 +20,17 @@
 #include "tools.h"
 
 const char *VideoDirectory = VIDEODIR;
+cStringList ExtraVideoDirectories;
 
 void SetVideoDirectory(const char *Directory)
 {
   VideoDirectory = strdup(Directory);
+}
+
+void AddExtraVideoDirectory(const char *Directory)
+{
+  if (Directory != NULL)
+     ExtraVideoDirectories.Append(strdup(Directory));
 }
 
 class cVideoDirectory {

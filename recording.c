@@ -673,7 +673,7 @@ cRecording::cRecording(cTimer *Timer, const cEvent *Event)
   info->lifetime = lifetime;
 }
 
-cRecording::cRecording(const char *FileName)
+cRecording::cRecording(const char *FileName, const char *VideoDir)
 {
   resume = RESUME_NOT_INITIALIZED;
   fileSizeMB = -1; // unknown
@@ -688,11 +688,12 @@ cRecording::cRecording(const char *FileName)
   deleted = 0;
   titleBuffer = NULL;
   sortBufferName = sortBufferTime = NULL;
+  videoDir = VideoDir == NULL ? VideoDirectory : VideoDir;
   FileName = fileName = strdup(FileName);
   if (*(fileName + strlen(fileName) - 1) == '/')
      *(fileName + strlen(fileName) - 1) = 0;
-  if (strstr(FileName, VideoDirectory) == FileName)
-     FileName += strlen(VideoDirectory) + 1;
+  if (strstr(FileName, videoDir) == FileName)
+     FileName += strlen(videoDir) + 1;
   const char *p = strrchr(FileName, '/');
 
   name = NULL;
@@ -838,8 +839,8 @@ char *cRecording::SortName(void) const
 {
   char **sb = (RecordingsSortMode == rsmName) ? &sortBufferName : &sortBufferTime;
   if (!*sb) {
-     char *s = (RecordingsSortMode == rsmName) ? strdup(FileName() + strlen(VideoDirectory))
-                                              : StripEpisodeName(strdup(FileName() + strlen(VideoDirectory)));
+     char *s = (RecordingsSortMode == rsmName) ? strdup(FileName() + strlen(videoDir))
+                                              : StripEpisodeName(strdup(FileName() + strlen(videoDir)));
      strreplace(s, '/', '0'); // some locales ignore '/' when sorting
      int l = strxfrm(NULL, s, 0) + 1;
      *sb = MALLOC(char, l);
@@ -1140,10 +1141,12 @@ void cRecordings::Refresh(bool Foreground)
   Clear();
   ChangeState();
   Unlock();
-  ScanVideoDir(VideoDirectory, Foreground);
+  ScanVideoDir(VideoDirectory, Foreground, 0, VideoDirectory);
+  for (int i = 0; i < ExtraVideoDirectories.Size(); i++)
+      ScanVideoDir(ExtraVideoDirectories.At(i), Foreground, 0, ExtraVideoDirectories.At(i));
 }
 
-void cRecordings::ScanVideoDir(const char *DirName, bool Foreground, int LinkLevel)
+void cRecordings::ScanVideoDir(const char *DirName, bool Foreground, int LinkLevel, const char *BaseVideoDir)
 {
   cReadDir d(DirName);
   struct dirent *e;
@@ -1163,7 +1166,7 @@ void cRecordings::ScanVideoDir(const char *DirName, bool Foreground, int LinkLev
               }
            if (S_ISDIR(st.st_mode)) {
               if (endswith(buffer, deleted ? DELEXT : RECEXT)) {
-                 cRecording *r = new cRecording(buffer);
+                 cRecording *r = new cRecording(buffer, BaseVideoDir);
                  if (r->Name()) {
                     r->NumFrames(); // initializes the numFrames member
                     r->FileSizeMB(); // initializes the fileSizeMB member
@@ -1178,7 +1181,7 @@ void cRecordings::ScanVideoDir(const char *DirName, bool Foreground, int LinkLev
                     delete r;
                  }
               else
-                 ScanVideoDir(buffer, Foreground, LinkLevel + Link);
+                 ScanVideoDir(buffer, Foreground, LinkLevel + Link, BaseVideoDir);
               }
            }
         }

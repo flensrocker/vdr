@@ -14,8 +14,10 @@
 #include "tools.h"
 
 extern const char *VideoDirectory;
+extern cStringList ExtraVideoDirectories;
 
 void SetVideoDirectory(const char *Directory);
+void AddExtraVideoDirectory(const char *Directory);
 cUnbufferedFile *OpenVideoFile(const char *FileName, int Flags);
 int CloseVideoFile(cUnbufferedFile *File);
 bool RenameVideoFile(const char *OldName, const char *NewName);
