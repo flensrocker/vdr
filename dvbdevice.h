@@ -107,7 +107,7 @@ class cDvbTuner;
 /// The cDvbDevice implements a DVB device which can be accessed through the Linux DVB driver API.
 
 class cDvbDevice : public cDevice {
-protected:
+public:
   static cString DvbName(const char *Name, int Adapter, int Frontend);
   static int DvbOpen(const char *Name, int Adapter, int Frontend, int Mode, bool ReportError = false);
 private:
@@ -127,19 +127,20 @@ private:
   int deliverySystems[MAXDELIVERYSYSTEMS];
   int numDeliverySystems;
   int numModulations;
-  int fd_dvr, fd_ca;
+  int fd_dvr;
   static cMutex bondMutex;
   cDvbDevice *bondedDevice;
   mutable bool needsDetachBondedReceivers;
   bool QueryDeliverySystems(int fd_frontend);
 public:
-  cDvbDevice(int Adapter, int Frontend);
+  cDvbDevice(int Adapter, int Frontend, cDevice *ParentDevice = NULL);
   virtual ~cDvbDevice();
   int Adapter(void) const { return adapter; }
   int Frontend(void) const { return frontend; }
   virtual bool Ready(void);
   virtual cString DeviceType(void) const;
   virtual cString DeviceName(void) const;
+  virtual bool SetIdleDevice(bool Idle, bool TestOnly);
   static bool BondDevices(const char *Bondings);
        ///< Bonds the devices as defined in the given Bondings string.
        ///< A bonding is a sequence of device numbers (starting at 1),
@@ -225,7 +226,7 @@ public:
 // Receiver facilities
 
 private:
-  cTSBuffer *tsBuffer;
+  cTSBufferBase *tsBuffer;
 protected:
   virtual bool OpenDvr(void);
   virtual void CloseDvr(void);
