@@ -323,6 +323,14 @@ const char *HelpPages[] = {
   "    be turned up or down, respectively. The option 'mute' will toggle the\n"
   "    audio muting. If no option is given, the current audio volume level will\n"
   "    be returned.",
+  "AXVD directory\n"
+  "    add directory to extra video directory list",
+  "CXVD\n"
+  "    clear extra video directory list",
+  "DXVD directory\n"
+  "    delete directory from extra video directory list",
+  "LXVD\n"
+  "    list extra video directories",
   "QUIT\n"
   "    Exit vdr (SVDRP).\n"
   "    You can also hit Ctrl-D to exit.",
@@ -1620,6 +1628,62 @@ void cSVDRP::CmdVOLU(const char *Option)
      Reply(250, "Audio volume is %d", cDevice::CurrentVolume());
 }
 
+void cSVDRP::CmdAXVD(const char *Option)
+{
+  if (*Option) {
+     if (!LockExtraVideoDirectories(false)) {
+        Reply(550, "Unable to lock extra video directory list");
+        return;
+        }
+     AddExtraVideoDirectory(Option);
+     UnlockExtraVideoDirectories();
+     Reply(250, "added '%s' to extra video directory list", Option);
+     return;
+     }
+  Reply(501, "Missing directory name");
+}
+
+void cSVDRP::CmdCXVD(const char *Option)
+{
+  if (!LockExtraVideoDirectories(false)) {
+     Reply(550, "Unable to lock extra video directory list");
+     return;
+     }
+  ExtraVideoDirectories.Clear();
+  UnlockExtraVideoDirectories();
+  Reply(250, "cleared extra video directory list");
+}
+
+void cSVDRP::CmdDXVD(const char *Option)
+{
+  if (*Option) {
+     if (!LockExtraVideoDirectories(false)) {
+        Reply(550, "Unable to lock extra video directory list");
+        return;
+        }
+     DelExtraVideoDirectory(Option);
+     UnlockExtraVideoDirectories();
+     Reply(250, "removed '%s' from extra video directory list", Option);
+     return;
+     }
+  Reply(501, "Missing directory name");
+}
+
+void cSVDRP::CmdLXVD(const char *Option)
+{
+  if (!LockExtraVideoDirectories(false)) {
+     Reply(550, "Unable to lock extra video directory list");
+     return;
+     }
+  if (ExtraVideoDirectories.Size() == 0)
+     Reply(550, "no extra video directories in list");
+  else {
+     for (int i = 0; i < ExtraVideoDirectories.Size(); i++)
+         Reply(i < ExtraVideoDirectories.Size() - 1 ? -250 : 250, "%s", ExtraVideoDirectories.At(i));
+     }
+  UnlockExtraVideoDirectories();
+}
+
 #define CMD(c) (strcasecmp(Cmd, c) == 0)
 
 void cSVDRP::Execute(char *Cmd)
@@ -1671,6 +1735,10 @@ void cSVDRP::Execute(char *Cmd)
   else if (CMD("UPDR"))  CmdUPDR(s);
   else if (CMD("UPDT"))  CmdUPDT(s);
   else if (CMD("VOLU"))  CmdVOLU(s);
+  else if (CMD("AXVD"))  CmdAXVD(s);
+  else if (CMD("CXVD"))  CmdCXVD(s);
+  else if (CMD("DXVD"))  CmdDXVD(s);
+  else if (CMD("LXVD"))  CmdLXVD(s);
   else if (CMD("QUIT"))  Close(true);
   else                   Reply(500, "Command unrecognized: \"%s\"", Cmd);
 }
