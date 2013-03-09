@@ -1794,8 +1794,6 @@ void cDevice::DetachAll(int Pid)
 
 void cDevice::DetachAllReceivers(void)
 {
-  if (parentDevice)
-     return parentDevice->DetachAllReceivers();
   cMutexLock MutexLock(&mutexReceiver);
   for (int i = 0; i < MAXRECEIVERS; i++)
       Detach(receiver[i]);
