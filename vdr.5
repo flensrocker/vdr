@@ -2,15 +2,15 @@
 .\" ** The above line should force tbl to be a preprocessor **
 .\" Man page for vdr file formats
 .\"
-.\" Copyright (C) 2008 Klaus Schmidinger
+.\" Copyright (C) 2013 Klaus Schmidinger
 .\"
 .\" You may distribute under the terms of the GNU General Public
 .\" License as specified in the file COPYING that comes with the
 .\" vdr distribution.
 .\"
-.\" $Id: vdr.5 2.31 2013/03/07 09:42:29 kls Exp $
+.\" $Id: vdr.5 2.34 2013/03/18 12:37:17 kls Exp $
 .\"
-.TH vdr 5 "10 Feb 2008" "1.6" "Video Disk Recorder Files"
+.TH vdr 5 "31 Mar 2013" "2.0" "Video Disk Recorder Files"
 .SH NAME
 vdr_files \- the Video Disk Recorder Files
 .SH DESCRIPTION
@@ -45,7 +45,11 @@ Such a delimiter will not appear in the Channels menu.
 A \fBchannel definition\fR is a line with channel data, where the fields
 are separated by ':' characters. Example:
 
+.TS
+tab (@);
+l.
 \fBRTL Television,RTL;RTL World:12187:hC34M2O0S0:S19.2E:27500:163=2:104=deu;106=deu:105:0:12003:1:1089:0\fR
+.TE
 
 The line number of a channel definition (not counting group separators,
 and based on a possible previous '@...' parameter)
@@ -891,7 +895,7 @@ Written by Klaus Schmidinger.
 .SH REPORTING BUGS
 Report bugs to <vdr\-bugs@tvdr.de>.
 .SH COPYRIGHT
-Copyright \(co 2008 Klaus Schmidinger.
+Copyright \(co 2013 Klaus Schmidinger.
 
 This is free software; see the source for copying conditions.  There is NO
 warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
