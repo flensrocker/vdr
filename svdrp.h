@@ -83,6 +83,10 @@ private:
   void CmdUPDT(const char *Option);
   void CmdUPDR(const char *Option);
   void CmdVOLU(const char *Option);
+  void CmdAXVD(const char *Option);
+  void CmdCXVD(const char *Option);
+  void CmdDXVD(const char *Option);
+  void CmdLXVD(const char *Option);
   void Execute(char *Cmd);
 public:
   cSVDRP(int Port);

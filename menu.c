@@ -2323,6 +2323,19 @@ cString cMenuRecordings::DirectoryName(void)
      char *s = ExchangeChars(strdup(base), true);
      d = AddDirectory(d, s);
      free(s);
+     if (!DirectoryOk(*d, false, true)) {
+        cString e;
+        if (LockExtraVideoDirectories(true)) {
+           for (int i = 0; i < ExtraVideoDirectories.Size(); i++) {
+               e = AddDirectory(ExtraVideoDirectories.At(i), s);
+               if (DirectoryOk(*e, false, true)) {
+                  UnlockExtraVideoDirectories();
+                  return e;
+                  }
+               }
+           UnlockExtraVideoDirectories();
+           }
+        }
      }
   return d;
 }
