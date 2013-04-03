@@ -13,6 +13,8 @@
 #include <stdlib.h>
 #include "tools.h"
 
+#define EXTRA_VIDEO_DIRECTORIES_PATCH 1
+
 extern cStringList ExtraVideoDirectories;
 
 bool LockExtraVideoDirectories(bool Wait = true);
