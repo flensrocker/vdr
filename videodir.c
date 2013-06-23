@@ -19,6 +19,43 @@
 #include "recording.h"
 #include "tools.h"
 
+cStringList ExtraVideoDirectories;
+bool        ExtraVideoDirectoriesIsLocked = false;
+cMutex      ExtraVideoDirectoriesMutex;
+
+bool LockExtraVideoDirectories(bool Wait)
+{
+  if (!Wait && ExtraVideoDirectoriesIsLocked)
+     return false;
+  ExtraVideoDirectoriesMutex.Lock();
+  ExtraVideoDirectoriesIsLocked = true;
+  return true;
+}
+
+void UnlockExtraVideoDirectories(void)
+{
+  ExtraVideoDirectoriesIsLocked = false;
+  ExtraVideoDirectoriesMutex.Unlock();
+}
+
+void AddExtraVideoDirectory(const char *Directory)
+{
+  if ((Directory != NULL) && (ExtraVideoDirectories.Find(Directory) < 0))
+     ExtraVideoDirectories.Append(strdup(Directory));
+}
+
+void DelExtraVideoDirectory(const char *Directory)
+{
+  if (Directory != NULL) {
+     int index = ExtraVideoDirectories.Find(Directory);
+     if (index < 0)
+        return;
+     char *dir = ExtraVideoDirectories.At(index);
+     ExtraVideoDirectories.Remove(index);
+     free(dir);
+     }
+}
+
 const char *VideoDirectory = VIDEODIR;
 
 void SetVideoDirectory(const char *Directory)

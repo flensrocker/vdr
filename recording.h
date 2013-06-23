@@ -105,9 +105,10 @@ private:
   int priority;
   int lifetime;
   time_t deleted;
+  const char *videoDir;
 public:
   cRecording(cTimer *Timer, const cEvent *Event);
-  cRecording(const char *FileName);
+  cRecording(const char *FileName, const char *VideoDir = NULL);
   virtual ~cRecording();
   time_t Start(void) const { return start; }
   int Priority(void) const { return priority; }
@@ -164,7 +165,7 @@ private:
   int state;
   const char *UpdateFileName(void);
   void Refresh(bool Foreground = false);
-  void ScanVideoDir(const char *DirName, bool Foreground = false, int LinkLevel = 0);
+  void ScanVideoDir(const char *DirName, bool Foreground = false, int LinkLevel = 0, const char *BaseVideoDir = NULL);
 protected:
   void Action(void);
 public:
