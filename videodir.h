@@ -21,6 +21,7 @@ bool LockExtraVideoDirectories(bool Wait = true);
 void UnlockExtraVideoDirectories(void);
 void AddExtraVideoDirectory(const char *Directory);
 void DelExtraVideoDirectory(const char *Directory);
+cString FindMatchingExtraVideoDirectory(const char *FileName);
 
 extern const char *VideoDirectory;
 

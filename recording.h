@@ -117,6 +117,7 @@ public:
   virtual int Compare(const cListObject &ListObject) const;
   const char *Name(void) const { return name; }
   const char *FileName(void) const;
+  const char *VideoDir(void) const { return videoDir; }
   const char *Title(char Delimiter = ' ', bool NewIndicator = false, int Level = -1) const;
   const cRecordingInfo *Info(void) const { return info; }
   const char *PrefixFileName(char Prefix);

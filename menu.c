@@ -2361,7 +2361,7 @@ eOSState cMenuRecordings::Play(void)
      if (ri->IsDirectory())
         Open();
      else {
-        cReplayControl::SetRecording(ri->Recording()->FileName());
+        cReplayControl::SetRecording(ri->Recording()->FileName(), ri->Recording()->VideoDir());
         return osReplay;
         }
      }
@@ -4501,6 +4501,7 @@ bool cRecordControls::StateChanged(int &State)
 
 cReplayControl *cReplayControl::currentReplayControl = NULL;
 cString cReplayControl::fileName;
+cString cReplayControl::videoDir;
 
 cReplayControl::cReplayControl(bool PauseLive)
 :cDvbPlayerControl(fileName, PauseLive)
@@ -4515,7 +4516,7 @@ cReplayControl::cReplayControl(bool PauseLive)
   lastSpeed = -2; // an invalid value
   timeoutShow = 0;
   timeSearchActive = false;
-  cRecording Recording(fileName);
+  cRecording Recording(fileName, videoDir);
   cStatus::MsgReplaying(this, Recording.Name(), Recording.FileName(), true);
   marks.Load(fileName, Recording.FramesPerSecond(), Recording.IsPesRecording());
   SetTrackDescriptions(false);
@@ -4565,9 +4566,12 @@ void cReplayControl::Stop(void)
   cDvbPlayerControl::Stop();
 }
 
-void cReplayControl::SetRecording(const char *FileName)
+void cReplayControl::SetRecording(const char *FileName, const char *VideoDir)
 {
   fileName = FileName;
+  videoDir = VideoDir;
+  if ((FileName != NULL) && (VideoDir == NULL))
+     videoDir = FindMatchingExtraVideoDirectory(FileName);
 }
 
 const char *cReplayControl::NowReplaying(void)

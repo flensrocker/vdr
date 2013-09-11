@@ -273,6 +273,7 @@ private:
   void ShowTimed(int Seconds = 0);
   static cReplayControl *currentReplayControl;
   static cString fileName;
+  static cString videoDir;
   void ShowMode(void);
   bool ShowProgress(bool Initial);
   void MarkToggle(void);
@@ -290,7 +291,7 @@ public:
   virtual void Show(void);
   virtual void Hide(void);
   bool Visible(void) { return visible; }
-  static void SetRecording(const char *FileName);
+  static void SetRecording(const char *FileName, const char *VideoDir = NULL);
   static const char *NowReplaying(void);
   static const char *LastReplayed(void);
   static void ClearLastReplayed(const char *FileName);
