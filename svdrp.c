@@ -1417,7 +1417,7 @@ void cSVDRP::CmdPLAY(const char *Option)
               else
                  resume.Save(pos);
               }
-           cReplayControl::SetRecording(recording->FileName());
+           cReplayControl::SetRecording(recording->FileName(), recording->VideoDir());
            cControl::Launch(new cReplayControl);
            cControl::Attach();
            Reply(250, "Playing recording \"%s\" [%s]", num, recording->Title());

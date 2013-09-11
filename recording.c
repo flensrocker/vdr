@@ -794,7 +794,15 @@ cRecording::cRecording(const char *FileName, const char *VideoDir)
   deleted = 0;
   titleBuffer = NULL;
   sortBufferName = sortBufferTime = NULL;
-  videoDir = VideoDir == NULL ? VideoDirectory : strdup(VideoDir);
+  if (VideoDir == NULL) {
+     cString extraVideoDir = FindMatchingExtraVideoDirectory(FileName);
+     if (*extraVideoDir == NULL)
+        videoDir = VideoDirectory;
+     else
+        videoDir = strdup(*extraVideoDir);
+     }
+  else
+     videoDir = strdup(VideoDir);
   FileName = fileName = strdup(FileName);
   if (*(fileName + strlen(fileName) - 1) == '/')
      *(fileName + strlen(fileName) - 1) = 0;

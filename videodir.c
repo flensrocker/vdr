@@ -56,6 +56,28 @@ void DelExtraVideoDirectory(const char *Directory)
      }
 }
 
+cString FindMatchingExtraVideoDirectory(const char *FileName)
+{
+  if (FileName == NULL)
+     return cString(NULL);
+  uint fileLen = strlen(FileName);
+  if ((strlen(VideoDirectory) < fileLen) && startswith(FileName, VideoDirectory))
+     return cString(NULL);
+  if (!LockExtraVideoDirectories())
+     return cString(NULL);
+  int i = 0;
+  cString videoDir(NULL);
+  while (i < ExtraVideoDirectories.Size()) {
+        if ((strlen(ExtraVideoDirectories.At(i)) < fileLen) && startswith(FileName, ExtraVideoDirectories.At(i))) {
+           videoDir = ExtraVideoDirectories.At(i);
+           break;
+           }
+        i++;
+        }
+  UnlockExtraVideoDirectories();
+  return videoDir;
+}
+
 const char *VideoDirectory = VIDEODIR;
 
 void SetVideoDirectory(const char *Directory)
@@ -65,13 +87,13 @@ void SetVideoDirectory(const char *Directory)
 
 class cVideoDirectory {
 private:
-  char *name, *stored, *adjusted;
+  char *videoDir, *name, *stored, *adjusted;
   int length, number, digits;
 public:
-  cVideoDirectory(void);
+  cVideoDirectory(const char *VideoDir = NULL);
   ~cVideoDirectory();
   int FreeMB(int *UsedMB = NULL);
-  const char *Name(void) { return name ? name : VideoDirectory; }
+  const char *Name(void) { return name ? name : videoDir; }
   const char *Stored(void) { return stored; }
   int Length(void) { return length; }
   bool IsDistributed(void) { return name != NULL; }
@@ -80,10 +102,14 @@ public:
   const char *Adjust(const char *FileName);
   };
 
-cVideoDirectory::cVideoDirectory(void)
+cVideoDirectory::cVideoDirectory(const char *VideoDir)
 {
-  length = strlen(VideoDirectory);
-  name = (VideoDirectory[length - 1] == '0') ? strdup(VideoDirectory) : NULL;
+  if (VideoDir == NULL)
+     videoDir = strdup(VideoDirectory);
+  else
+     videoDir = strdup(VideoDir);
+  length = strlen(videoDir);
+  name = (videoDir[length - 1] == '0') ? strdup(videoDir) : NULL;
   stored = adjusted = NULL;
   number = -1;
   digits = 0;
@@ -91,6 +117,7 @@ cVideoDirectory::cVideoDirectory(void)
 
 cVideoDirectory::~cVideoDirectory()
 {
+  free(videoDir);
   free(name);
   free(stored);
   free(adjusted);
@@ -98,7 +125,7 @@ cVideoDirectory::~cVideoDirectory()
 
 int cVideoDirectory::FreeMB(int *UsedMB)
 {
-  return FreeDiskSpaceMB(name ? name : VideoDirectory, UsedMB);
+  return FreeDiskSpaceMB(name ? name : videoDir, UsedMB);
 }
 
 bool cVideoDirectory::Next(void)
@@ -150,14 +177,18 @@ cUnbufferedFile *OpenVideoFile(const char *FileName, int Flags)
   const char *ActualFileName = FileName;
 
   // Incoming name must be in base video directory:
+  cString extraVideoDir;
   if (strstr(FileName, VideoDirectory) != FileName) {
-     esyslog("ERROR: %s not in %s", FileName, VideoDirectory);
-     errno = ENOENT; // must set 'errno' - any ideas for a better value?
-     return NULL;
+     extraVideoDir = FindMatchingExtraVideoDirectory(FileName);
+     if (*extraVideoDir == NULL) {
+        esyslog("ERROR: %s not in %s", FileName, VideoDirectory);
+        errno = ENOENT; // must set 'errno' - any ideas for a better value?
+        return NULL;
+        }
      }
   // Are we going to create a new file?
   if ((Flags & O_CREAT) != 0) {
-     cVideoDirectory Dir;
+     cVideoDirectory Dir(*extraVideoDir);
      if (Dir.IsDistributed()) {
         // Find the directory with the most free space:
         int MaxFree = Dir.FreeMB();
