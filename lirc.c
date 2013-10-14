@@ -67,7 +67,7 @@ void cLircRemote::Action(void)
 
   while (Running()) {
 
-        bool ready = cFile::FileReady(f, timeout);
+        bool ready = f >= 0 ? cFile::FileReady(f, timeout) : false;
         int ret = ready ? safe_read(f, buf, sizeof(buf)) : -1;
 
         if (ret <= 0) {
