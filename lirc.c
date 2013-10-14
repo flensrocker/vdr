@@ -21,11 +21,9 @@ cLircRemote::cLircRemote(const char *DeviceName)
 {
   addr.sun_family = AF_UNIX;
   strcpy(addr.sun_path, DeviceName);
-  if (Connect()) {
-     Start();
-     return;
-     }
-  f = -1;
+  if (!Connect())
+     f = -1;
+  Start();
 }
 
 cLircRemote::~cLircRemote()
@@ -67,14 +65,15 @@ void cLircRemote::Action(void)
   bool repeat = false;
   int timeout = -1;
 
-  while (Running() && f >= 0) {
+  while (Running()) {
 
         bool ready = cFile::FileReady(f, timeout);
         int ret = ready ? safe_read(f, buf, sizeof(buf)) : -1;
 
-        if (ready && ret <= 0 ) {
+        if (ret <= 0) {
            esyslog("ERROR: lircd connection broken, trying to reconnect every %.1f seconds", float(RECONNECTDELAY) / 1000);
-           close(f);
+           if (f >= 0)
+              close(f);
            f = -1;
            while (Running() && f < 0) {
                  cCondWait::SleepMs(RECONNECTDELAY);
