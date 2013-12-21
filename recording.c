@@ -44,9 +44,9 @@
 #define NAMEFORMAT   "%s/%s/" DATAFORMAT
 */
 #define DATAFORMATPES   "%4d-%02d-%02d.%02d%*c%02d.%02d.%02d" RECEXT
-#define NAMEFORMATPES   "%s/%s/" "%4d-%02d-%02d.%02d.%02d.%02d.%02d" RECEXT
+#define NAMEFORMATPES   "%s/%s%s/" "%4d-%02d-%02d.%02d.%02d.%02d.%02d" RECEXT
 #define DATAFORMATTS    "%4d-%02d-%02d.%02d.%02d.%d-%d" RECEXT
-#define NAMEFORMATTS    "%s/%s/" DATAFORMATTS
+#define NAMEFORMATTS    "%s/%s%s/" DATAFORMATTS
 
 #define RESUMEFILESUFFIX  "/resume%s%s"
 #ifdef SUMMARYFALLBACK
@@ -829,8 +829,14 @@ cRecording::cRecording(const char *FileName)
         t.tm_sec = 0;
         start = mktime(&t);
         name = MALLOC(char, p - FileName + 1);
-        strncpy(name, FileName, p - FileName);
-        name[p - FileName] = 0;
+        int first_len = 0;
+        if (cVideoDirectory::HideFirstRecordingLevel()) {
+           const char *f = strchr(FileName, '/');
+           if (f != NULL)
+              first_len = f - FileName + 1;
+           }
+        strncpy(name, FileName + first_len, p - FileName - first_len);
+        name[p - FileName - first_len] = 0;
         name = ExchangeChars(name, false);
         isPesRecording = instanceId < 0;
         }
@@ -960,7 +966,16 @@ char *cRecording::SortName(void) const
 {
   char **sb = (RecordingsSortMode == rsmName) ? &sortBufferName : &sortBufferTime;
   if (!*sb) {
-     char *s = strdup(FileName() + strlen(cVideoDirectory::Name()));
+     char *s;
+     if (cVideoDirectory::HideFirstRecordingLevel()) {
+        const char *f = strchr(FileName(), '/');
+        int first_len = 0;
+        if (f != NULL)
+           first_len = f - FileName() + 1;
+        s = strdup(FileName() + strlen(cVideoDirectory::Name()) + first_len);
+        }
+     else
+        s = strdup(FileName() + strlen(cVideoDirectory::Name()));
      if (RecordingsSortMode != rsmName || Setup.AlwaysSortFoldersFirst)
         s = StripEpisodeName(s, RecordingsSortMode != rsmName);
      strreplace(s, '/', '0'); // some locales ignore '/' when sorting
@@ -1028,7 +1043,7 @@ const char *cRecording::FileName(void) const
      if (strcmp(Name, name) != 0)
         dsyslog("recording file name '%s' truncated to '%s'", name, Name);
      Name = ExchangeChars(Name, true);
-     fileName = strdup(cString::sprintf(fmt, cVideoDirectory::Name(), Name, t->tm_year + 1900, t->tm_mon + 1, t->tm_mday, t->tm_hour, t->tm_min, ch, ri));
+     fileName = strdup(cString::sprintf(fmt, cVideoDirectory::Name(), cVideoDirectory::HideFirstRecordingLevel() ? "local/" : "", Name, t->tm_year + 1900, t->tm_mon + 1, t->tm_mday, t->tm_hour, t->tm_min, ch, ri));
      free(Name);
      }
   return fileName;
