@@ -106,6 +106,7 @@ class cKbdRemote : public cRemote, private cThread {
 private:
   static bool kbdAvailable;
   static bool rawMode;
+  bool systemIsUtf8;
   struct termios savedTm;
   virtual void Action(void);
   int ReadKey(void);

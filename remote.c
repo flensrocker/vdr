@@ -260,6 +260,7 @@ cKbdRemote::cKbdRemote(void)
      tcsetattr(STDIN_FILENO, TCSANOW, &tm);
      }
   kbdAvailable = true;
+  systemIsUtf8 = ((cCharSetConv::SystemCharacterTable() == NULL) || (strcmp(cCharSetConv::SystemCharacterTable(), "UTF-8") == 0));
   Start();
 }
 
@@ -324,7 +325,23 @@ uint64_t cKbdRemote::ReadKeySequence(void)
 
   if ((key1 = ReadKey()) >= 0) {
      k = key1;
-     if (key1 == 0x1B) {
+     if (systemIsUtf8 && ((key1 & 0xc0) == 0xc0)) {
+        char bytes[4] = { 0, 0, 0, 0};
+        bytes[0] = key1;
+        int bytescount = 1;
+        if ((key1 & 0xf0) == 0xf0)
+           bytescount = 3;
+        else if ((key1 & 0xe0) == 0xe0)
+           bytescount = 2;
+        for (int i = 0; i < bytescount; i++) {
+              if ((key1 = ReadKey()) >= 0)
+                 bytes[i + 1] = key1;
+              }
+        k = Utf8CharGet(bytes);
+        if (k > 0xff)
+           k = 0;
+        }
+     else if (key1 == 0x1B) {
         // Start of escape sequence
         if ((key1 = ReadKey()) >= 0) {
            k <<= 8;
