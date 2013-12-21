@@ -22,7 +22,7 @@
  *
  * The project's page is at http://www.tvdr.de
  *
- * $Id: vdr.c 2.57 2013/03/15 10:44:54 kls Exp $
+ * $Id: vdr.c 3.4 2013/10/16 09:33:58 kls Exp $
  */
 
 #include <getopt.h>
@@ -663,7 +663,7 @@ int main(int argc, char *argv[])
 
   // Directories:
 
-  SetVideoDirectory(VideoDirectory);
+  cVideoDirectory::SetName(VideoDirectory);
   if (!ConfigDirectory)
      ConfigDirectory = DEFAULTCONFDIR;
   cPlugin::SetConfigDirectory(ConfigDirectory);
@@ -799,6 +799,11 @@ int main(int argc, char *argv[])
 
   if (AudioCommand)
      new cExternalAudio(AudioCommand);
+
+  // Positioner:
+
+  if (!cPositioner::GetPositioner()) // no plugin has created a positioner
+     new cDiseqcPositioner;
 
   // Channel:
 
@@ -1234,7 +1239,7 @@ int main(int argc, char *argv[])
              case osRecordings:
                             DELETE_MENU;
                             cControl::Shutdown();
-                            Menu = new cMenuMain(osRecordings);
+                            Menu = new cMenuMain(osRecordings, true);
                             break;
              case osReplay: DELETE_MENU;
                             cControl::Shutdown();
@@ -1315,8 +1320,9 @@ int main(int argc, char *argv[])
         if (!Menu) {
            if (!InhibitEpgScan)
               EITScanner.Process();
-           if (!cCutter::Active() && cCutter::Ended()) {
-              if (cCutter::Error())
+           bool Error = false;
+           if (RecordingsHandler.Finished(Error)) {
+              if (Error)
                  Skins.Message(mtError, tr("Editing process failed!"));
               else
                  Skins.Message(mtInfo, tr("Editing process finished"));
@@ -1336,7 +1342,10 @@ int main(int argc, char *argv[])
               ShutdownHandler.countdown.Cancel();
            }
 
-        if ((Now - LastInteract) > ACTIVITYTIMEOUT && !cRecordControls::Active() && !cCutter::Active() && !Interface->HasSVDRPConnection() && (Now - cRemote::LastActivity()) > ACTIVITYTIMEOUT) {
+        // Keep the recordings handler alive:
+        RecordingsHandler.Active();
+
+        if ((Now - LastInteract) > ACTIVITYTIMEOUT && !cRecordControls::Active() && !RecordingsHandler.Active() && !Interface->HasSVDRPConnection() && (Now - cRemote::LastActivity()) > ACTIVITYTIMEOUT) {
            // Handle housekeeping tasks
 
            // Shutdown:
@@ -1385,7 +1394,7 @@ Exit:
 
   PluginManager.StopPlugins();
   cRecordControls::Shutdown();
-  cCutter::Stop();
+  RecordingsHandler.DelAll();
   delete Menu;
   cControl::Shutdown();
   delete Interface;
@@ -1400,6 +1409,8 @@ Exit:
      Setup.Save();
      }
   cDevice::Shutdown();
+  cPositioner::DestroyPositioner();
+  cVideoDirectory::Destroy();
   EpgHandlers.Clear();
   PluginManager.Shutdown(true);
   cSchedules::Cleanup(true);

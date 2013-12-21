@@ -7,7 +7,7 @@
  * Original version (as used in VDR before 1.3.0) written by
  * Robert Schneider <Robert.Schneider@web.de> and Rolf Hakenes <hakenes@hippomi.de>.
  *
- * $Id: epg.c 2.23.1.1 2013/09/01 09:16:53 kls Exp $
+ * $Id: epg.c 3.2 2013/08/31 13:21:09 kls Exp $
  */
 
 #include "epg.h"
@@ -1539,4 +1539,20 @@ void cEpgHandlers::DropOutdated(cSchedule *Schedule, time_t SegmentStart, time_t
          return;
       }
   Schedule->DropOutdated(SegmentStart, SegmentEnd, TableID, Version);
+}
+
+void cEpgHandlers::BeginSegmentTransfer(const cChannel *Channel, bool OnlyRunningStatus)
+{
+  for (cEpgHandler *eh = First(); eh; eh = Next(eh)) {
+      if (eh->BeginSegmentTransfer(Channel, OnlyRunningStatus))
+         return;
+      }
+}
+
+void cEpgHandlers::EndSegmentTransfer(bool Modified, bool OnlyRunningStatus)
+{
+  for (cEpgHandler *eh = First(); eh; eh = Next(eh)) {
+      if (eh->EndSegmentTransfer(Modified, OnlyRunningStatus))
+         return;
+      }
 }

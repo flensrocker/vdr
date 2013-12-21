@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: VDR 2.0.0\n"
 "Report-Msgid-Bugs-To: <vdr-bugs@tvdr.de>\n"
-"POT-Creation-Date: 2013-02-03 16:46+0100\n"
+"POT-Creation-Date: 2013-10-14 11:56+0200\n"
 "PO-Revision-Date: 2013-03-04 14:52+0800\n"
 "Last-Translator: NFVDR <nfvdr@live.com>\n"
 "Language-Team: Chinese (simplified) <nfvdr@live.com>\n"
@@ -725,6 +725,70 @@ msgstr "请输入 %d 数字!"
 msgid "CAM not responding!"
 msgstr "CAM 没有响应！"
 
+msgid "Edit path"
+msgstr ""
+
+msgid "Folder"
+msgstr ""
+
+msgid "This folder is currently in use - no changes are possible!"
+msgstr ""
+
+#, c-format
+msgid "Move entire folder containing %d recordings?"
+msgstr ""
+
+msgid "Error while moving folder!"
+msgstr ""
+
+msgid "Edit recording"
+msgstr ""
+
+msgid "This recording is currently in use - no changes are possible!"
+msgstr ""
+
+msgid "Button$Cancel cutting"
+msgstr ""
+
+msgid "Button$Stop cutting"
+msgstr ""
+
+msgid "Button$Cancel moving"
+msgstr ""
+
+msgid "Button$Stop moving"
+msgstr ""
+
+msgid "Button$Cancel copying"
+msgstr ""
+
+msgid "Button$Stop copying"
+msgstr ""
+
+msgid "Button$Cut"
+msgstr ""
+
+msgid "Button$Delete marks"
+msgstr ""
+
+msgid "Recording vanished!"
+msgstr ""
+
+msgid "Error while queueing recording for cutting!"
+msgstr ""
+
+msgid "Delete editing marks for this recording?"
+msgstr ""
+
+msgid "Error while deleting editing marks!"
+msgstr ""
+
+msgid "Error while changing priority/lifetime!"
+msgstr ""
+
+msgid "Error while changing folder/name!"
+msgstr ""
+
 msgid "Recording info"
 msgstr "录像信息"
 
@@ -994,6 +1058,33 @@ msgstr "设备%d卫星连接线"
 
 msgid "Setup.LNB$own"
 msgstr "所有"
+
+msgid "Setup.LNB$Use dish positioner"
+msgstr ""
+
+msgid "Setup.LNB$Site latitude (degrees)"
+msgstr ""
+
+msgid "South"
+msgstr ""
+
+msgid "North"
+msgstr ""
+
+msgid "Setup.LNB$Site longitude (degrees)"
+msgstr ""
+
+msgid "West"
+msgstr ""
+
+msgid "East"
+msgstr ""
+
+msgid "Setup.LNB$Max. positioner swing (degrees)"
+msgstr ""
+
+msgid "Setup.LNB$Positioner speed (degrees/s)"
+msgstr ""
 
 msgid "CAM reset"
 msgstr "CAM重置"
@@ -1331,6 +1422,10 @@ msgstr "现场"
 
 msgid "PLAY"
 msgstr "播放"
+
+#, c-format
+msgid "Moving dish to %.1f..."
+msgstr ""
 
 msgid "ST:TNG Panels"
 msgstr "ST:TNG 面板"

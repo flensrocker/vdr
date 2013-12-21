@@ -3,7 +3,7 @@
  *
  * See the README file for copyright information and how to reach the author.
  *
- * $Id: dvbsddevice.c 1.10.1.1 2013/08/22 08:30:52 kls Exp $
+ * $Id: dvbsddevice.c 3.1 2013/08/22 08:20:18 kls Exp $
  */
 
 #include <getopt.h>
