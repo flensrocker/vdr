@@ -76,7 +76,11 @@ VDR Plugin 'dvbhddevice' Revision History
 
 - Fixed aspect ratio and position of scaled video.
 
-2013-08-26: Version 2.0.2
+2013-08-23: Version 2.1.1
 
+- Fixed aspect ratio and position of scaled video.
 - Added yellow button in main menu to send CEC TV-Off command.
+
+2013-08-26: Version 2.1.2
+
 - Updated the Finnish OSD texts (thanks to Rolf Ahrenberg).
