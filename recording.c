@@ -1608,13 +1608,14 @@ cRecordingItem::cRecordingItem(cRecordings *Recordings, cRecording *Recording)
   Recordings->StateChanged(recordingsState);
 }
 
-bool cRecordingItem::Refresh(void)
+int cRecordingItem::Refresh(void)
 {
   if (recordings->StateChanged(recordingsState)) {
      if ((recording = recordings->GetByName(originalFileName)) == NULL)
-        return false;
+        return -1;
+     return 1;
      }
-  return true;
+  return 0;
 }
 
 cRecording *cRecordingItem::Recording(void)

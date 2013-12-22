@@ -289,7 +289,10 @@ private:
 
 public:
   cRecordingItem(cRecordings *Recordings, cRecording *Recording);
-  bool Refresh(void);
+  int Refresh(void);
+      ///< Returns -1 if the recording has vanished.
+      ///< Returns  0 if the recording object hasn't changed
+      ///< Returns  1 if the recording object has changed
   cRecording *Recording(void);
   };
 

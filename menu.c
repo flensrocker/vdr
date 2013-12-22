@@ -2403,13 +2403,12 @@ eOSState cMenuRecordingEdit::ProcessKey(eKeys Key)
 
 class cMenuRecording : public cOsdMenu {
 private:
-  cRecording *recording;
-  cString originalFileName;
-  int recordingsState;
+  cRecordingItem *recordingItem;
   bool withButtons;
   bool RefreshRecording(void);
 public:
   cMenuRecording(cRecording *Recording, bool WithButtons = false);
+  virtual ~cMenuRecording(void);
   virtual void Display(void);
   virtual eOSState ProcessKey(eKeys Key);
 };
@@ -2418,23 +2417,25 @@ cMenuRecording::cMenuRecording(cRecording *Recording, bool WithButtons)
 :cOsdMenu(tr("Recording info"))
 {
   SetMenuCategory(mcRecordingInfo);
-  recording = Recording;
-  originalFileName = recording->FileName();
-  Recordings.StateChanged(recordingsState); // just to get the current state
+  recordingItem = new cRecordingItem(&Recordings, Recording);
   withButtons = WithButtons;
   if (withButtons)
      SetHelp(tr("Button$Play"), tr("Button$Rewind"), NULL, tr("Button$Edit"));
 }
 
+cMenuRecording::~cMenuRecording(void)
+{
+  delete recordingItem;
+}
+
 bool cMenuRecording::RefreshRecording(void)
 {
-  if (Recordings.StateChanged(recordingsState)) {
-     if ((recording = Recordings.GetByName(originalFileName)) != NULL)
-        Display();
-     else {
-        Skins.Message(mtWarning, tr("Recording vanished!"));
-        return false;
-        }
+  int r = recordingItem->Refresh();
+  if (r > 0)
+     Display();
+  else if (r < 0) {
+     Skins.Message(mtWarning, tr("Recording vanished!"));
+     return false;
      }
   return true;
 }
@@ -2446,9 +2447,9 @@ void cMenuRecording::Display(void)
      return;
      }
   cOsdMenu::Display();
-  DisplayMenu()->SetRecording(recording);
-  if (recording->Info()->Description())
-     cStatus::MsgOsdTextItem(recording->Info()->Description());
+  DisplayMenu()->SetRecording(recordingItem->Recording());
+  if (recordingItem->Recording()->Info()->Description())
+     cStatus::MsgOsdTextItem(recordingItem->Recording()->Info()->Description());
 }
 
 eOSState cMenuRecording::ProcessKey(eKeys Key)
@@ -2489,7 +2490,7 @@ eOSState cMenuRecording::ProcessKey(eKeys Key)
                      // continue with osBack to close the info menu and process the key
        case kOk:     return osBack;
        case kBlue:   if (withButtons)
-                        return AddSubMenu(new cMenuRecordingEdit(recording));
+                        return AddSubMenu(new cMenuRecordingEdit(recordingItem->Recording()));
                      break;
        default: break;
        }
