@@ -1598,6 +1598,31 @@ void cRecordings::ClearSortNames(void)
       recording->ClearSortName();
 }
 
+// --- cRecordingItem --------------------------------------------------------
+
+cRecordingItem::cRecordingItem(cRecordings *Recordings, cRecording *Recording)
+{
+  recordings = Recordings;
+  recording = Recording;
+  originalFileName = Recording->FileName();
+  Recordings->StateChanged(recordingsState);
+}
+
+bool cRecordingItem::Refresh(void)
+{
+  if (recordings->StateChanged(recordingsState)) {
+     if ((recording = recordings->GetByName(originalFileName)) == NULL)
+        return false;
+     }
+  return true;
+}
+
+cRecording *cRecordingItem::Recording(void)
+{
+  Refresh();
+  return recording;
+}
+
 // --- cDirCopier ------------------------------------------------------------
 
 class cDirCopier : public cThread {

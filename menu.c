@@ -2501,7 +2501,7 @@ eOSState cMenuRecording::ProcessKey(eKeys Key)
 
 class cMenuRecordingItem : public cOsdItem {
 private:
-  cRecording *recording;
+  cRecordingItem *recordingItem;
   int level;
   char *name;
   int totalEntries, newEntries;
@@ -2511,14 +2511,14 @@ public:
   void IncrementCounter(bool New);
   const char *Name(void) { return name; }
   int Level(void) { return level; }
-  cRecording *Recording(void) { return recording; }
+  cRecording *Recording(void) { return recordingItem->Recording(); }
   bool IsDirectory(void) { return name != NULL; }
   virtual void SetMenuItem(cSkinDisplayMenu *DisplayMenu, int Index, bool Current, bool Selectable);
   };
 
 cMenuRecordingItem::cMenuRecordingItem(cRecording *Recording, int Level)
 {
-  recording = Recording;
+  recordingItem = new cRecordingItem(&Recordings, Recording);
   level = Level;
   name = NULL;
   totalEntries = newEntries = 0;
@@ -2530,6 +2530,7 @@ cMenuRecordingItem::cMenuRecordingItem(cRecording *Recording, int Level)
 cMenuRecordingItem::~cMenuRecordingItem()
 {
   free(name);
+  delete recordingItem;
 }
 
 void cMenuRecordingItem::IncrementCounter(bool New)
@@ -2542,7 +2543,7 @@ void cMenuRecordingItem::IncrementCounter(bool New)
 
 void cMenuRecordingItem::SetMenuItem(cSkinDisplayMenu *DisplayMenu, int Index, bool Current, bool Selectable)
 {
-  if (!DisplayMenu->SetItemRecording(recording, Index, Current, Selectable, level, totalEntries, newEntries))
+  if (!DisplayMenu->SetItemRecording(recordingItem->Recording(), Index, Current, Selectable, level, totalEntries, newEntries))
      DisplayMenu->SetItem(Text(), Index, Current, Selectable);
 }
 
@@ -2606,7 +2607,8 @@ void cMenuRecordings::Set(bool Refresh)
   cMenuRecordingItem *LastItem = NULL;
   cThreadLock RecordingsLock(&Recordings);
   if (Refresh) {
-     if (cMenuRecordingItem *ri = (cMenuRecordingItem *)Get(Current()))
+     cMenuRecordingItem *ri = (cMenuRecordingItem *)Get(Current());
+     if (ri && ri->Recording())
         CurrentRecording = ri->Recording()->FileName();
      }
   Clear();
@@ -2692,7 +2694,7 @@ eOSState cMenuRecordings::Play(void)
   if (ri) {
      if (ri->IsDirectory())
         Open();
-     else {
+     else if (ri->Recording()) {
         cReplayControl::SetRecording(ri->Recording()->FileName());
         return osReplay;
         }
@@ -2705,7 +2707,7 @@ eOSState cMenuRecordings::Rewind(void)
   if (HasSubMenu() || Count() == 0)
      return osContinue;
   cMenuRecordingItem *ri = (cMenuRecordingItem *)Get(Current());
-  if (ri && !ri->IsDirectory()) {
+  if (ri && !ri->IsDirectory() && ri->Recording()) {
      cDevice::PrimaryDevice()->StopReplay(); // must do this first to be able to rewind the currently replayed recording
      cResumeFile ResumeFile(ri->Recording()->FileName(), ri->Recording()->IsPesRecording());
      ResumeFile.Delete();
@@ -2719,7 +2721,7 @@ eOSState cMenuRecordings::Delete(void)
   if (HasSubMenu() || Count() == 0)
      return osContinue;
   cMenuRecordingItem *ri = (cMenuRecordingItem *)Get(Current());
-  if (ri && !ri->IsDirectory()) {
+  if (ri && !ri->IsDirectory() && ri->Recording()) {
      if (Interface->Confirm(tr("Delete recording?"))) {
         cRecordControl *rc = cRecordControls::GetRecordControl(ri->Recording()->FileName());
         if (rc) {
@@ -2773,7 +2775,8 @@ eOSState cMenuRecordings::Info(void)
 {
   if (HasSubMenu() || Count() == 0)
      return osContinue;
-  if (cMenuRecordingItem *ri = (cMenuRecordingItem *)Get(Current())) {
+  cMenuRecordingItem *ri = (cMenuRecordingItem *)Get(Current());
+  if (ri && ri->Recording()) {
      if (ri->IsDirectory())
         return AddSubMenu(new cMenuPathEdit(cString(ri->Recording()->Name(), strchrn(ri->Recording()->Name(), FOLDERDELIMCHAR, ri->Level() + 1))));
      else
@@ -2787,7 +2790,7 @@ eOSState cMenuRecordings::Commands(eKeys Key)
   if (HasSubMenu() || Count() == 0)
      return osContinue;
   cMenuRecordingItem *ri = (cMenuRecordingItem *)Get(Current());
-  if (ri && !ri->IsDirectory()) {
+  if (ri && !ri->IsDirectory() && ri->Recording()) {
      cMenuCommands *menu;
      eOSState state = AddSubMenu(menu = new cMenuCommands(tr("Recording commands"), &RecordingCommands, cString::sprintf("\"%s\"", *strescape(ri->Recording()->FileName(), "\\\"$"))));
      if (Key != kNone)

@@ -280,6 +280,19 @@ public:
 extern cRecordings Recordings;
 extern cRecordings DeletedRecordings;
 
+class cRecordingItem {
+private:
+  cRecordings *recordings;
+  cRecording *recording;
+  cString originalFileName;
+  int recordingsState;
+
+public:
+  cRecordingItem(cRecordings *Recordings, cRecording *Recording);
+  bool Refresh(void);
+  cRecording *Recording(void);
+  };
+
 class cRecordingsHandlerEntry;
 
 class cRecordingsHandler {
