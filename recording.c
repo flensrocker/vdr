@@ -828,15 +828,15 @@ cRecording::cRecording(const char *FileName)
         t.tm_mon--;
         t.tm_sec = 0;
         start = mktime(&t);
-        name = MALLOC(char, p - FileName + 1);
-        int first_len = 0;
+        const char *copyFileName = FileName;
         if (cVideoDirectory::HideFirstRecordingLevel()) {
            const char *f = strchr(FileName, '/');
            if (f != NULL)
-              first_len = f - FileName + 1;
+              copyFileName = f + 1;
            }
-        strncpy(name, FileName + first_len, p - FileName - first_len);
-        name[p - FileName - first_len] = 0;
+        name = MALLOC(char, p - copyFileName + 1);
+        strncpy(name, copyFileName, p - copyFileName);
+        name[p - copyFileName] = 0;
         name = ExchangeChars(name, false);
         isPesRecording = instanceId < 0;
         }
@@ -966,16 +966,14 @@ char *cRecording::SortName(void) const
 {
   char **sb = (RecordingsSortMode == rsmName) ? &sortBufferName : &sortBufferTime;
   if (!*sb) {
-     char *s;
+     int first_len = 0;
      if (cVideoDirectory::HideFirstRecordingLevel()) {
-        const char *f = strchr(FileName(), '/');
-        int first_len = 0;
-        if (f != NULL)
-           first_len = f - FileName() + 1;
-        s = strdup(FileName() + strlen(cVideoDirectory::Name()) + first_len);
+        const char *f1 = FileName() + strlen(cVideoDirectory::Name()) + 1;
+        const char *f2 = strchr(f1, '/');
+        if (f2 != NULL)
+           first_len = f2 - f1 + 1;
         }
-     else
-        s = strdup(FileName() + strlen(cVideoDirectory::Name()));
+     char *s = strdup(FileName() + strlen(cVideoDirectory::Name()) + first_len);
      if (RecordingsSortMode != rsmName || Setup.AlwaysSortFoldersFirst)
         s = StripEpisodeName(s, RecordingsSortMode != rsmName);
      strreplace(s, '/', '0'); // some locales ignore '/' when sorting
