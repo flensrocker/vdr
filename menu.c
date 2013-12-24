@@ -2430,6 +2430,7 @@ cMenuRecording::~cMenuRecording(void)
 
 bool cMenuRecording::RefreshRecording(void)
 {
+  cThreadLock RecordingsLock(&Recordings);
   int r = recordingItem->Refresh();
   if (r > 0)
      Display();
@@ -2446,10 +2447,13 @@ void cMenuRecording::Display(void)
      SubMenu()->Display();
      return;
      }
-  cOsdMenu::Display();
-  DisplayMenu()->SetRecording(recordingItem->Recording());
-  if (recordingItem->Recording()->Info()->Description())
-     cStatus::MsgOsdTextItem(recordingItem->Recording()->Info()->Description());
+  cThreadLock RecordingsLock(&Recordings);
+  if (cRecording *r = recordingItem->Recording()) {
+     cOsdMenu::Display();
+     DisplayMenu()->SetRecording(r);
+     if (r->Info()->Description())
+        cStatus::MsgOsdTextItem(r->Info()->Description());
+     }
 }
 
 eOSState cMenuRecording::ProcessKey(eKeys Key)
@@ -2544,8 +2548,11 @@ void cMenuRecordingItem::IncrementCounter(bool New)
 
 void cMenuRecordingItem::SetMenuItem(cSkinDisplayMenu *DisplayMenu, int Index, bool Current, bool Selectable)
 {
-  if (!DisplayMenu->SetItemRecording(recordingItem->Recording(), Index, Current, Selectable, level, totalEntries, newEntries))
-     DisplayMenu->SetItem(Text(), Index, Current, Selectable);
+  cThreadLock RecordingsLock(&Recordings);
+  if (cRecording *r = recordingItem->Recording()) {
+     if (!DisplayMenu->SetItemRecording(r, Index, Current, Selectable, level, totalEntries, newEntries))
+        DisplayMenu->SetItem(Text(), Index, Current, Selectable);
+     }
 }
 
 // --- cMenuRecordings -------------------------------------------------------
@@ -2695,9 +2702,12 @@ eOSState cMenuRecordings::Play(void)
   if (ri) {
      if (ri->IsDirectory())
         Open();
-     else if (ri->Recording()) {
-        cReplayControl::SetRecording(ri->Recording()->FileName());
-        return osReplay;
+     else {
+        cThreadLock RecordingsLock(&Recordings);
+        if (cRecording *r = ri->Recording()) {
+           cReplayControl::SetRecording(r->FileName());
+           return osReplay;
+           }
         }
      }
   return osContinue;
@@ -2708,6 +2718,7 @@ eOSState cMenuRecordings::Rewind(void)
   if (HasSubMenu() || Count() == 0)
      return osContinue;
   cMenuRecordingItem *ri = (cMenuRecordingItem *)Get(Current());
+  cThreadLock RecordingsLock(&Recordings);
   if (ri && !ri->IsDirectory() && ri->Recording()) {
      cDevice::PrimaryDevice()->StopReplay(); // must do this first to be able to rewind the currently replayed recording
      cResumeFile ResumeFile(ri->Recording()->FileName(), ri->Recording()->IsPesRecording());
@@ -2722,6 +2733,7 @@ eOSState cMenuRecordings::Delete(void)
   if (HasSubMenu() || Count() == 0)
      return osContinue;
   cMenuRecordingItem *ri = (cMenuRecordingItem *)Get(Current());
+  cThreadLock RecordingsLock(&Recordings);
   if (ri && !ri->IsDirectory() && ri->Recording()) {
      if (Interface->Confirm(tr("Delete recording?"))) {
         cRecordControl *rc = cRecordControls::GetRecordControl(ri->Recording()->FileName());
@@ -2777,6 +2789,7 @@ eOSState cMenuRecordings::Info(void)
   if (HasSubMenu() || Count() == 0)
      return osContinue;
   cMenuRecordingItem *ri = (cMenuRecordingItem *)Get(Current());
+  cThreadLock RecordingsLock(&Recordings);
   if (ri && ri->Recording()) {
      if (ri->IsDirectory())
         return AddSubMenu(new cMenuPathEdit(cString(ri->Recording()->Name(), strchrn(ri->Recording()->Name(), FOLDERDELIMCHAR, ri->Level() + 1))));
@@ -2791,6 +2804,7 @@ eOSState cMenuRecordings::Commands(eKeys Key)
   if (HasSubMenu() || Count() == 0)
      return osContinue;
   cMenuRecordingItem *ri = (cMenuRecordingItem *)Get(Current());
+  cThreadLock RecordingsLock(&Recordings);
   if (ri && !ri->IsDirectory() && ri->Recording()) {
      cMenuCommands *menu;
      eOSState state = AddSubMenu(menu = new cMenuCommands(tr("Recording commands"), &RecordingCommands, cString::sprintf("\"%s\"", *strescape(ri->Recording()->FileName(), "\\\"$"))));
