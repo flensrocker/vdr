@@ -1369,6 +1369,7 @@ int main(int argc, char *argv[])
 
            // Disk housekeeping:
            RemoveDeletedRecordings();
+           ClearVanishedRecordings();
            cSchedules::Cleanup();
            // Plugins housekeeping:
            PluginManager.Housekeeping();
