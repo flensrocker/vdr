@@ -190,6 +190,13 @@ public:
 cOsdObject *CamControl(void);
 bool CamMenuActive(void);
 
+class cRecordingFilter {
+public:
+  virtual ~cRecordingFilter(void) {};
+  virtual bool Filter(const cRecording *Recording) const = 0;
+      ///< Returns true if the given Recording shall be displayed in the Recordings menu.
+  };
+
 class cMenuRecordingItem;
 
 class cMenuRecordings : public cOsdMenu {
@@ -198,6 +205,7 @@ private:
   int level;
   int recordingsState;
   int helpKeys;
+  const cRecordingFilter *filter;
   static cString path;
   static cString fileName;
   void SetHelpKeys(void);
@@ -212,7 +220,7 @@ private:
 protected:
   cString DirectoryName(void);
 public:
-  cMenuRecordings(const char *Base = NULL, int Level = 0, bool OpenSubMenus = false);
+  cMenuRecordings(const char *Base = NULL, int Level = 0, bool OpenSubMenus = false, const cRecordingFilter *Filter = NULL);
   ~cMenuRecordings();
   virtual eOSState ProcessKey(eKeys Key);
   static void SetPath(const char *Path);
