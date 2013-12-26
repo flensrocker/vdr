@@ -297,7 +297,7 @@ int cKbdRemote::MapCodeToFunc(uint64_t Code)
 
 void cKbdRemote::PutKey(uint64_t Code, bool Repeat, bool Release)
 {
-  if (rawMode || !Put(Code, Repeat, Release)) {
+  if (rawMode || (!Put(Code, Repeat, Release) && !IsLearning())) {
      if (int func = MapCodeToFunc(Code))
         Put(KBDKEY(func), Repeat, Release);
      }
