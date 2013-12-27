@@ -1392,6 +1392,7 @@ void cRecordings::Refresh(bool Foreground)
 
 void cRecordings::ScanVideoDir(const char *DirName, bool Foreground, int LinkLevel, int DirLevel)
 {
+  bool DoChangeState = false;
   // Find any new recordings:
   cReadDir d(DirName);
   struct dirent *e;
@@ -1420,7 +1421,10 @@ void cRecordings::ScanVideoDir(const char *DirName, bool Foreground, int LinkLev
                           r->deleted = time(NULL);
                        Lock();
                        Add(r);
-                       ChangeState();
+                       if (initial)
+                          ChangeState();
+                       else
+                          DoChangeState = true;
                        Unlock();
                        }
                     else
@@ -1441,11 +1445,13 @@ void cRecordings::ScanVideoDir(const char *DirName, bool Foreground, int LinkLev
             Lock();
             Del(r, false);
             VanishedRecordings.Add(r);
-            ChangeState();
+            DoChangeState = true;
             Unlock();
             }
          }
      }
+  if (DoChangeState)
+     ChangeState();
 }
 
 bool cRecordings::StateChanged(int &State)
