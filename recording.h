@@ -223,7 +223,7 @@ private:
   int state;
   const char *UpdateFileName(void);
   void Refresh(bool Foreground = false);
-  void ScanVideoDir(const char *DirName, bool Foreground = false, int LinkLevel = 0, int DirLevel = 0);
+  bool ScanVideoDir(const char *DirName, bool Foreground = false, int LinkLevel = 0, int DirLevel = 0);
 protected:
   void Action(void);
 public:
