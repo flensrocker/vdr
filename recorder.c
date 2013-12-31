@@ -139,6 +139,7 @@ void cRecorder::Action(void)
                           }
                        }
                     InfoWritten = true;
+                    cRecordingUserCommand::InvokeCommand(RUC_STARTRECORDING, recordingName);
                     }
                  if (FirstIframeSeen || frameDetector->IndependentFrame()) {
                     FirstIframeSeen = true; // start recording with the first I-frame

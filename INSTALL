@@ -254,6 +254,7 @@ The program will be called with two or three (in case of "edited") string
 parameters. The first parameter is one of
 
   before      if this is *before* a recording starts
+  start       if this is *start* recording has started
   after       if this is *after* a recording has finished
   edited      if this is after a recording has been *edited*
   deleted     if this is after a recording has been *deleted*

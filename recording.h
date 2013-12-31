@@ -386,6 +386,7 @@ public:
   };
 
 #define RUC_BEFORERECORDING "before"
+#define RUC_STARTRECORDING  "start"
 #define RUC_AFTERRECORDING  "after"
 #define RUC_EDITEDRECORDING "edited"
 #define RUC_DELETERECORDING "deleted"
