@@ -2681,7 +2681,7 @@ bool cMenuRecordings::Open(bool OpenSubMenus)
         buffer = cString::sprintf("%s%c%s", base, FOLDERDELIMCHAR, t);
         t = buffer;
         }
-     AddSubMenu(new cMenuRecordings(t, level + 1, OpenSubMenus));
+     AddSubMenu(new cMenuRecordings(t, level + 1, OpenSubMenus, filter));
      return true;
      }
   return false;
