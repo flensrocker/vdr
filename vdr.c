@@ -243,6 +243,7 @@ int main(int argc, char *argv[])
       { "genindex", required_argument, NULL, 'g' | 0x100 },
       { "grab",     required_argument, NULL, 'g' },
       { "help",     no_argument,       NULL, 'h' },
+      { "hide-first-recording-level", no_argument, NULL, 'H' },
       { "instance", required_argument, NULL, 'i' },
       { "lib",      required_argument, NULL, 'L' },
       { "lirc",     optional_argument, NULL, 'l' | 0x100 },
@@ -267,7 +268,7 @@ int main(int argc, char *argv[])
     };
 
   int c;
-  while ((c = getopt_long(argc, argv, "a:c:dD:e:E:g:hi:l:L:mp:P:r:s:t:u:v:Vw:", long_options, NULL)) != -1) {
+  while ((c = getopt_long(argc, argv, "a:c:dD:e:E:g:hHi:l:L:mp:P:r:s:t:u:v:Vw:", long_options, NULL)) != -1) {
         switch (c) {
           case 'a': AudioCommand = optarg;
                     break;
@@ -351,6 +352,8 @@ int main(int argc, char *argv[])
           case 'g': cSVDRP::SetGrabImageDir(*optarg != '-' ? optarg : NULL);
                     break;
           case 'h': DisplayHelp = true;
+                    break;
+          case 'H': cVideoDirectory::SetHideFirstRecordingLevel(true);
                     break;
           case 'i': if (isnumber(optarg)) {
                        InstanceId = atoi(optarg);
@@ -517,6 +520,13 @@ int main(int argc, char *argv[])
                "                           existing directory, without any \"..\", double '/'\n"
                "                           or symlinks (default: none, same as -g-)\n"
                "  -h,       --help         print this help and exit\n"
+               "  -H,       --hide-first-recording-level\n"
+               "                           The first level directories in the video directory\n"
+               "                           will be ignored in the recordings menu.\n"
+               "                           All recordings will be placed in the directory 'local'.\n"
+               "                           You can mount/link other video directories inside the\n"
+               "                           video directory to display their contents side by side\n"
+               "                           with your local video directory\n"
                "  -i ID,    --instance=ID  use ID as the id of this VDR instance (default: 0)\n"
                "  -l LEVEL, --log=LEVEL    set log level (default: 3)\n"
                "                           0 = no logging, 1 = errors only,\n"

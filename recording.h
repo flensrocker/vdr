@@ -104,6 +104,7 @@ private:
   mutable char *sortBufferTime;
   mutable char *fileName;
   mutable char *name;
+  cString firstLevelFolderIfHidden;
   mutable int fileSizeMB;
   mutable int numFrames;
   int channel;
