@@ -158,10 +158,10 @@ bool cArgs::ReadDirectory(const char *Directory)
   argc = 1; // for argv0
   if (vdrSection != NULL) {
      argc += vdrSection->Args().Size();
-     argc += sections.Count() - 1;
+     argc += (sections.Count() - 1) * 2;
      }
   else
-     argc += sections.Count();
+     argc += sections.Count() * 2;
 
   argv = new char*[argc];
   argv[0] = strdup(*argv0);
@@ -175,10 +175,13 @@ bool cArgs::ReadDirectory(const char *Directory)
   for (cArgsSection *s = sections.First(); s; s = sections.Next(s)) {
       if (s == vdrSection)
          continue;
-      cString arg = cString::sprintf("'-P%s", s->Name());
+
+      argv[c] = strdup("-P");
+      c++;
+
+      cString arg = cString::sprintf("%s", s->Name());
       for (int i = 0; i < s->Args().Size(); i++)
           arg = cString::sprintf("%s %s", *arg, s->Args().At(i));
-      arg = cString::sprintf("%s'", *arg);
       argv[c] = strdup(*arg);
       c++;
       }
