@@ -265,7 +265,7 @@ int main(int argc, char *argv[])
       { "port",     required_argument, NULL, 'p' },
       { "record",   required_argument, NULL, 'r' },
       { "resdir",   required_argument, NULL, 'r' | 0x100 },
-      { "showargs", no_argument,       NULL, 's' | 0x200 },
+      { "showargs", optional_argument, NULL, 's' | 0x200 },
       { "shutdown", required_argument, NULL, 's' },
       { "split",    no_argument,       NULL, 's' | 0x100 },
       { "terminal", required_argument, NULL, 't' },
@@ -439,9 +439,10 @@ int main(int argc, char *argv[])
                     Setup.SplitEditedFiles = 1;
                     break;
           case 's' | 0x200: {
+                    const char *argsdir = optarg ? optarg : DEFAULTARGSDIR;
                     cArgs a(argv[0]);
-                    if (!a.ReadDirectory(DEFAULTARGSDIR)) {
-                       fprintf(stderr, "vdr: can't read arguments from directory: %s\n", DEFAULTARGSDIR);
+                    if (!a.ReadDirectory(argsdir)) {
+                       fprintf(stderr, "vdr: can't read arguments from directory: %s\n", argsdir);
                        return 2;
                        }
                     int c = a.GetArgc();
@@ -563,7 +564,7 @@ int main(int argc, char *argv[])
                "  -s CMD,   --shutdown=CMD call CMD to shutdown the computer\n"
                "            --split        split edited files at the editing marks (only\n"
                "                           useful in conjunction with --edit)\n"
-               "            --showargs     print the arguments read from %s and exit\n"
+               "            --showargs[=DIR] print the arguments read from DIR and exit (default: %s)\n"
                "  -t TTY,   --terminal=TTY controlling tty\n"
                "  -u USER,  --user=USER    run as user USER; only applicable if started as\n"
                "                           root\n"
