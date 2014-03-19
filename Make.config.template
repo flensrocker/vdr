@@ -38,6 +38,7 @@ endif
 
 #VIDEODIR  = /srv/vdr/video
 #CONFDIR   = /var/lib/vdr
+#ARGSDIR   = /etc/vdr/conf.d
 #CACHEDIR  = /var/cache/vdr
 
 # Overrides for preset/legacy configurations:

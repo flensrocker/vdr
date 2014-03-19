@@ -31,6 +31,7 @@ PLUGINDIR ?= $(CWD)/PLUGINS
 DESTDIR   ?=
 VIDEODIR  ?= /srv/vdr/video
 CONFDIR   ?= /var/lib/vdr
+ARGSDIR   ?= /etc/vdr/conf.d
 CACHEDIR  ?= /var/cache/vdr
 
 PREFIX    ?= /usr/local
@@ -66,7 +67,7 @@ endif
 
 SILIB    = $(LSIDIR)/libsi.a
 
-OBJS = audio.o channels.o ci.o config.o cutter.o device.o diseqc.o dvbdevice.o dvbci.o\
+OBJS = args.o audio.o channels.o ci.o config.o cutter.o device.o diseqc.o dvbdevice.o dvbci.o\
        dvbplayer.o dvbspu.o dvbsubtitle.o eit.o eitscan.o epg.o filter.o font.o i18n.o interface.o keys.o\
        lirc.o menu.o menuitems.o nit.o osdbase.o osd.o pat.o player.o plugin.o positioner.o\
        receiver.o recorder.o recording.o remote.o remux.o ringbuffer.o sdt.o sections.o shutdown.o\
@@ -105,6 +106,7 @@ DEFINES += -DLIRC_DEVICE=\"$(LIRC_DEVICE)\"
 DEFINES += -DVIDEODIR=\"$(VIDEODIR)\"
 DEFINES += -DCONFDIR=\"$(CONFDIR)\"
 DEFINES += -DCACHEDIR=\"$(CACHEDIR)\"
+DEFINES += -DARGSDIR=\"$(ARGSDIR)\"
 DEFINES += -DRESDIR=\"$(RESDIR)\"
 DEFINES += -DPLUGINDIR=\"$(LIBDIR)\"
 DEFINES += -DLOCDIR=\"$(LOCDIR)\"
@@ -147,6 +149,7 @@ vdr.pc:
 	@echo "bindir=$(BINDIR)" > $@
 	@echo "mandir=$(MANDIR)" >> $@
 	@echo "configdir=$(CONFDIR)" >> $@
+	@echo "argsdir=$(ARGSDIR)" >> $@
 	@echo "videodir=$(VIDEODIR)" >> $@
 	@echo "cachedir=$(CACHEDIR)" >> $@
 	@echo "resdir=$(RESDIR)" >> $@
@@ -265,6 +268,7 @@ install-bin: vdr
 install-dirs:
 	@mkdir -p $(DESTDIR)$(VIDEODIR)
 	@mkdir -p $(DESTDIR)$(CONFDIR)
+	@mkdir -p $(DESTDIR)$(ARGSDIR)
 	@mkdir -p $(DESTDIR)$(CACHEDIR)
 	@mkdir -p $(DESTDIR)$(RESDIR)
 
