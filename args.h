@@ -14,9 +14,14 @@
 
 class cArgs {
 private:
-  cString argv0;
-  int     argc;
-  char  **argv;
+  cString     argv0;
+  cStringList args;
+  cString     lastArg;
+  bool        inVdrSection;
+  int         argc;
+  char      **argv;
+
+  bool AddArg(const char *s);
 
 public:
   cArgs(const char *Argv0);
@@ -24,8 +29,8 @@ public:
 
   bool ReadDirectory(const char *Directory);
 
-  int GetArgc(void) const;
-  char **GetArgv(void) const;
+  int GetArgc(void) const { return argc; };
+  char **GetArgv(void) const { return argv; };
   };
 
 #endif //__ARGS_H
