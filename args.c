@@ -20,7 +20,7 @@ public:
   {
     name = Name;
   };
-  
+
   virtual ~cArgsSection(void)
   {
   };
@@ -187,7 +187,7 @@ bool cArgs::ReadDirectory(const char *Directory)
       }
   return result;
 }
-  
+
 int cArgs::GetArgc(void) const
 {
   return argc;

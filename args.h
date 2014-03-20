@@ -23,7 +23,7 @@ public:
   ~cArgs(void);
 
   bool ReadDirectory(const char *Directory);
-  
+
   int GetArgc(void) const;
   char **GetArgv(void) const;
   };
