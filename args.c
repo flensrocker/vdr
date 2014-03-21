@@ -69,16 +69,16 @@ bool cArgs::ReadDirectory(const char *Directory)
                      s++;
 
                      if (*lastArg) {
+                        lastArg = cString::sprintf("%s\"", *lastArg);
                         args.Append(strdup(*lastArg));
-                        lastArg = 0;
+                        lastArg = NULL;
                         }
 
                      if (strcmp(s, "vdr") == 0)
                         inVdrSection = true;
                      else {
                         inVdrSection = false;
-                        args.Append(strdup("-P"));
-                        lastArg = s;
+                        lastArg = cString::sprintf("--plugin=\"%s", s);
                         }
                      }
                   else {
@@ -115,8 +115,11 @@ bool cArgs::ReadDirectory(const char *Directory)
           return false;
           }
       }
-  if (*lastArg)
+  if (*lastArg) {
+     lastArg = cString::sprintf("%s\"", *lastArg);
      args.Append(strdup(*lastArg));
+     lastArg = NULL;
+     }
 
   argv = new char*[args.Size() + 1];
   argv[0] = strdup(*argv0);
