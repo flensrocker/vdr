@@ -49,14 +49,18 @@ bool cArgs::ReadDirectory(const char *Directory)
      return false;
 
   for (int i = 0; i < files.Size(); i++) {
-      cString fileName = AddDirectory(Directory, files.At(i));
+      const char *fileName = files.At(i);
+      if (startswith(fileName, ".") || !endswith(fileName, ".conf"))
+         continue;
+
+      cString fullFileName = AddDirectory(Directory, fileName);
       struct stat fs;
-      if ((access(*fileName, F_OK) != 0) || (stat(*fileName, &fs) != 0) || S_ISDIR(fs.st_mode))
+      if ((access(*fullFileName, F_OK) != 0) || (stat(*fullFileName, &fs) != 0) || S_ISDIR(fs.st_mode))
          continue;
 
       bool ok = true;
       int line = 0;
-      FILE *f = fopen(*fileName, "r");
+      FILE *f = fopen(*fullFileName, "r");
       if (f) {
          char *s;
          cReadLine ReadLine;
@@ -110,7 +114,7 @@ bool cArgs::ReadDirectory(const char *Directory)
          fclose(f);
          }
        if (!ok) {
-          esyslog("ERROR: args file %s, line %d", *fileName, line);
+          esyslog("ERROR: args file %s, line %d", *fullFileName, line);
           return false;
           }
       }
