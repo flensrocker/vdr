@@ -844,7 +844,7 @@ cRecording::cRecording(const char *FileName)
         const char *copyFileName = FileName;
         if (cVideoDirectory::HideFirstRecordingLevel()) {
            const char *f = strchr(FileName, '/');
-           if (f != NULL) {
+           if ((f != NULL) && (f < p)) {
               copyFileName = f + 1;
               firstLevelFolderIfHidden = FileName;
               firstLevelFolderIfHidden.Truncate(f - FileName + 1);
