@@ -238,7 +238,7 @@ bool EntriesOnSameFileSystem(const char *File1, const char *File2);
     ///< files doesn't exist, this function returns *true* to avoid any actions that might be
     ///< triggered if files are on different file system.
 int FreeDiskSpaceMB(const char *Directory, int *UsedMB = NULL);
-bool DirectoryOk(const char *DirName, bool LogErrors = false);
+bool DirectoryOk(const char *DirName, bool LogErrors = false, bool ReadOnly = false);
 bool MakeDirs(const char *FileName, bool IsDirectory = false);
 bool RemoveFileOrDir(const char *FileName, bool FollowSymlinks = false);
 bool RemoveEmptyDirectories(const char *DirName, bool RemoveThis = false, const char *IgnoreFiles[] = NULL);

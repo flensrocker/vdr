@@ -2780,6 +2780,22 @@ cString cMenuRecordings::DirectoryName(void)
   cString d(cVideoDirectory::Name());
   if (base) {
      char *s = ExchangeChars(strdup(base), true);
+     const cStringList &firstFolders = Recordings.FirstFolderNames();
+     bool found = false;
+     // first run: look for writeable directory
+     // second run: read-only directory is enough
+     for (int i = 0; !found && (i < 2); i++) {
+         for (int j = 0; j < firstFolders.Size(); j++) {
+            const char *f = firstFolders.At(j);
+            cString dir = AddDirectory(d, f);
+            dir = AddDirectory(dir, s);
+            if (DirectoryOk(*dir, false, i == 1)) {
+               d = AddDirectory(d, f);
+               found = true;
+               break;
+               }
+            }
+        }
      d = AddDirectory(d, s);
      free(s);
      }

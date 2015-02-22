@@ -758,9 +758,9 @@ cRecording::cRecording(cTimer *Timer, const cEvent *Event)
   sortBufferName = sortBufferTime = NULL;
   fileName = NULL;
   name = NULL;
-  firstLevelFolderIfHidden = "";
+  firstFolder = "";
   if (cVideoDirectory::HideFirstRecordingLevel())
-     firstLevelFolderIfHidden = "local/";
+     firstFolder = "local/";
   fileSizeMB = -1; // unknown
   channel = Timer->Channel()->Number();
   instanceId = InstanceId;
@@ -832,7 +832,7 @@ cRecording::cRecording(const char *FileName)
   if (strstr(FileName, cVideoDirectory::Name()) == FileName)
      FileName += strlen(cVideoDirectory::Name()) + 1;
   const char *p = strrchr(FileName, '/');
-  firstLevelFolderIfHidden = "";
+  firstFolder = "";
 
   name = NULL;
   info = new cRecordingInfo(fileName);
@@ -852,8 +852,8 @@ cRecording::cRecording(const char *FileName)
            const char *f = strchr(FileName, '/');
            if ((f != NULL) && (f < p)) {
               copyFileName = f + 1;
-              firstLevelFolderIfHidden = FileName;
-              firstLevelFolderIfHidden.Truncate(f - FileName + 1);
+              firstFolder = FileName;
+              firstFolder.Truncate(f - FileName + 1);
               }
            }
         name = MALLOC(char, p - copyFileName + 1);
@@ -995,7 +995,7 @@ char *cRecording::SortName(void) const
         *sb = strdup(buf);
         }
      else {
-        char *s = strdup(FileName() + strlen(cVideoDirectory::Name()) + strlen(*firstLevelFolderIfHidden));
+        char *s = strdup(FileName() + strlen(cVideoDirectory::Name()) + strlen(*firstFolder));
         if (RecordingsSortMode != rsmName || Setup.AlwaysSortFoldersFirst)
            s = StripEpisodeName(s, RecordingsSortMode != rsmName);
         strreplace(s, '/', '0'); // some locales ignore '/' when sorting
@@ -1064,7 +1064,7 @@ const char *cRecording::FileName(void) const
      if (strcmp(Name, name) != 0)
         dsyslog("recording file name '%s' truncated to '%s'", name, Name);
      Name = ExchangeChars(Name, true);
-     fileName = strdup(cString::sprintf(fmt, cVideoDirectory::Name(), *firstLevelFolderIfHidden, Name, t->tm_year + 1900, t->tm_mon + 1, t->tm_mday, t->tm_hour, t->tm_min, ch, ri));
+     fileName = strdup(cString::sprintf(fmt, cVideoDirectory::Name(), *firstFolder, Name, t->tm_year + 1900, t->tm_mon + 1, t->tm_mday, t->tm_hour, t->tm_min, ch, ri));
      free(Name);
      }
   return fileName;
@@ -1424,6 +1424,8 @@ bool cRecordings::ScanVideoDir(const char *DirName, bool Foreground, int LinkLev
   // Find any new recordings:
   cReadDir d(DirName);
   struct dirent *e;
+  if (DirLevel == 0)
+     firstFolderNames.Clear();
   while ((Foreground || Running()) && (e = d.Next()) != NULL) {
         cString buffer = AddDirectory(DirName, e->d_name);
         struct stat st;
@@ -1440,7 +1442,8 @@ bool cRecordings::ScanVideoDir(const char *DirName, bool Foreground, int LinkLev
               }
            if (S_ISDIR(st.st_mode)) {
               if (endswith(buffer, deleted ? DELEXT : RECEXT)) {
-                 if (deleted || initial || !GetByName(buffer)) {
+                 cRecording *er = NULL;
+                 if (deleted || initial || !(er = GetByName(buffer))) {
                     cRecording *r = new cRecording(buffer);
                     if (r->Name()) {
                        r->NumFrames(); // initializes the numFrames member
@@ -1450,6 +1453,7 @@ bool cRecordings::ScanVideoDir(const char *DirName, bool Foreground, int LinkLev
                           r->deleted = time(NULL);
                        Lock();
                        Add(r);
+                       AddFirstFolderName(r);
                        if (initial)
                           ChangeState();
                        else
@@ -1459,12 +1463,17 @@ bool cRecordings::ScanVideoDir(const char *DirName, bool Foreground, int LinkLev
                     else
                        delete r;
                     }
+                 else if (er) {
+                    AddFirstFolderName(er);
+                    }
                  }
               else
                  DoChangeState |= ScanVideoDir(buffer, Foreground, LinkLevel + Link, DirLevel + 1);
               }
            }
         }
+  if (DirLevel == 0)
+     firstFolderNames.Sort();
   // Handle any vanished recordings:
   if (!deleted && !initial && DirLevel == 0) {
      for (cRecording *recording = First(); recording; ) {
@@ -1482,6 +1491,15 @@ bool cRecordings::ScanVideoDir(const char *DirName, bool Foreground, int LinkLev
   if (DoChangeState && DirLevel == 0)
      ChangeState();
   return DoChangeState;
+}
+
+void cRecordings::AddFirstFolderName(cRecording *Recording)
+{
+  if ((Recording == NULL) || !cVideoDirectory::HideFirstRecordingLevel())
+     return;
+  const char *firstFolder = Recording->FirstFolder();
+  if (firstFolderNames.Find(firstFolder) < 0)
+     firstFolderNames.Append(strdup(firstFolder));
 }
 
 bool cRecordings::StateChanged(int &State)

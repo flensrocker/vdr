@@ -104,7 +104,7 @@ private:
   mutable char *sortBufferTime;
   mutable char *fileName;
   mutable char *name;
-  cString firstLevelFolderIfHidden;
+  cString firstFolder;
   mutable int fileSizeMB;
   mutable int numFrames;
   int channel;
@@ -134,6 +134,10 @@ public:
   bool IsInPath(const char *Path);
        ///< Returns true if this recording is stored anywhere under the given Path.
        ///< If Path is NULL or an empty string, the entire video directory is checked.
+  const char *FirstFolder(void) const { return *firstFolder; }
+       ///< Returns the name of the first folder (without the video directory) of
+       ///< this recording including a trailing slash. Only filled with content if the
+       ///< option "hide-first-recording-level" is activated, otherwise and empty string "".
   cString Folder(void) const;
        ///< Returns the name of the folder this recording is stored in (without the
        ///< video directory). For use in menus etc.
@@ -224,9 +228,11 @@ private:
   bool initial;
   time_t lastUpdate;
   int state;
+  cStringList firstFolderNames;
   const char *UpdateFileName(void);
   void Refresh(bool Foreground = false);
   bool ScanVideoDir(const char *DirName, bool Foreground = false, int LinkLevel = 0, int DirLevel = 0);
+  void AddFirstFolderName(cRecording *Recording);
 protected:
   void Action(void);
 public:
@@ -280,6 +286,7 @@ public:
        ///< If OldPath and NewPath are on different file systems, the recordings
        ///< will be moved in a background process and this function returns true
        ///< if all recordings have been successfully added to the RecordingsHandler.
+  const cStringList &FirstFolderNames(void) const { return firstFolderNames; };
   };
 
 /// Any access to Recordings that loops through the list of recordings

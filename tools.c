@@ -424,12 +424,15 @@ int FreeDiskSpaceMB(const char *Directory, int *UsedMB)
   return Free;
 }
 
-bool DirectoryOk(const char *DirName, bool LogErrors)
+bool DirectoryOk(const char *DirName, bool LogErrors, bool ReadOnly)
 {
   struct stat ds;
   if (stat(DirName, &ds) == 0) {
      if (S_ISDIR(ds.st_mode)) {
-        if (access(DirName, R_OK | W_OK | X_OK) == 0)
+        int mode = R_OK | X_OK;
+        if (!ReadOnly)
+           mode |= W_OK;
+        if (access(DirName, mode) == 0)
            return true;
         else if (LogErrors)
            esyslog("ERROR: can't access %s", DirName);
