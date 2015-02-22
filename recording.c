@@ -44,9 +44,9 @@
 #define NAMEFORMAT   "%s/%s/" DATAFORMAT
 */
 #define DATAFORMATPES   "%4d-%02d-%02d.%02d%*c%02d.%02d.%02d" RECEXT
-#define NAMEFORMATPES   "%s/%s/" "%4d-%02d-%02d.%02d.%02d.%02d.%02d" RECEXT
+#define NAMEFORMATPES   "%s/%s%s/" "%4d-%02d-%02d.%02d.%02d.%02d.%02d" RECEXT
 #define DATAFORMATTS    "%4d-%02d-%02d.%02d.%02d.%d-%d" RECEXT
-#define NAMEFORMATTS    "%s/%s/" DATAFORMATTS
+#define NAMEFORMATTS    "%s/%s%s/" DATAFORMATTS
 
 #define RESUMEFILESUFFIX  "/resume%s%s"
 #ifdef SUMMARYFALLBACK
@@ -758,6 +758,9 @@ cRecording::cRecording(cTimer *Timer, const cEvent *Event)
   sortBufferName = sortBufferTime = NULL;
   fileName = NULL;
   name = NULL;
+  firstLevelFolderIfHidden = "";
+  if (cVideoDirectory::HideFirstRecordingLevel())
+     firstLevelFolderIfHidden = "local/";
   fileSizeMB = -1; // unknown
   channel = Timer->Channel()->Number();
   instanceId = InstanceId;
@@ -829,6 +832,7 @@ cRecording::cRecording(const char *FileName)
   if (strstr(FileName, cVideoDirectory::Name()) == FileName)
      FileName += strlen(cVideoDirectory::Name()) + 1;
   const char *p = strrchr(FileName, '/');
+  firstLevelFolderIfHidden = "";
 
   name = NULL;
   info = new cRecordingInfo(fileName);
@@ -843,9 +847,18 @@ cRecording::cRecording(const char *FileName)
         t.tm_mon--;
         t.tm_sec = 0;
         start = mktime(&t);
-        name = MALLOC(char, p - FileName + 1);
-        strncpy(name, FileName, p - FileName);
-        name[p - FileName] = 0;
+        const char *copyFileName = FileName;
+        if (cVideoDirectory::HideFirstRecordingLevel()) {
+           const char *f = strchr(FileName, '/');
+           if ((f != NULL) && (f < p)) {
+              copyFileName = f + 1;
+              firstLevelFolderIfHidden = FileName;
+              firstLevelFolderIfHidden.Truncate(f - FileName + 1);
+              }
+           }
+        name = MALLOC(char, p - copyFileName + 1);
+        strncpy(name, copyFileName, p - copyFileName);
+        name[p - copyFileName] = 0;
         name = ExchangeChars(name, false);
         isPesRecording = instanceId < 0;
         }
@@ -982,7 +995,7 @@ char *cRecording::SortName(void) const
         *sb = strdup(buf);
         }
      else {
-        char *s = strdup(FileName() + strlen(cVideoDirectory::Name()));
+        char *s = strdup(FileName() + strlen(cVideoDirectory::Name()) + strlen(*firstLevelFolderIfHidden));
         if (RecordingsSortMode != rsmName || Setup.AlwaysSortFoldersFirst)
            s = StripEpisodeName(s, RecordingsSortMode != rsmName);
         strreplace(s, '/', '0'); // some locales ignore '/' when sorting
@@ -1051,7 +1064,7 @@ const char *cRecording::FileName(void) const
      if (strcmp(Name, name) != 0)
         dsyslog("recording file name '%s' truncated to '%s'", name, Name);
      Name = ExchangeChars(Name, true);
-     fileName = strdup(cString::sprintf(fmt, cVideoDirectory::Name(), Name, t->tm_year + 1900, t->tm_mon + 1, t->tm_mday, t->tm_hour, t->tm_min, ch, ri));
+     fileName = strdup(cString::sprintf(fmt, cVideoDirectory::Name(), *firstLevelFolderIfHidden, Name, t->tm_year + 1900, t->tm_mon + 1, t->tm_mday, t->tm_hour, t->tm_min, ch, ri));
      free(Name);
      }
   return fileName;
