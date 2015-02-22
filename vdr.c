@@ -211,6 +211,8 @@ int main(int argc, char *argv[])
   const char *EpgDataFileName = DEFAULTEPGDATAFILENAME;
   bool DisplayHelp = false;
   bool DisplayVersion = false;
+  bool DisplayOnlyPluginHelp = false;
+  bool HaveSeenPluginParameter = false;
   bool DaemonMode = false;
   int SysLogTarget = LOG_USER;
   bool MuteAudio = false;
@@ -374,6 +376,8 @@ int main(int argc, char *argv[])
           case 'g': cSVDRP::SetGrabImageDir(*optarg != '-' ? optarg : NULL);
                     break;
           case 'h': DisplayHelp = true;
+                    if (HaveSeenPluginParameter)
+                       DisplayOnlyPluginHelp = true;
                     break;
           case 'i': if (isnumber(optarg)) {
                        InstanceId = atoi(optarg);
@@ -438,6 +442,7 @@ int main(int argc, char *argv[])
                        }
                     break;
           case 'P': PluginManager.AddPlugin(optarg);
+                    HaveSeenPluginParameter = true;
                     break;
           case 'r': cRecordingUserCommand::SetCommand(optarg);
                     break;
@@ -523,7 +528,7 @@ int main(int argc, char *argv[])
      if (!PluginManager.HasPlugins())
         PluginManager.AddPlugin("*"); // adds all available plugins
      PluginManager.LoadPlugins();
-     if (DisplayHelp) {
+     if (DisplayHelp && !DisplayOnlyPluginHelp) {
         printf("Usage: vdr [OPTIONS]\n\n"          // for easier orientation, this is column 80|
                "  -a CMD,   --audio=CMD    send Dolby Digital audio to stdin of command CMD\n"
                "            --cachedir=DIR save cache files in DIR (default: %s)\n"
