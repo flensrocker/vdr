@@ -760,7 +760,7 @@ cRecording::cRecording(cTimer *Timer, const cEvent *Event)
   name = NULL;
   firstFolder = "";
   if (cVideoDirectory::HideFirstRecordingLevel())
-     firstFolder = "local/";
+     firstFolder = LOCALRECFOLDER;
   fileSizeMB = -1; // unknown
   channel = Timer->Channel()->Number();
   instanceId = InstanceId;
@@ -1490,17 +1490,17 @@ void cRecordings::cFolderInfos::cFolderTree::Add(cRecording *Recording)
 cRecordings::cFolderInfos::cFolderInfo *cRecordings::cFolderInfos::cFolderTree::GetInfo(void) const
 {
   cFolderInfo *info = new cFolderInfo(*name, *FullName(), count, latest, *latestFileName);
-  // take care that "local/" is the first item
+  // take care that LOCALRECFOLDER is the first item
   bool addLocal = false;
   for (int i = 0; i < firstFolderNames.Size(); i++) {
-      if (strcmp(firstFolderNames.At(i), "local/"))
+      if (strcmp(firstFolderNames.At(i), LOCALRECFOLDER))
          addLocal = true;
       else
          info->FirstFolderNames.Append(strdup(firstFolderNames.At(i)));
       }
   info->FirstFolderNames.Sort();
   if (addLocal)
-     info->FirstFolderNames.Insert(strdup("local/"));
+     info->FirstFolderNames.Insert(strdup(LOCALRECFOLDER));
   return info;
 }
 

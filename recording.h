@@ -19,6 +19,7 @@
 #include "tools.h"
 
 #define FOLDERDELIMCHAR '~'
+#define LOCALRECFOLDER "local/"
 
 extern int DirectoryPathMax;
 extern int DirectoryNameMax;
