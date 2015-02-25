@@ -222,17 +222,59 @@ public:
   };
 
 class cRecordings : public cList<cRecording>, public cThread {
+public:
+  class cFolderInfos {
+  private:
+    class cFolderTree;
+
+    cRecordings &recordings;
+    int recState;
+    cFolderTree *root;
+    cMutex rootLock;
+
+    void Rebuild(void);
+  public:
+    class cFolderInfo {
+    public:
+      cString Name;
+           ///< Name of the folder
+      cString FullName;
+           ///< Name of the folder with all parent folders
+      cStringList FirstFolderNames;
+           ///< Names of the first level folders this folder belongs to
+           ///< if the first level is hidden
+      int Count;
+           ///< Total count of recordings in this folder and subfolders
+      time_t Latest;
+           ///< Timestamp of the latest recording in this folder or subfolders
+      cString LatestFileName;
+           ///< Filename of the latest recording
+
+      cFolderInfo(const char *Name, const char *FullName, int Count, time_t Latest, const char *LatestFileName);
+    };
+
+    cFolderInfos(cRecordings &Recordings);
+    ~cFolderInfos(void);
+
+    cFolderInfo *Get(const char *Folder);
+         ///< The caller must delete the cInfo object.
+         ///< If the given folder doesn't exists, NULL is returned.
+         ///< The internal tree will be rebuild if the recordings'
+         ///< state has changed.
+         ///< This function is thread-safe.
+    };
+
 private:
   static char *updateFileName;
   bool deleted;
   bool initial;
   time_t lastUpdate;
   int state;
-  cStringList firstFolderNames;
+  cMutex folderInfosMutex;
+  cFolderInfos *folderInfos;
   const char *UpdateFileName(void);
   void Refresh(bool Foreground = false);
   bool ScanVideoDir(const char *DirName, bool Foreground = false, int LinkLevel = 0, int DirLevel = 0);
-  void AddFirstFolderName(cRecording *Recording);
 protected:
   void Action(void);
 public:
@@ -286,7 +328,7 @@ public:
        ///< If OldPath and NewPath are on different file systems, the recordings
        ///< will be moved in a background process and this function returns true
        ///< if all recordings have been successfully added to the RecordingsHandler.
-  const cStringList &FirstFolderNames(void) const { return firstFolderNames; };
+  cFolderInfos &GetFolderInfos(void);
   };
 
 /// Any access to Recordings that loops through the list of recordings

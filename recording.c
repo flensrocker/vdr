@@ -1373,6 +1373,204 @@ int cRecording::FileSizeMB(void) const
   return fileSizeMB;
 }
 
+// --- cRecordings::cFolderInfos ---------------------------------------------
+
+class cRecordings::cFolderInfos::cFolderTree : public cListObject {
+private:
+  cFolderTree *parent;
+  cList<cFolderTree> *subFolders;
+
+  cString name;
+  int count;
+  time_t latest;
+  cString latestFileName;
+  cStringList firstFolderNames;
+
+  void UpdateData(cRecording *Recording);
+  cFolderTree *FindSubFolder(const char *Name) const;
+
+public:
+  cFolderTree(cFolderTree *Parent, const char *Name);
+  virtual ~cFolderTree(void);
+
+  // split Name and find folder-info in tree
+  // if "Add", missing folders are created
+  cFolderTree *Find(const char *Name, bool Add);
+  void Add(cRecording *Recording);
+  cFolderInfo *GetInfo(void) const;
+  cString FullName(void) const;
+};
+
+cRecordings::cFolderInfos::cFolderTree::cFolderTree(cFolderTree *Parent, const char *Name)
+:parent(Parent)
+,name(Name)
+,count(0)
+,latest(0)
+,latestFileName("")
+{
+  subFolders = new cList<cFolderTree>();
+}
+
+cRecordings::cFolderInfos::cFolderTree::~cFolderTree(void)
+{
+  delete subFolders;
+  subFolders = NULL;
+}
+
+cRecordings::cFolderInfos::cFolderTree *cRecordings::cFolderInfos::cFolderTree::Find(const char *Name, bool Add)
+{
+  cFolderTree *info = NULL;
+  if (Add)
+     info = this;
+
+  if (Name && *Name) {
+     static char delim[2] = { FOLDERDELIMCHAR, 0 };
+     char *strtok_next;
+     cFolderTree *next;
+     char *folder = strdup(Name);
+     info = this;
+     for (char *t = strtok_r(folder, delim, &strtok_next); t; t = strtok_r(NULL, delim, &strtok_next)) {
+         next = info->FindSubFolder(t);
+         if (next == NULL) {
+            if (!Add) {
+               info = NULL;
+               break;
+               }
+
+            next = new cFolderTree(info, t);
+            info->subFolders->Add(next);
+            }
+         info = next;
+         }
+     free(folder);
+     }
+
+  return info;
+}
+
+void cRecordings::cFolderInfos::cFolderTree::UpdateData(cRecording *Recording)
+{
+  // count every recording
+  count++;
+
+  // update date if newer
+  time_t recdate = Recording->Start();
+  if (latest < recdate) {
+     latest = recdate;
+     latestFileName = Recording->FileName();
+     }
+
+  // add all possible first level folders
+  if (cVideoDirectory::HideFirstRecordingLevel()) {
+     const char *firstFolder = Recording->FirstFolder();
+     if (firstFolderNames.Find(firstFolder) < 0)
+        firstFolderNames.Append(strdup(firstFolder));
+     }
+}
+
+cRecordings::cFolderInfos::cFolderTree *cRecordings::cFolderInfos::cFolderTree::FindSubFolder(const char *Name) const
+{
+  for (cFolderTree *info = subFolders->First(); info; info = subFolders->Next(info)) {
+      if (strcmp(info->name, Name) == 0)
+         return info;
+      }
+  return NULL;
+}
+
+void cRecordings::cFolderInfos::cFolderTree::Add(cRecording *Recording)
+{
+  if (Recording == NULL)
+     return;
+
+  // update this and all parent folders
+  for (cFolderTree *p = this; p; p = p->parent)
+      p->UpdateData(Recording);
+}
+
+cRecordings::cFolderInfos::cFolderInfo *cRecordings::cFolderInfos::cFolderTree::GetInfo(void) const
+{
+  cFolderInfo *info = new cFolderInfo(*name, *FullName(), count, latest, *latestFileName);
+  // take care that "local/" is the first item
+  bool addLocal = false;
+  for (int i = 0; i < firstFolderNames.Size(); i++) {
+      if (strcmp(firstFolderNames.At(i), "local/"))
+         addLocal = true;
+      else
+         info->FirstFolderNames.Append(strdup(firstFolderNames.At(i)));
+      }
+  info->FirstFolderNames.Sort();
+  if (addLocal)
+     info->FirstFolderNames.Insert(strdup("local/"));
+  return info;
+}
+
+cString cRecordings::cFolderInfos::cFolderTree::FullName(void) const
+{
+  static char delim[2] = { FOLDERDELIMCHAR, 0 };
+
+  cString n = name;
+  for (cFolderTree *p = parent; p; p = p->parent) {
+      // don't add FOLDERDELIMCHAR at start of FullName
+      if (p->parent == NULL)
+         break;
+      n = cString::sprintf("%s%s%s", *p->name, delim, *n);
+      }
+  return n;
+}
+
+cRecordings::cFolderInfos::cFolderInfo::cFolderInfo(const char *Name, const char *FullName, int Count, time_t Latest, const char *LatestFileName)
+{
+  this->Name = Name;
+  this->FullName = FullName;
+  this->Count = Count;
+  this->Latest = Latest;
+  this->LatestFileName= LatestFileName;
+}
+
+cRecordings::cFolderInfos::cFolderInfos(cRecordings &Recordings)
+:recordings(Recordings)
+,root(NULL)
+{
+  Rebuild();
+}
+
+cRecordings::cFolderInfos::~cFolderInfos(void)
+{
+  delete root;
+  root = NULL;
+}
+
+void cRecordings::cFolderInfos::Rebuild(void)
+{
+  delete root;
+  root = new cFolderTree(NULL, "");
+
+  cThreadLock RecordingsLock(&recordings);
+  // re-get state with lock held
+  recordings.StateChanged(recState);
+  cFolderTree *info;
+  cString folder;
+  for (cRecording *rec = recordings.First(); rec; rec = recordings.Next(rec)) {
+      folder = rec->Folder();
+      info = root->Find(*folder, true);
+      info->Add(rec);
+      }
+}
+
+cRecordings::cFolderInfos::cFolderInfo *cRecordings::cFolderInfos::Get(const char *Folder)
+{
+  cMutexLock lock(&rootLock);
+
+  if (recordings.StateChanged(recState) || (root == NULL))
+     Rebuild();
+
+  cFolderTree *info = root->Find(Folder, false);
+  if (info == NULL)
+     return NULL;
+
+  return info->GetInfo();
+}
+
 // --- cRecordings -----------------------------------------------------------
 
 cRecordings Recordings;
@@ -1391,6 +1589,7 @@ cRecordings::cRecordings(bool Deleted)
 cRecordings::~cRecordings()
 {
   Cancel(3);
+  delete folderInfos;
 }
 
 void cRecordings::Action(void)
@@ -1424,8 +1623,6 @@ bool cRecordings::ScanVideoDir(const char *DirName, bool Foreground, int LinkLev
   // Find any new recordings:
   cReadDir d(DirName);
   struct dirent *e;
-  if (DirLevel == 0)
-     firstFolderNames.Clear();
   while ((Foreground || Running()) && (e = d.Next()) != NULL) {
         cString buffer = AddDirectory(DirName, e->d_name);
         struct stat st;
@@ -1442,8 +1639,7 @@ bool cRecordings::ScanVideoDir(const char *DirName, bool Foreground, int LinkLev
               }
            if (S_ISDIR(st.st_mode)) {
               if (endswith(buffer, deleted ? DELEXT : RECEXT)) {
-                 cRecording *er = NULL;
-                 if (deleted || initial || !(er = GetByName(buffer))) {
+                 if (deleted || initial || !GetByName(buffer)) {
                     cRecording *r = new cRecording(buffer);
                     if (r->Name()) {
                        r->NumFrames(); // initializes the numFrames member
@@ -1453,7 +1649,6 @@ bool cRecordings::ScanVideoDir(const char *DirName, bool Foreground, int LinkLev
                           r->deleted = time(NULL);
                        Lock();
                        Add(r);
-                       AddFirstFolderName(r);
                        if (initial)
                           ChangeState();
                        else
@@ -1463,17 +1658,12 @@ bool cRecordings::ScanVideoDir(const char *DirName, bool Foreground, int LinkLev
                     else
                        delete r;
                     }
-                 else if (er) {
-                    AddFirstFolderName(er);
-                    }
                  }
               else
                  DoChangeState |= ScanVideoDir(buffer, Foreground, LinkLevel + Link, DirLevel + 1);
               }
            }
         }
-  if (DirLevel == 0)
-     firstFolderNames.Sort();
   // Handle any vanished recordings:
   if (!deleted && !initial && DirLevel == 0) {
      for (cRecording *recording = First(); recording; ) {
@@ -1491,15 +1681,6 @@ bool cRecordings::ScanVideoDir(const char *DirName, bool Foreground, int LinkLev
   if (DoChangeState && DirLevel == 0)
      ChangeState();
   return DoChangeState;
-}
-
-void cRecordings::AddFirstFolderName(cRecording *Recording)
-{
-  if ((Recording == NULL) || !cVideoDirectory::HideFirstRecordingLevel())
-     return;
-  const char *firstFolder = Recording->FirstFolder();
-  if (firstFolderNames.Find(firstFolder) < 0)
-     firstFolderNames.Append(strdup(firstFolder));
 }
 
 bool cRecordings::StateChanged(int &State)
@@ -1683,6 +1864,14 @@ void cRecordings::ClearSortNames(void)
   LOCK_THREAD;
   for (cRecording *recording = First(); recording; recording = Next(recording))
       recording->ClearSortName();
+}
+
+cRecordings::cFolderInfos &cRecordings::GetFolderInfos(void)
+{
+  cMutexLock lock(&folderInfosMutex);
+  if (folderInfos == NULL)
+     folderInfos = new cFolderInfos(*this);
+  return *folderInfos;
 }
 
 // --- cDirCopier ------------------------------------------------------------
