@@ -789,7 +789,7 @@ static void AddRecordingFolders(cList<cNestedItem> *List, char *Path)
      cThreadLock RecordingsLock(&Recordings);
      cStringList Dirs;
      for (cRecording *Recording = Recordings.First(); Recording; Recording = Recordings.Next(Recording)) {
-         cString Folder = Recording->Folder();
+         cString Folder = Recording->FileFolder();
          strreplace((char *)*Folder, FOLDERDELIMCHAR, FOLDERDELIMCHARSUBST); // makes sure parent folders come before subfolders
          if (Dirs.Find(Folder) < 0)
             Dirs.Append(strdup(Folder));
@@ -2413,7 +2413,7 @@ eOSState cMenuRecordingEdit::SetFolder(void)
 
 eOSState cMenuRecordingEdit::Folder(void)
 {
-  return AddSubMenu(new cMenuFolder(tr("Select folder"), &Folders, recording->Name()));
+  return AddSubMenu(new cMenuFolder(tr("Select folder"), &Folders, *recording->FullName()));
 }
 
 eOSState cMenuRecordingEdit::Action(void)
