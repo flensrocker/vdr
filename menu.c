@@ -2330,7 +2330,7 @@ cMenuRecordingEdit::cMenuRecordingEdit(cRecording *Recording)
   recording = Recording;
   originalFileName = recording->FileName();
   Recordings.StateChanged(recordingsState); // just to get the current state
-  strn0cpy(folder, recording->Folder(), sizeof(folder));
+  strn0cpy(folder, recording->FileFolder(), sizeof(folder));
   strn0cpy(name, recording->BaseName(), sizeof(name));
   priority = recording->Priority();
   lifetime = recording->Lifetime();
@@ -2477,7 +2477,7 @@ eOSState cMenuRecordingEdit::ApplyChanges(void)
      }
   cString NewName = *folder ? cString::sprintf("%s%c%s", folder, FOLDERDELIMCHAR, name) : name;
   NewName.CompactChars(FOLDERDELIMCHAR);
-  if (strcmp(NewName, recording->Name())) {
+  if (strcmp(NewName, *recording->FullName())) {
      if (!recording->ChangeName(NewName)) {
         Skins.Message(mtError, tr("Error while changing folder/name!"));
         return osContinue;

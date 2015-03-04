@@ -139,6 +139,14 @@ public:
        ///< Returns the name of the first folder (without the video directory) of
        ///< this recording including a trailing slash. Only filled with content if the
        ///< option "hide-first-recording-level" is activated, otherwise and empty string "".
+  cString FileFolder(void) const;
+       ///< Returns the name of the folder this recording is stored in (without the
+       ///< video directory) but including the "first folder", even if the option
+       ///< "hide-first-recording-level" is activated.
+  cString FullName(void) const;
+       ///< Returns the full name of the recording (without the video directory)
+       ///< but including the "first folder", even if the option
+       ///< "hide-first-recording-level" is activated.
   cString Folder(void) const;
        ///< Returns the name of the folder this recording is stored in (without the
        ///< video directory). For use in menus etc.

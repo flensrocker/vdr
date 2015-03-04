@@ -1038,6 +1038,30 @@ bool cRecording::IsInPath(const char *Path)
   return strncmp(Path, name, l) == 0 && (name[l] == FOLDERDELIMCHAR);
 }
 
+cString cRecording::FileFolder(void) const
+{
+  if (cVideoDirectory::HideFirstRecordingLevel() && **firstFolder) {
+     char *s = strdup(*firstFolder);
+     s = ExchangeChars(s, false);
+     cString f = cString::sprintf("%s%s", s, *Folder());
+     free(s);
+     return f;
+     }
+  return Folder();
+}
+
+cString cRecording::FullName(void) const
+{
+  if (cVideoDirectory::HideFirstRecordingLevel() && **firstFolder) {
+     char *s = strdup(*firstFolder);
+     s = ExchangeChars(s, false);
+     cString n = cString::sprintf("%s%s", s, Name());
+     free(s);
+     return n;
+     }
+  return Name();
+}
+
 cString cRecording::Folder(void) const
 {
   if (char *s = strrchr(name, FOLDERDELIMCHAR))
@@ -1240,20 +1264,36 @@ bool cRecording::ChangePriorityLifetime(int NewPriority, int NewLifetime)
 
 bool cRecording::ChangeName(const char *NewName)
 {
-  if (strcmp(NewName, Name())) {
-     dsyslog("changing name of '%s' to '%s'", Name(), NewName);
+  cString fullName = FullName();
+  if (strcmp(NewName, *fullName)) {
+     dsyslog("changing name of '%s' to '%s'", *fullName, NewName);
      cString OldName = Name();
      cString OldFileName = FileName();
+     cString OldFirstFolder = FirstFolder();
      free(fileName);
      fileName = NULL;
      free(name);
-     name = strdup(NewName);
+     const char *p = strrchr(NewName, FOLDERDELIMCHAR);
+     const char *copyFileName = NewName;
+     if (cVideoDirectory::HideFirstRecordingLevel()) {
+        const char *f = strchr(NewName, FOLDERDELIMCHAR);
+        if ((f != NULL) && (f < p)) {
+           copyFileName = f + 1;
+           char *s = strdup(NewName);
+           s[f - NewName + 1] = 0;
+           s = ExchangeChars(s, true);
+           firstFolder = s;
+           free(s);
+           }
+        }
+     name = strdup(copyFileName);
      cString NewFileName = FileName();
      if (!(MakeDirs(NewFileName, true) && cVideoDirectory::MoveVideoFile(OldFileName, NewFileName))) {
         free(name);
         name = strdup(OldName);
         free(fileName);
         fileName = strdup(OldFileName);
+        firstFolder = OldFirstFolder;
         return false;
         }
      isOnVideoDirectoryFileSystem = -1; // it might have been moved to a different file system
@@ -1584,6 +1624,7 @@ cRecordings::cRecordings(bool Deleted)
   initial = true;
   lastUpdate = 0;
   state = 0;
+  folderInfos = NULL;
 }
 
 cRecordings::~cRecordings()
