@@ -1350,9 +1350,9 @@ void cSVDRP::CmdMOVR(const char *Option)
               if (c)
                  option = skipspace(++option);
               if (*option) {
-                 cString oldName = recording->Name();
+                 cString oldName = recording->FullName();
                  if ((recording = Recordings.GetByName(recording->FileName())) != NULL && recording->ChangeName(option))
-                    Reply(250, "Recording \"%s\" moved to \"%s\"", *oldName, recording->Name());
+                    Reply(250, "Recording \"%s\" moved to \"%s\"", *oldName, recording->FullName());
                  else
                     Reply(554, "Error while moving recording \"%s\" to \"%s\"!", *oldName, option);
                  }
