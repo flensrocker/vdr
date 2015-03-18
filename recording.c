@@ -1277,7 +1277,7 @@ bool cRecording::ChangeName(const char *NewName)
      const char *copyFileName = NewName;
      if (cVideoDirectory::HideFirstRecordingLevel()) {
         const char *f = strchr(NewName, FOLDERDELIMCHAR);
-        if ((f != NULL) && (f < p)) {
+        if ((f != NULL) && (f <= p)) {
            copyFileName = f + 1;
            char *s = strdup(NewName);
            s[f - NewName + 1] = 0;

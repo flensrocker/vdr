@@ -235,11 +235,12 @@ const char *HelpPages[] = {
   "    only data for that channel is listed. 'now', 'next', or 'at <time>'\n"
   "    restricts the returned data to present events, following events, or\n"
   "    events at the given time (which must be in time_t form).",
-  "LSTR [ <number> [ path ] ]\n"
+  "LSTR [ <number> [ path | name ] ]\n"
   "    List recordings. Without option, all recordings are listed. Otherwise\n"
   "    the information for the given recording is listed. If a recording\n"
   "    number and the keyword 'path' is given, the actual file name of that\n"
-  "    recording's directory is listed.",
+  "    recording's directory is listed. If the keyword 'name' is given,\n"
+  "    the name is listed including the hidden first folder.",
   "LSTT [ <number> ] [ id ]\n"
   "    List timers. Without option, all timers are listed. Otherwise\n"
   "    only the given timer is listed. If the keyword 'id' is given, the\n"
@@ -1094,6 +1095,7 @@ void cSVDRP::CmdLSTR(const char *Option)
 {
   int Number = 0;
   bool Path = false;
+  bool Name = false;
   recordings.Update(true);
   if (*Option) {
      char buf[strlen(Option) + 1];
@@ -1112,6 +1114,8 @@ void cSVDRP::CmdLSTR(const char *Option)
               }
            else if (strcasecmp(p, "PATH") == 0)
               Path = true;
+           else if (strcasecmp(p, "NAME") == 0)
+              Name = true;
            else {
               Reply(501, "Unknown option: \"%s\"", p);
               return;
@@ -1125,6 +1129,8 @@ void cSVDRP::CmdLSTR(const char *Option)
            if (f) {
               if (Path)
                  Reply(250, "%s", recording->FileName());
+              else if (Name)
+                 Reply(250, "%s", *recording->FullName());
               else {
                  recording->Info()->Write(f, "215-");
                  fflush(f);
