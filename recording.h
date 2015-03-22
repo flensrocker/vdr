@@ -20,6 +20,7 @@
 
 #define FOLDERDELIMCHAR '~'
 #define LOCALRECFOLDER "local/"
+#define HIDE_FIRST_RECORDING_LEVEL_PATCH
 
 extern int DirectoryPathMax;
 extern int DirectoryNameMax;
