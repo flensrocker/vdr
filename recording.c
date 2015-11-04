@@ -1673,7 +1673,6 @@ cRecordings::cFolderInfos::~cFolderInfos(void)
 
 void cRecordings::cFolderInfos::Rebuild(const cRecordings *Recordings)
 {
-  dsyslog("rec-folder-info: rebuilding");
   delete root;
   root = new cFolderTree(NULL, "");
 
@@ -1688,7 +1687,6 @@ void cRecordings::cFolderInfos::Rebuild(const cRecordings *Recordings)
 
 cRecordings::cFolderInfos::cFolderInfo *cRecordings::cFolderInfos::Get(const cRecordings *Recordings, const char *Folder)
 {
-  dsyslog("rec-folder-info: Get");
   cMutexLock lock(&rootLock);
 
   if (Recordings->Lock(recState)) {
