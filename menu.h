@@ -224,7 +224,7 @@ private:
   eOSState Sort(void);
   eOSState Commands(eKeys Key = kNone);
 protected:
-  cString DirectoryName(void);
+  cString DirectoryName(const cRecordings *Recordings);
 public:
   cMenuRecordings(const char *Base = NULL, int Level = 0, bool OpenSubMenus = false, const cRecordingFilter *Filter = NULL);
   ~cMenuRecordings();

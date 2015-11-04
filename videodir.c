@@ -21,6 +21,7 @@
 
 cMutex cVideoDirectory::mutex;
 cString cVideoDirectory::name;
+bool cVideoDirectory::hide_first_recording_level = false;
 cVideoDirectory *cVideoDirectory::current = NULL;
 
 cVideoDirectory::cVideoDirectory(void)

@@ -822,7 +822,7 @@ static void AddRecordingFolders(const cRecordings *Recordings, cList<cNestedItem
   else {
      cStringList Dirs;
      for (const cRecording *Recording = Recordings->First(); Recording; Recording = Recordings->Next(Recording)) {
-         cString Folder = Recording->Folder();
+         cString Folder = Recording->FileFolder();
          strreplace((char *)*Folder, FOLDERDELIMCHAR, FOLDERDELIMCHARSUBST); // makes sure parent folders come before subfolders
          if (Dirs.Find(Folder) < 0)
             Dirs.Append(strdup(Folder));
@@ -2547,7 +2547,7 @@ cMenuRecordingEdit::cMenuRecordingEdit(const cRecording *Recording)
   SetMenuCategory(mcRecordingEdit);
   recording = Recording;
   originalFileName = recording->FileName();
-  strn0cpy(folder, recording->Folder(), sizeof(folder));
+  strn0cpy(folder, recording->FileFolder(), sizeof(folder));
   strn0cpy(name, recording->BaseName(), sizeof(name));
   priority = recording->Priority();
   lifetime = recording->Lifetime();
@@ -2632,7 +2632,7 @@ eOSState cMenuRecordingEdit::SetFolder(void)
 
 eOSState cMenuRecordingEdit::Folder(void)
 {
-  return AddSubMenu(new cMenuFolder(tr("Select folder"), &Folders, recording->Name()));
+  return AddSubMenu(new cMenuFolder(tr("Select folder"), &Folders, *recording->FullName()));
 }
 
 eOSState cMenuRecordingEdit::Action(void)
@@ -2704,7 +2704,7 @@ eOSState cMenuRecordingEdit::ApplyChanges(void)
      }
   cString NewName = *folder ? cString::sprintf("%s%c%s", folder, FOLDERDELIMCHAR, name) : name;
   NewName.CompactChars(FOLDERDELIMCHAR);
-  if (strcmp(NewName, Recording->Name())) {
+  if (strcmp(NewName, *Recording->FullName())) {
      if (!Recording->ChangeName(NewName)) {
         Skins.Message(mtError, tr("Error while changing folder/name!"));
         StateKey.Remove(Modified);
@@ -2958,7 +2958,7 @@ void cMenuRecordings::Set(bool Refresh)
            CurrentRecording = ri->Recording()->FileName();
         }
      Clear();
-     GetRecordingsSortMode(DirectoryName());
+     GetRecordingsSortMode(DirectoryName(Recordings));
      Recordings->Sort();
      for (const cRecording *Recording = Recordings->First(); Recording; Recording = Recordings->Next(Recording)) {
          if ((!filter || filter->Filter(Recording)) && (!base || (strstr(Recording->Name(), base) == Recording->Name() && Recording->Name()[strlen(base)] == FOLDERDELIMCHAR))) {
@@ -3010,10 +3010,19 @@ void cMenuRecordings::SetRecording(const char *FileName)
   fileName = FileName;
 }
 
-cString cMenuRecordings::DirectoryName(void)
+cString cMenuRecordings::DirectoryName(const cRecordings *Recordings)
 {
   cString d(cVideoDirectory::Name());
   if (base) {
+     if (cVideoDirectory::HideFirstRecordingLevel()) {
+        cRecordings::cFolderInfos::cFolderInfo* info = Recordings->GetFolderInfo(base);
+        if (info) {
+           if (info->FirstFolderNames.Size() > 0)
+              d = AddDirectory(d, info->FirstFolderNames.At(0));
+           delete info;
+           }
+        }
+
      char *s = ExchangeChars(strdup(base), true);
      d = AddDirectory(d, s);
      free(s);
@@ -3163,7 +3172,10 @@ eOSState cMenuRecordings::Sort(void)
 {
   if (HasSubMenu())
      return osContinue;
-  IncRecordingsSortMode(DirectoryName());
+  cStateKey recState;
+  const cRecordings *recs = cRecordings::GetRecordingsRead(recState);
+  IncRecordingsSortMode(DirectoryName(recs));
+  recState.Remove();
   recordingsStateKey.Reset();
   Set(true);
   return osContinue;

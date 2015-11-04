@@ -17,6 +17,7 @@ class cVideoDirectory {
 private:
   static cMutex mutex;
   static cString name;
+  static bool hide_first_recording_level;
   static cVideoDirectory *current;
   static cVideoDirectory *Current(void);
 public:
@@ -82,6 +83,8 @@ public:
   static cString PrefixVideoFileName(const char *FileName, char Prefix);
   static void RemoveEmptyVideoDirectories(const char *IgnoreFiles[] = NULL);
   static bool IsOnVideoDirectoryFileSystem(const char *FileName);
+  static void SetHideFirstRecordingLevel(bool Hide) { hide_first_recording_level = Hide; };
+  static bool HideFirstRecordingLevel(void) { return hide_first_recording_level; };
   };
 
 class cVideoDiskUsage {

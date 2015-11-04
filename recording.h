@@ -19,6 +19,8 @@
 #include "tools.h"
 
 #define FOLDERDELIMCHAR '~'
+#define LOCALRECFOLDER "local/"
+#define HIDE_FIRST_RECORDING_LEVEL_PATCH
 
 extern int DirectoryPathMax;
 extern int DirectoryNameMax;
@@ -103,6 +105,7 @@ private:
   mutable char *sortBufferTime;
   mutable char *fileName;
   mutable char *name;
+  cString firstFolder;
   mutable int fileSizeMB;
   mutable int numFrames;
   int channel;
@@ -133,6 +136,18 @@ public:
   bool IsInPath(const char *Path) const;
        ///< Returns true if this recording is stored anywhere under the given Path.
        ///< If Path is NULL or an empty string, the entire video directory is checked.
+  const char *FirstFolder(void) const { return *firstFolder; }
+       ///< Returns the name of the first folder (without the video directory) of
+       ///< this recording including a trailing slash. Only filled with content if the
+       ///< option "hide-first-recording-level" is activated, otherwise and empty string "".
+  cString FileFolder(void) const;
+       ///< Returns the name of the folder this recording is stored in (without the
+       ///< video directory) but including the "first folder", even if the option
+       ///< "hide-first-recording-level" is activated.
+  cString FullName(void) const;
+       ///< Returns the full name of the recording (without the video directory)
+       ///< but including the "first folder", even if the option
+       ///< "hide-first-recording-level" is activated.
   cString Folder(void) const;
        ///< Returns the name of the folder this recording is stored in (without the
        ///< video directory). For use in menus etc.
@@ -219,7 +234,50 @@ public:
 class cVideoDirectoryScannerThread;
 
 class cRecordings : public cList<cRecording> {
+public:
+  class cFolderInfos {
+  private:
+    class cFolderTree;
+
+    cStateKey recState;
+    cFolderTree *root;
+    cMutex rootLock;
+
+    void Rebuild(const cRecordings *Recordings);
+  public:
+    class cFolderInfo {
+    public:
+      cString Name;
+           ///< Name of the folder
+      cString FullName;
+           ///< Name of the folder with all parent folders
+      cStringList FirstFolderNames;
+           ///< Names of the first level folders this folder belongs to
+           ///< if the first level is hidden
+      int Count;
+           ///< Total count of recordings in this folder and subfolders
+      time_t Latest;
+           ///< Timestamp of the latest recording in this folder or subfolders
+      cString LatestFileName;
+           ///< Filename of the latest recording
+
+      cFolderInfo(const char *Name, const char *FullName, int Count, time_t Latest, const char *LatestFileName);
+    };
+
+    cFolderInfos(const cRecordings *Recordings);
+    ~cFolderInfos(void);
+
+    cFolderInfo *Get(const cRecordings *Recordings, const char *Folder);
+         ///< The caller must delete the cFolderInfo object.
+         ///< If the given folder doesn't exists, NULL is returned.
+         ///< The internal tree will be rebuild if the recordings'
+         ///< state has changed.
+         ///< This function is thread-safe.
+    };
+
 private:
+  cMutex folderInfosMutex;
+  mutable cFolderInfos *folderInfos;
   static cRecordings recordings;
   static cRecordings deletedRecordings;
   static char *updateFileName;
@@ -284,6 +342,13 @@ public:
        ///< If OldPath and NewPath are on different file systems, the recordings
        ///< will be moved in a background process and this function returns true
        ///< if all recordings have been successfully added to the RecordingsHandler.
+  cFolderInfos &GetFolderInfos(void) const;
+  cFolderInfos::cFolderInfo *GetFolderInfo(const char *Folder) const;
+        ///< The caller must delete the cFolderInfo object.
+        ///< If the given folder doesn't exists, NULL is returned.
+        ///< The internal tree will be rebuild if the recordings'
+        ///< state has changed.
+        ///< This function is thread-safe.
   };
 
 // Provide lock controlled access to the list:

@@ -44,9 +44,9 @@
 #define NAMEFORMAT   "%s/%s/" DATAFORMAT
 */
 #define DATAFORMATPES   "%4d-%02d-%02d.%02d%*c%02d.%02d.%02d" RECEXT
-#define NAMEFORMATPES   "%s/%s/" "%4d-%02d-%02d.%02d.%02d.%02d.%02d" RECEXT
+#define NAMEFORMATPES   "%s/%s%s/" "%4d-%02d-%02d.%02d.%02d.%02d.%02d" RECEXT
 #define DATAFORMATTS    "%4d-%02d-%02d.%02d.%02d.%d-%d" RECEXT
-#define NAMEFORMATTS    "%s/%s/" DATAFORMATTS
+#define NAMEFORMATTS    "%s/%s%s/" DATAFORMATTS
 
 #define RESUMEFILESUFFIX  "/resume%s%s"
 #ifdef SUMMARYFALLBACK
@@ -758,6 +758,9 @@ cRecording::cRecording(cTimer *Timer, const cEvent *Event)
   sortBufferName = sortBufferTime = NULL;
   fileName = NULL;
   name = NULL;
+  firstFolder = "";
+  if (cVideoDirectory::HideFirstRecordingLevel())
+     firstFolder = LOCALRECFOLDER;
   fileSizeMB = -1; // unknown
   channel = Timer->Channel()->Number();
   instanceId = InstanceId;
@@ -827,6 +830,7 @@ cRecording::cRecording(const char *FileName)
   if (strstr(FileName, cVideoDirectory::Name()) == FileName)
      FileName += strlen(cVideoDirectory::Name()) + 1;
   const char *p = strrchr(FileName, '/');
+  firstFolder = "";
 
   name = NULL;
   info = new cRecordingInfo(fileName);
@@ -841,9 +845,18 @@ cRecording::cRecording(const char *FileName)
         t.tm_mon--;
         t.tm_sec = 0;
         start = mktime(&t);
-        name = MALLOC(char, p - FileName + 1);
-        strncpy(name, FileName, p - FileName);
-        name[p - FileName] = 0;
+        const char *copyFileName = FileName;
+        if (cVideoDirectory::HideFirstRecordingLevel()) {
+           const char *f = strchr(FileName, '/');
+           if ((f != NULL) && (f < p)) {
+              copyFileName = f + 1;
+              firstFolder = FileName;
+              firstFolder.Truncate(f - FileName + 1);
+              }
+           }
+        name = MALLOC(char, p - copyFileName + 1);
+        strncpy(name, copyFileName, p - copyFileName);
+        name[p - copyFileName] = 0;
         name = ExchangeChars(name, false);
         isPesRecording = instanceId < 0;
         }
@@ -980,7 +993,7 @@ char *cRecording::SortName(void) const
         *sb = strdup(buf);
         }
      else {
-        char *s = strdup(FileName() + strlen(cVideoDirectory::Name()));
+        char *s = strdup(FileName() + strlen(cVideoDirectory::Name()) + strlen(*firstFolder));
         if (RecordingsSortMode != rsmName || Setup.AlwaysSortFoldersFirst)
            s = StripEpisodeName(s, RecordingsSortMode != rsmName);
         strreplace(s, '/', '0'); // some locales ignore '/' when sorting
@@ -1023,6 +1036,30 @@ bool cRecording::IsInPath(const char *Path) const
   return strncmp(Path, name, l) == 0 && (name[l] == FOLDERDELIMCHAR);
 }
 
+cString cRecording::FileFolder(void) const
+{
+  if (cVideoDirectory::HideFirstRecordingLevel() && **firstFolder) {
+     char *s = strdup(*firstFolder);
+     s = ExchangeChars(s, false);
+     cString f = cString::sprintf("%s%s", s, *Folder());
+     free(s);
+     return f;
+     }
+  return Folder();
+}
+
+cString cRecording::FullName(void) const
+{
+  if (cVideoDirectory::HideFirstRecordingLevel() && **firstFolder) {
+     char *s = strdup(*firstFolder);
+     s = ExchangeChars(s, false);
+     cString n = cString::sprintf("%s%s", s, Name());
+     free(s);
+     return n;
+     }
+  return Name();
+}
+
 cString cRecording::Folder(void) const
 {
   if (char *s = strrchr(name, FOLDERDELIMCHAR))
@@ -1049,7 +1086,7 @@ const char *cRecording::FileName(void) const
      if (strcmp(Name, name) != 0)
         dsyslog("recording file name '%s' truncated to '%s'", name, Name);
      Name = ExchangeChars(Name, true);
-     fileName = strdup(cString::sprintf(fmt, cVideoDirectory::Name(), Name, t->tm_year + 1900, t->tm_mon + 1, t->tm_mday, t->tm_hour, t->tm_min, ch, ri));
+     fileName = strdup(cString::sprintf(fmt, cVideoDirectory::Name(), *firstFolder, Name, t->tm_year + 1900, t->tm_mon + 1, t->tm_mday, t->tm_hour, t->tm_min, ch, ri));
      free(Name);
      }
   return fileName;
@@ -1217,20 +1254,36 @@ bool cRecording::ChangePriorityLifetime(int NewPriority, int NewLifetime)
 
 bool cRecording::ChangeName(const char *NewName)
 {
-  if (strcmp(NewName, Name())) {
-     dsyslog("changing name of '%s' to '%s'", Name(), NewName);
+  cString fullName = FullName();
+  if (strcmp(NewName, *fullName)) {
+     dsyslog("changing name of '%s' to '%s'", *fullName, NewName);
      cString OldName = Name();
      cString OldFileName = FileName();
+     cString OldFirstFolder = FirstFolder();
      free(fileName);
      fileName = NULL;
      free(name);
-     name = strdup(NewName);
+     const char *p = strrchr(NewName, FOLDERDELIMCHAR);
+     const char *copyFileName = NewName;
+     if (cVideoDirectory::HideFirstRecordingLevel()) {
+        const char *f = strchr(NewName, FOLDERDELIMCHAR);
+        if ((f != NULL) && (f <= p)) {
+           copyFileName = f + 1;
+           char *s = strdup(NewName);
+           s[f - NewName + 1] = 0;
+           s = ExchangeChars(s, true);
+           firstFolder = s;
+           free(s);
+           }
+        }
+     name = strdup(copyFileName);
      cString NewFileName = FileName();
      if (!(MakeDirs(NewFileName, true) && cVideoDirectory::MoveVideoFile(OldFileName, NewFileName))) {
         free(name);
         name = strdup(OldName);
         free(fileName);
         fileName = strdup(OldFileName);
+        firstFolder = OldFirstFolder;
         return false;
         }
      isOnVideoDirectoryFileSystem = -1; // it might have been moved to a different file system
@@ -1452,6 +1505,204 @@ void cVideoDirectoryScannerThread::ScanVideoDir(const char *DirName, int LinkLev
      }
 }
 
+// --- cRecordings::cFolderInfos ---------------------------------------------
+
+class cRecordings::cFolderInfos::cFolderTree : public cListObject {
+private:
+  cFolderTree *parent;
+  cList<cFolderTree> *subFolders;
+
+  cString name;
+  int count;
+  time_t latest;
+  cString latestFileName;
+  cStringList firstFolderNames;
+
+  void UpdateData(const cRecording *Recording);
+  cFolderTree *FindSubFolder(const char *Name) const;
+
+public:
+  cFolderTree(cFolderTree *Parent, const char *Name);
+  virtual ~cFolderTree(void);
+
+  // split Name and find folder-info in tree
+  // if "Add", missing folders are created
+  cFolderTree *Find(const char *Name, bool Add);
+  void Add(const cRecording *Recording);
+  cFolderInfo *GetInfo(void) const;
+  cString FullName(void) const;
+};
+
+cRecordings::cFolderInfos::cFolderTree::cFolderTree(cFolderTree *Parent, const char *Name)
+:parent(Parent)
+,name(Name)
+,count(0)
+,latest(0)
+,latestFileName("")
+{
+  subFolders = new cList<cFolderTree>();
+}
+
+cRecordings::cFolderInfos::cFolderTree::~cFolderTree(void)
+{
+  delete subFolders;
+  subFolders = NULL;
+}
+
+cRecordings::cFolderInfos::cFolderTree *cRecordings::cFolderInfos::cFolderTree::Find(const char *Name, bool Add)
+{
+  cFolderTree *info = NULL;
+  if (Add)
+     info = this;
+
+  if (Name && *Name) {
+     static char delim[2] = { FOLDERDELIMCHAR, 0 };
+     char *strtok_next;
+     cFolderTree *next;
+     char *folder = strdup(Name);
+     info = this;
+     for (char *t = strtok_r(folder, delim, &strtok_next); t; t = strtok_r(NULL, delim, &strtok_next)) {
+         next = info->FindSubFolder(t);
+         if (next == NULL) {
+            if (!Add) {
+               info = NULL;
+               break;
+               }
+
+            next = new cFolderTree(info, t);
+            info->subFolders->Add(next);
+            }
+         info = next;
+         }
+     free(folder);
+     }
+
+  return info;
+}
+
+void cRecordings::cFolderInfos::cFolderTree::UpdateData(const cRecording *Recording)
+{
+  // count every recording
+  count++;
+
+  // update date if newer
+  time_t recdate = Recording->Start();
+  if (latest < recdate) {
+     latest = recdate;
+     latestFileName = Recording->FileName();
+     }
+
+  // add all possible first level folders
+  if (cVideoDirectory::HideFirstRecordingLevel()) {
+     const char *firstFolder = Recording->FirstFolder();
+     if (firstFolderNames.Find(firstFolder) < 0)
+        firstFolderNames.Append(strdup(firstFolder));
+     }
+}
+
+cRecordings::cFolderInfos::cFolderTree *cRecordings::cFolderInfos::cFolderTree::FindSubFolder(const char *Name) const
+{
+  for (cFolderTree *info = subFolders->First(); info; info = subFolders->Next(info)) {
+      if (strcmp(info->name, Name) == 0)
+         return info;
+      }
+  return NULL;
+}
+
+void cRecordings::cFolderInfos::cFolderTree::Add(const cRecording *Recording)
+{
+  if (Recording == NULL)
+     return;
+
+  // update this and all parent folders
+  for (cFolderTree *p = this; p; p = p->parent)
+      p->UpdateData(Recording);
+}
+
+cRecordings::cFolderInfos::cFolderInfo *cRecordings::cFolderInfos::cFolderTree::GetInfo(void) const
+{
+  cFolderInfo *info = new cFolderInfo(*name, *FullName(), count, latest, *latestFileName);
+  // take care that LOCALRECFOLDER is the first item
+  bool addLocal = false;
+  for (int i = 0; i < firstFolderNames.Size(); i++) {
+      if (strcmp(firstFolderNames.At(i), LOCALRECFOLDER))
+         addLocal = true;
+      else
+         info->FirstFolderNames.Append(strdup(firstFolderNames.At(i)));
+      }
+  info->FirstFolderNames.Sort();
+  if (addLocal)
+     info->FirstFolderNames.Insert(strdup(LOCALRECFOLDER));
+  return info;
+}
+
+cString cRecordings::cFolderInfos::cFolderTree::FullName(void) const
+{
+  static char delim[2] = { FOLDERDELIMCHAR, 0 };
+
+  cString n = name;
+  for (cFolderTree *p = parent; p; p = p->parent) {
+      // don't add FOLDERDELIMCHAR at start of FullName
+      if (p->parent == NULL)
+         break;
+      n = cString::sprintf("%s%s%s", *p->name, delim, *n);
+      }
+  return n;
+}
+
+cRecordings::cFolderInfos::cFolderInfo::cFolderInfo(const char *Name, const char *FullName, int Count, time_t Latest, const char *LatestFileName)
+{
+  this->Name = Name;
+  this->FullName = FullName;
+  this->Count = Count;
+  this->Latest = Latest;
+  this->LatestFileName= LatestFileName;
+}
+
+cRecordings::cFolderInfos::cFolderInfos(const cRecordings *Recordings)
+:root(NULL)
+{
+  Rebuild(Recordings);
+}
+
+cRecordings::cFolderInfos::~cFolderInfos(void)
+{
+  delete root;
+  root = NULL;
+}
+
+void cRecordings::cFolderInfos::Rebuild(const cRecordings *Recordings)
+{
+  dsyslog("rec-folder-info: rebuilding");
+  delete root;
+  root = new cFolderTree(NULL, "");
+
+  cFolderTree *info;
+  cString folder;
+  for (const cRecording *rec = Recordings->First(); rec; rec = Recordings->Next(rec)) {
+      folder = rec->Folder();
+      info = root->Find(*folder, true);
+      info->Add(rec);
+      }
+}
+
+cRecordings::cFolderInfos::cFolderInfo *cRecordings::cFolderInfos::Get(const cRecordings *Recordings, const char *Folder)
+{
+  dsyslog("rec-folder-info: Get");
+  cMutexLock lock(&rootLock);
+
+  if (Recordings->Lock(recState)) {
+     Rebuild(Recordings);
+     recState.Remove();
+     }
+
+  cFolderTree *info = root->Find(Folder, false);
+  if (info == NULL)
+     return NULL;
+
+  return info->GetInfo();
+}
+
 // --- cRecordings -----------------------------------------------------------
 
 cRecordings cRecordings::recordings;
@@ -1463,6 +1714,7 @@ time_t cRecordings::lastUpdate = 0;
 cRecordings::cRecordings(bool Deleted)
 :cList<cRecording>(Deleted ? "DelRecs" : "Recordings")
 {
+  folderInfos = NULL;
 }
 
 cRecordings::~cRecordings()
@@ -1470,6 +1722,7 @@ cRecordings::~cRecordings()
   // The first one to be destructed deletes it:
   delete videoDirectoryScannerThread;
   videoDirectoryScannerThread = NULL;
+  delete folderInfos;
 }
 
 const char *cRecordings::UpdateFileName(void)
@@ -1639,6 +1892,19 @@ void cRecordings::ClearSortNames(void)
 {
   for (cRecording *Recording = First(); Recording; Recording = Next(Recording))
       Recording->ClearSortName();
+}
+
+cRecordings::cFolderInfos &cRecordings::GetFolderInfos(void) const
+{
+  cMutexLock lock((cMutex*)&folderInfosMutex);
+  if (folderInfos == NULL)
+     folderInfos = new cFolderInfos(this);
+  return *folderInfos;
+}
+
+cRecordings::cFolderInfos::cFolderInfo *cRecordings::GetFolderInfo(const char *Folder) const
+{
+  return GetFolderInfos().Get(this, Folder);
 }
 
 // --- cDirCopier ------------------------------------------------------------
